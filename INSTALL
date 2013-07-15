@@ -1,0 +1,11 @@
+For convenience, the (required parts of my) ftemplate and perllib
+libraries have been merged into this repository for now (in the
+future, I will properly package those libraries as separate CPAN
+modules and then just ask to install from there or from their own
+Github repositories).
+
+The other non-standard dependencies can be installed on a
+Debian-derived Linux system using:
+
+ apt-get install libmime-tools-perl libmail-box-perl
+
