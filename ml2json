@@ -1,0 +1,106 @@
+#!/usr/bin/perl -w
+
+# Thu Jul  4 21:30:42 BST 2013
+(my $email='ch%christianjaeger,ch')=~ tr/%,/@./;
+
+use strict;
+
+my ($mydir, $myname);
+BEGIN {
+    $0=~ /(.*?)([^\/]+)\z/s or die "?";
+    ($mydir, $myname)=($1,$2);
+}
+use lib "$mydir/perllib";
+use lib "$mydir/ftemplate/lib";
+use lib "$mydir/lib";
+
+our $tmpbase="/tmp/$myname";
+our $tmplink= "$ENV{HOME}/.$myname-tmp"; ## ok to use that path?
+
+sub usage {
+    print STDERR map{"$_\n"} @_ if @_;
+    print "$myname sourcedir targetfile
+
+  sourcedir should be a directory with *.mbox files directly in it
+  ($myname does not currently recurse into subdirectories).
+
+  targetfile is where the JSON output should go (use '-' for stdout).
+
+  (Christian Jaeger <$email>)
+";
+exit (@_ ? 1 : 0);
+}
+
+use Getopt::Long;
+our $verbose=0;
+#our $opt_dry;
+GetOptions("verbose"=> \$verbose,
+	   "help"=> sub{usage},
+	   #"dry-run"=> \$opt_dry,
+	   ) or exit 1;
+usage unless @ARGV==2;
+
+our ($sourcedir, $targetfile)=@ARGV;
+
+use Chj::tempdir;
+
+use Chj::xperlfunc ':all';
+
+our $tmp= do {
+    my $create= sub {
+	my $t= tempdir $tmpbase;
+	xsymlink $t, $tmplink;
+	$t
+    };
+    if (my $p= readlink( $tmplink)) {
+	if (my $s= Xstat $p) {
+	    if ($s->uid == $>) {
+		$p
+	    } else {
+		warn "directory pointed to by '$tmplink' ('$p') is owned by somebody else, creating a new one instead";
+		xunlink $tmplink;
+		&$create;
+	    }
+	} else {
+	    xunlink $tmplink;
+	    &$create;
+	}
+    } else {
+	&$create;
+    }
+};
+
+
+use Chj::Ml2json::Mailcollection ':all';
+use Chj::FP2::Stream ':all';
+use Chj::Ml2json::OutputJSON;
+use Chj::Ml2json::OutputJSON::Continuous;
+use Chj::Ml2json::Try;
+use Chj::xopen ':all';
+
+#our $coll= parse_mbox ('mbox/foucault-l.mbox.crdownload.1', $tmp);
+our $coll= parse_mbox_dir ($sourcedir, $tmp);
+
+our $index= $coll->index;
+
+our $outputjson= Chj::Ml2json::OutputJSON->new;
+
+sub allout {
+    my $o= xopen_write $targetfile;
+    binmode $o, ":utf8" or die;
+    my $json= Chj::Ml2json::OutputJSON::Continuous->new($o,$outputjson);
+    stream_for_each sub {
+	my ($m)=@_;
+	Try {
+	    $json->message_print($m,$index);
+	} $m;
+    }, $index->messages_threadsorted;
+    $json->end;
+    $o->xclose;
+}
+
+#use Chj::Ml2json::Debug;
+#use Chj::Ml2json::MIMEExtract ':all';
+use Chj::Backtrace;
+#use Chj::repl; repl;
+allout;
