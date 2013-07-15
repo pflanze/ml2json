@@ -36,7 +36,7 @@ package Chj::Ml2json::Mbox;
 
 use strict;
 
-use Chj::Struct ["path"];
+use Chj::Struct ["path","i"];
 
 use Mail::Box::Mbox;
 
@@ -45,14 +45,14 @@ sub parser {
     $$s{parser}||= Mail::Box::Mbox->new (folder=> $$s{path})
 }
 
-sub i {
+sub next_i {
     my $s=shift;
     defined $$s{i} ? ++($$s{i}) : ($$s{i}=0)
 }
 
 sub next_message {
     my $s=shift;
-    if (local our $msg= $s->parser->message($s->i)) {
+    if (local our $msg= $s->parser->message($s->next_i)) {
 	#use Chj::repl;repl;
 	#"$msg"
 	$msg->head . $msg->body
