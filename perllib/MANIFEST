@@ -1,0 +1,13 @@
+COPYING
+Chj/Backtrace.pm
+Chj/Chomp.pm
+Chj/IO/File.pm
+Chj/Unix/Exitcode.pm
+Chj/Unix/Signal.pm
+Chj/Unix/exitcode.pm
+Chj/chompspace.pm
+Chj/singlequote.pm
+Chj/xopen.pm
+Chj/xperlfunc.pm
+Class/Array.pm
+README
