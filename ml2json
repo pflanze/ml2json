@@ -26,6 +26,9 @@ sub usage {
 
   targetfile is where the JSON output should go (use '-' for stdout).
 
+  Options:
+    --cleanup   delete currently used temp directory at $tmpbase*
+
   (Christian Jaeger <$email>)
 ";
 exit (@_ ? 1 : 0);
@@ -36,6 +39,7 @@ our $verbose=0;
 #our $opt_dry;
 GetOptions("verbose"=> \$verbose,
 	   "help"=> sub{usage},
+	   "cleanup"=> sub { cleanup_tmp(); exit 0; },
 	   #"dry-run"=> \$opt_dry,
 	   ) or exit 1;
 usage unless @ARGV==2;
@@ -70,6 +74,22 @@ our $tmp= do {
     }
 };
 
+sub cleanup_tmp {
+    # partially COPYPASTE..
+    if (my $p= readlink( $tmplink)) {
+	if (my $s= Xstat $p) {
+	    if ($s->uid == $>) {
+		$p=~ m|^/| or die "not an absolute target location: '$p'";
+		unlink $tmplink;
+		system ("rm", "-rf", "--", $p)==0 or die "rm -rf '$p' failed";
+	    } else {
+		warn "directory pointed to by '$tmplink' ('$p') is owned by somebody else";
+	    }
+	} else {
+	    xunlink $tmplink;
+	}
+    }
+}
 
 use Chj::Ml2json::Mailcollection ':all';
 use Chj::FP2::Stream ':all';
