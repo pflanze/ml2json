@@ -1,4 +1,8 @@
 COPYING
+INSTALL
+MANIFEST
+README
+example_config.pl
 lib/Chj/Array/Util.pm
 lib/Chj/FP/ArrayUtil.pm
 lib/Chj/FP/Array_sort.pm
