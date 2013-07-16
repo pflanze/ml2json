@@ -103,6 +103,7 @@ use Chj::Ml2json::MIMEExtract ':all';
 use Chj::xperlfunc ':all'; # basename, xstat
 use Date::Format 'ctime';
 use Chj::Chomp;
+use URI::file;
 
 sub message_jsondata {
     my $s=shift;
@@ -137,12 +138,14 @@ sub message_jsondata {
 	   my $ent= $att->ent;
 	   #use Chj::repl;repl;
 	   my $path= MIME_Entity_path($ent,$m);
+	   my $uri= URI::file->new($path);
 	   my $filename= basename $path;
 	   +{
 	     #"url": "http://example.com/file1.txt"
 	     #content=>"dGVzdGZpbGU=",
 	     # instead:
 	     path=> $path,
+	     url=> $uri->as_string,
 	     "file_name"=> $filename, # not to feed it, just informatively??
 	     "content_type"=> MIME_Entity_maybe_content_type_lc($ent),
 	     "size"=> xstat($path)->size, # bytes, not characters
