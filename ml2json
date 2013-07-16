@@ -40,6 +40,12 @@ sub usage {
                 relative, it is output as a relative URI (i.e. no
                 file:// prefix).
 
+    --config myconfig.pl
+                load given file containing perl code, which must
+                end with a perl hashref; currently
+                   'jsonfields_orig_headers' and 'jsonfields_top'
+                are used. See docs in lib/Chj/Ml2json/OutputJSON.pm
+
   (Christian Jaeger <$email>)
 ";
 exit (@_ ? 1 : 0);
@@ -49,10 +55,15 @@ use Getopt::Long;
 our $verbose=0;
 #our $opt_dry;
 our $tmp;
+our $config;
 GetOptions("verbose"=> \$verbose,
 	   "help"=> sub{usage},
 	   "cleanup"=> sub { cleanup_tmp(); exit 0; },
 	   "attachment-basedir=s"=> \$tmp,
+	   "config=s"=> sub {
+	       my ($_,$path)=@_;
+	       $config= require $path
+	   },
 	   #"dry-run"=> \$opt_dry,
 	   ) or exit 1;
 usage unless @ARGV==2;
@@ -116,7 +127,9 @@ our $coll= parse_mbox_dir ($sourcedir, $tmp);
 
 our $index= $coll->index;
 
-our $outputjson= Chj::Ml2json::OutputJSON->new;
+our $outputjson= Chj::Ml2json::OutputJSON->new
+  ($$config{jsonfields_orig_headers},
+   $$config{jsonfields_top});
 
 sub allout {
     my $o= xopen_write $targetfile;
