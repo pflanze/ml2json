@@ -44,7 +44,7 @@ sub message_print {
     my $s=shift;
     @_==2 or die;
     my ($m,$index)=@_;
-    $s->print($s->OutputJSON->message_jsondata($m,$index));
+    $s->print($s->OutputJSON->json($m,$index));
 }
 
 _END_

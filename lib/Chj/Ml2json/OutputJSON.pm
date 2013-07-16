@@ -11,7 +11,10 @@ Chj::Ml2json::OutputJSON
 =head1 SYNOPSIS
 
  use Chj::Ml2json::OutputJSON;
- our $outputjson= Chj::Ml2json::OutputJSON->new($jsonheaders);
+ our $outputjson= Chj::Ml2json::OutputJSON->new
+    ($jsonfields_orig_headers, $jsonfields_top);
+ # see comments in source code for an explanation of the two
+ # arguments and their default values
 
 =head1 DESCRIPTION
 
@@ -24,16 +27,39 @@ package Chj::Ml2json::OutputJSON;
 
 use strict;
 
+# List of which fields to output to JSON, at the top level of every
+# message. The first entry is the name of the field in the JSON
+# output, the second is the name of the Chj::Ml2json::OutputJSON
+# method to be called to generate it, the third can be either 0, 1 or
+# 2: 0 means, don't output this field at all (same as if the entry is
+# not present), 1 means, if there is exactly 1 value returned by the
+# method, don't wrap it in an array; 2 means, always wrap in an array
+# (or really, directly output what the method returned).
 
-# List of which email headers to output to JSON.  Headers not present
-# in $whichheaders are ignored.  A mapping to 1 means, if there is
-# exactly 1 such header in the email, don't wrap it in an array; 2
-# means, always wrap in an array.  (0 means, ignore this header, just
-# as if it were not listed here.) The casing as provided here is used
-# as the header names in the JSON output (overriding the casing as
-# provided in the email).
+our $default_jsonfields_top=
+  [
+   ["orig_headers"=> "json_orig_headers", 2],
+   ["message-id"=> "json_message_id",1],
+   [replies=> "json_replies", 2],
+   ["in-reply-to"=> "json_in_reply_to", 1],
+   [unixtime=> "json_unixtime", 1],
+   [ctime_UTC=> "json_ctime_UTC", 1],
+   [orig_plain=> "json_orig_plain", 2],
+   [orig_html=> "json_orig_html", 2],
+   [html=> "json_html", 2],
+   [attachments=> "json_attachments", 2],
+  ];
 
-our $jsonheaders=
+
+# List of which email headers to output to the sub-JSON returned by
+# the json_orig_headers method.  Email headers not present are
+# ignored.  A mapping to 1 means, if there is exactly 1 such header in
+# the email, don't wrap it in an array; 2 means, always wrap in an
+# array.  (0 means, ignore this header, just as if it were not listed
+# here.) The casing as provided here is used as the header names in
+# the JSON output (overriding the casing as provided in the email).
+
+our $default_jsonfields_orig_headers=
   [
    ["Return-Path"=> 1],
    [Received=> 2],
@@ -50,36 +76,55 @@ our $jsonheaders=
    ["User-Agent"=> 1],
   ];
 
-use Chj::Struct ["jsonheaders"];
 
-sub jsonheaders {
+
+use Chj::Struct ["jsonfields_orig_headers", "jsonfields_top"];
+
+sub jsonfields_orig_headers {
     my $s=shift;
-    $$s{jsonheaders} || $jsonheaders
+    $$s{jsonfields_orig_headers} || $default_jsonfields_orig_headers
 }
 
-sub jsonheaders_h {
+sub jsonfields_top {
     my $s=shift;
-    $$s{jsonheaders_h}||= do {
-	+{
-	  map {
-	      my ($k,$v)=@$_;
-	      (lc($k), $_)
-	  } @{$s->jsonheaders}
-	 };
-    }
+    $$s{jsonfields_top} || $default_jsonfields_top
 }
+
+sub Jsonheaders_h_extract {
+    my $s=shift;
+    my ($method)=@_;
+    +{
+      map {
+	  my ($k,$v)=@$_;
+	  (lc($k), $_)
+      } @{$s->$method}
+     }
+}
+
+sub jsonfields_orig_headers_h {
+    my $s=shift;
+    $$s{jsonfields_orig_headers_h}||= $s->Jsonheaders_h_extract("jsonfields_orig_headers");
+}
+
+#sub jsonfields_top_h {
+#    my $s=shift;
+#    $$s{jsonfields_top_h}||= $s->Jsonheaders_h_extract("jsonfields_top");
+#}
+#ehrXX
 
 sub DeArrize ($) {
     my ($v)=@_;
-    @$v == 0 ? undef : (@$v == 1 ? $$v[0] : $v)
+    ref($v) eq "ARRAY" ?
+      (@$v == 0 ? undef : (@$v == 1 ? $$v[0] : $v))
+	: $v
 }
 
-sub message_head_extract {
+sub json_orig_headers {
     my $s=shift;
     my ($m)=@_;
     my $head= $m->ent->head;
     my $h= $head->header_hashref;
-    my $jsonheaders_h= $s->jsonheaders_h;
+    my $jsonheaders_h= $s->jsonfields_orig_headers_h;
     my %res;
     for my $k (keys %$h) {
 	if (my $found= $$jsonheaders_h{lc $k}) {
@@ -105,54 +150,109 @@ use Date::Format 'ctime';
 use Chj::Chomp;
 use URI::file;
 
-sub message_jsondata {
+
+sub json_attachments {
     my $s=shift;
     @_==2 or die;
     my ($m,$index)=@_;
-    my $id= $m->id;
-    my ($orig_plain, $orig_html, $html)=
-      MIME_Entity_origplain_orightml_html ($m->ent);
-    +{
-      orig_headers=> $s->message_head_extract($m),
-      "message-id"=> $id,
-      replies=> $index->sorted_replies($id),
-      #"in-reply-tos"=> $index->inreplytos->{$id},## k?
-      "in-reply-to"=> DeArrize($index->inreplytos->{$id}),
-      unixtime=> $m->unixtime,
-      ctime_UTC=> Chomp(ctime($m->unixtime,0)),
-      orig_plain=> $orig_plain,
-      orig_html=> $orig_html,
-      html=> $html,
-      #"reply_plain": "Message reply if found.", -- ? Doesn't seem
-      #sensible, instead see 'replies'.
-      attachments=>
-      # always present, perhaps empty array.
-      [
-       # 'URL Attachments ' vs: 'With embedded attachments the
-       # attachment content is passed in base-64 encoding to the
-       # content parameter of the attachment'. But why not output
-       # 'path' key instead, in our case?
-       map {
-	   my ($att)=$_;
-	   #local our
-	   my $ent= $att->ent;
-	   #use Chj::repl;repl;
-	   my $path= MIME_Entity_path($ent,$m);
-	   my $uri= URI::file->new($path);
-	   my $filename= basename $path;
-	   +{
-	     #"url": "http://example.com/file1.txt"
-	     #content=>"dGVzdGZpbGU=",
+    [
+     # 'URL Attachments ' vs: 'With embedded attachments the
+     # attachment content is passed in base-64 encoding to the
+     # content parameter of the attachment'. But why not output
+     # 'path' key instead, in our case?
+     map {
+	 my ($att)=$_;
+	 #local our
+	 my $ent= $att->ent;
+	 #use Chj::repl;repl;
+	 my $path= MIME_Entity_path($ent,$m);
+	 my $uri= URI::file->new($path);
+	 my $filename= basename $path;
+	 +{
+	   #"url": "http://example.com/file1.txt"
+	   #content=>"dGVzdGZpbGU=",
 	     # instead:
-	     path=> $path,
-	     url=> $uri->as_string,
-	     "file_name"=> $filename, # not to feed it, just informatively??
-	     "content_type"=> MIME_Entity_maybe_content_type_lc($ent),
-	     "size"=> xstat($path)->size, # bytes, not characters
-	     "disposition"=> $att->disposition, #"attachment" not 'attached', k?
-	    },
-	} @{$m->attachments}
-      ],
+	   path=> $path,
+	   url=> $uri->as_string,
+	   "file_name"=> $filename, # not to feed it, just informatively??
+	   "content_type"=> MIME_Entity_maybe_content_type_lc($ent),
+	   "size"=> xstat($path)->size, # bytes, not characters
+	   "disposition"=> $att->disposition, #"attachment" not 'attached', k?
+	  },
+      } @{$m->attachments}
+    ]
+}
+
+sub json_orig_plain {
+    my $s=shift;
+    @_==2 or die;
+    my ($m,$index)=@_;
+    ($m->origplain_orightml_html)[0]
+}
+
+sub json_orig_html {
+    my $s=shift;
+    @_==2 or die;
+    my ($m,$index)=@_;
+    ($m->origplain_orightml_html)[1]
+}
+
+sub json_html {
+    my $s=shift;
+    @_==2 or die;
+    my ($m,$index)=@_;
+    ($m->origplain_orightml_html)[2]
+}
+
+sub json_message_id {
+    my $s=shift;
+    @_==2 or die;
+    my ($m,$index)=@_;
+    $m->id
+}
+
+sub json_replies {
+    my $s=shift;
+    @_==2 or die;
+    my ($m,$index)=@_;
+    $index->sorted_replies($m->id),
+}
+
+sub json_in_reply_to {
+    my $s=shift;
+    @_==2 or die;
+    my ($m,$index)=@_;
+    $index->inreplytos->{$m->id}
+}
+
+sub json_unixtime {
+    my $s=shift;
+    @_==2 or die;
+    my ($m,$index)=@_;
+    $m->unixtime
+}
+
+sub json_ctime_UTC {
+    my $s=shift;
+    @_==2 or die;
+    my ($m,$index)=@_;
+    Chomp(ctime($m->unixtime,0))
+}
+
+sub json {
+    my $s=shift;
+    @_==2 or die;
+    my ($m,$index)=@_;
+    +{
+      map {
+	  my ($field, $method, $n)=@$_;
+	  if ($n) {
+	      my $v= $s->$method($m,$index);
+	      ($field=> ($n == 1 ? DeArrize ($v) : $v))
+	  } else {
+	      ()
+	  }
+      } @{$s->jsonfields_top}
      }
 }
 
