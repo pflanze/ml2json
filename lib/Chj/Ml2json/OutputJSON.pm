@@ -13,12 +13,32 @@ Chj::Ml2json::OutputJSON
  use Chj::Ml2json::OutputJSON;
  our $outputjson= Chj::Ml2json::OutputJSON->new
     ($jsonfields_orig_headers, $jsonfields_top);
- # see comments in source code for an explanation of the two
- # arguments and their default values
 
 =head1 DESCRIPTION
 
-see Chj::Ml2json::OutputJSON::Continuous
+This allows for customization of the output. If
+$jsonfields_orig_headers or $jsonfields_top are undef, their defaults
+are taken (see source code for those); if they are given, the values
+are used instead.
+
+$jsonfields_orig_headers is an array of [$fieldname, $n].
+$jsonfields_top is an array of [$fieldname, $methodname, $n].
+
+$fieldname is the key used in the JSON output.
+
+$methodname is the name of the Chj::Ml2json::OutputJSON method used to
+generate the value.
+
+If $n is 0, the given entry is ignored just as if it weren't given. If
+$n is 1, then if there is no value for the given field, undef (JSON
+null) is output, if there is one, the value is given as is, if there
+are multiple, they are given in an array. If $n is 2, then an array is
+always output (holding however many values there are, possibly none).
+
+See source code for the $default_jsonfields_top and
+$default_jsonfields_orig_headers.
+
+(Also see Chj::Ml2json::OutputJSON::Continuous.)
 
 =cut
 
