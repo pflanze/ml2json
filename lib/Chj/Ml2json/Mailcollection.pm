@@ -365,7 +365,7 @@ use Chj::FP2::Stream;
 			 my $inreplyto_id= $$index{messageids}{$inreplyto}
 			   || do {
 			       global::warn("unknown message with messageid "
-				  ."'$inreplyto' given in in-reply-to"
+				  ."'$inreplyto' given in in-reply-to "
 				  ."header of ".$m->identify);
 			       $inreplyto
 			   };
