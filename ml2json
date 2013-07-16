@@ -27,7 +27,18 @@ sub usage {
   targetfile is where the JSON output should go (use '-' for stdout).
 
   Options:
+
     --cleanup   delete currently used temp directory at $tmpbase*
+
+    --attachment-basedir path
+                use path instead of a random subdirectory below
+                '$tmpbase' for the output; the output currently
+                contains serialized objects as well, but those don't
+                hurt, do they?
+                If path is absolute, then the url field for
+                attachments is output as file:// URI, if it is
+                relative, it is output as a relative URI (i.e. no
+                file:// prefix).
 
   (Christian Jaeger <$email>)
 ";
@@ -37,9 +48,11 @@ exit (@_ ? 1 : 0);
 use Getopt::Long;
 our $verbose=0;
 #our $opt_dry;
+our $tmp;
 GetOptions("verbose"=> \$verbose,
 	   "help"=> sub{usage},
 	   "cleanup"=> sub { cleanup_tmp(); exit 0; },
+	   "attachment-basedir=s"=> \$tmp,
 	   #"dry-run"=> \$opt_dry,
 	   ) or exit 1;
 usage unless @ARGV==2;
@@ -50,7 +63,7 @@ use Chj::tempdir;
 
 use Chj::xperlfunc ':all';
 
-our $tmp= do {
+$tmp ||= do {
     my $create= sub {
 	my $t= tempdir $tmpbase;
 	xsymlink $t, $tmplink;
