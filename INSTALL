@@ -9,3 +9,5 @@ Debian-derived Linux system using:
 
  apt-get install libmime-tools-perl libmail-box-perl
 
+Or install MIME::Tools and Mail::Box from CPAN.
+
