@@ -24,15 +24,17 @@ package Chj::Ml2json::Debug;
 
 use strict;
 
-sub deidentify ($) { # load mail
-    my $str=shift;
+sub deidentify ($$) { # load mail
+    my ($str,$tmp)=@_;
     Chj::Ml2json::Ghostable->load("$tmp/$str");
 }
 
 use Chj::ruse;
 
+use Chj::FP2::Stream ':all';
+
 sub test_output {
-    my ($fh)=@_;
+    my ($index,$fh)=@_;
     stream_for_each sub {
 	my ($m)=@_;
 	$fh->xprint( $m->id,"\n")
@@ -40,7 +42,7 @@ sub test_output {
 }
 
 sub test_origoutput {
-    my ($fh)=@_;
+    my ($coll,$fh)=@_;
     stream_for_each sub {
 	my ($m)=@_;
 	$fh->xprint( $m->id,"\n")

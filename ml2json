@@ -46,6 +46,15 @@ sub usage {
                    'jsonfields_orig_headers' and 'jsonfields_top'
                 are used. See docs in lib/Chj/Ml2json/OutputJSON.pm
 
+    --deidentify string
+                print message identified by the given string, which is
+                output into the JSON by the json_identify method (as
+                'identify' field by default) or printed along with
+                WARN and ERROR messages.
+                Only works if the generated files are still available.
+                If --attachment-basedir was given before, it has to
+                be specified for --deidentify as well.
+
   (Christian Jaeger <$email>)
 ";
 exit (@_ ? 1 : 0);
@@ -56,6 +65,7 @@ our $verbose=0;
 #our $opt_dry;
 our $tmp;
 our $config;
+our $opt_deidentify;
 GetOptions("verbose"=> \$verbose,
 	   "help"=> sub{usage},
 	   "cleanup"=> sub { cleanup_tmp(); exit 0; },
@@ -64,11 +74,10 @@ GetOptions("verbose"=> \$verbose,
 	       my ($_,$path)=@_;
 	       $config= require $path
 	   },
+	   "deidentify=s"=> \$opt_deidentify,
 	   #"dry-run"=> \$opt_dry,
 	   ) or exit 1;
-usage unless @ARGV==2;
-
-our ($sourcedir, $targetfile)=@ARGV;
+usage unless @ARGV==2 or $opt_deidentify;
 
 use Chj::tempdir;
 
@@ -98,6 +107,19 @@ $tmp ||= do {
     }
 };
 
+
+sub print_deidentify {
+    my ($str)=@_;
+    my $m= Chj::Ml2json::Debug::deidentify($str,$tmp);
+    print $m->ent->as_string
+      or die $!;
+}
+if ($opt_deidentify) {
+    require Chj::Ml2json::Debug;
+    print_deidentify $opt_deidentify;
+    exit 0;
+}
+
 sub cleanup_tmp {
     # partially COPYPASTE..
     if (my $p= readlink( $tmplink)) {
@@ -121,6 +143,8 @@ use Chj::Ml2json::OutputJSON;
 use Chj::Ml2json::OutputJSON::Continuous;
 use Chj::Ml2json::Try;
 use Chj::xopen ':all';
+
+our ($sourcedir, $targetfile)=@ARGV;
 
 #our $coll= parse_mbox ('mbox/foucault-l.mbox.crdownload.1', $tmp);
 our $coll= parse_mbox_dir ($sourcedir, $tmp);
