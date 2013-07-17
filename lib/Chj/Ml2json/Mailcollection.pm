@@ -462,7 +462,10 @@ use Chj::Ml2json::Try;
 use Chj::chompspace;
 
 # date parsing is complicated matters with there being software not
-# creating standard conform formats:
+# creating standard conform formats, especially if there are emails
+# from a time when there perhaps were no standards yet(?) or they were
+# not followed as well as today(?).
+
 use Date::Parse 'str2time';
 use Email::Date 'find_date';
 use Mail::Message::Field::Date;
