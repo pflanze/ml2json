@@ -513,6 +513,14 @@ sub parse_mbox {
 				  my $v= chompspace $_;
 				  if (my $t= str2time ($v)) {
 				      $t
+				  } elsif ($t= str2time (do {
+				      my $v=$v;
+				      # add space before '+' in something like:
+				      # '2 Oct 1994 05:27:32+1000'
+				      $v=~ s|\+| +|;
+				      $v
+				  })) {
+				      $t
 				  } elsif (my $t2=Mail::Message::Field::Date->new
 					   ->parse($v)) {
 				      $t2->time;
