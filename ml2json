@@ -67,14 +67,14 @@ exit (@_ ? 1 : 0);
 use Getopt::Long;
 our $verbose=0;
 #our $opt_dry;
-our $tmp;
 our $config;
 our $opt_deidentify;
 our $opt_show_mbox_path;
+our $opt_attachment_basedir;
 GetOptions("verbose"=> \$verbose,
 	   "help"=> sub{usage},
 	   "cleanup"=> sub { cleanup_tmp(); exit 0; },
-	   "attachment-basedir=s"=> \$tmp,
+	   "attachment-basedir=s"=> \$opt_attachment_basedir,
 	   "config=s"=> sub {
 	       my ($_,$path)=@_;
 	       $config= require $path
@@ -89,7 +89,7 @@ use Chj::tempdir;
 
 use Chj::xperlfunc ':all';
 
-$tmp ||= do {
+our $tmp= $opt_attachment_basedir || do {
     my $create= sub {
 	my $t= tempdir $tmpbase;
 	xsymlink $t, $tmplink;
@@ -138,18 +138,23 @@ if ($opt_show_mbox_path) {
 }
 
 sub cleanup_tmp {
-    # partially COPYPASTE..
-    if (my $p= readlink( $tmplink)) {
-	if (my $s= Xstat $p) {
-	    if ($s->uid == $>) {
-		$p=~ m|^/| or die "not an absolute target location: '$p'";
-		unlink $tmplink;
-		system ("rm", "-rf", "--", $p)==0 or die "rm -rf '$p' failed";
+    if ($opt_attachment_basedir) {
+	my $p= $opt_attachment_basedir;
+	system ("rm", "-rf", "--", $p)==0 or die "rm -rf '$p' failed";
+    } else {
+	# partially COPYPASTE..
+	if (my $p= readlink( $tmplink)) {
+	    if (my $s= Xstat $p) {
+		if ($s->uid == $>) {
+		    $p=~ m|^/| or die "not an absolute target location: '$p'";
+		    unlink $tmplink;
+		    system ("rm", "-rf", "--", $p)==0 or die "rm -rf '$p' failed";
+		} else {
+		    warn "directory pointed to by '$tmplink' ('$p') is owned by somebody else";
+		}
 	    } else {
-		warn "directory pointed to by '$tmplink' ('$p') is owned by somebody else";
+		xunlink $tmplink;
 	    }
-	} else {
-	    xunlink $tmplink;
 	}
     }
 }
