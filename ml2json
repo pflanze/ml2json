@@ -89,6 +89,8 @@ use Chj::tempdir;
 
 use Chj::xperlfunc ':all';
 
+mkdir $opt_attachment_basedir if $opt_attachment_basedir;
+
 our $tmp= $opt_attachment_basedir || do {
     my $create= sub {
 	my $t= tempdir $tmpbase;
