@@ -27,5 +27,6 @@
    [orig_html=> "json_orig_html", 2],
    [html=> "json_html", 2],
    [attachments=> "json_attachments", 2],
+   [identify=> "json_identify",1],
   ]
  }
