@@ -23,10 +23,11 @@ package Chj::Array::Util;
 %EXPORT_TAGS=(all=>[@EXPORT,@EXPORT_OK]);
 
 use strict;
+use Carp;
 
 sub array_xone ($) {
     my ($a)=@_;
-    @$a==1 or die "expecting 1 element, got ".@$a;
+    @$a==1 or croak "expecting 1 element, got ".@$a;
     $$a[0]
 }
 
