@@ -1,0 +1,31 @@
+#!/usr/bin/perl -w
+
+use strict;
+
+my ($mydir, $myname);
+BEGIN {
+    $0=~ /(.*?)([^\/]+)\z/s or die "?";
+    ($mydir, $myname)=($1,$2);
+}
+use lib "$mydir/perllib";
+use lib "$mydir/ftemplate/lib";
+use lib "$mydir/lib";
+use Chj::Ml2json::OutputJSON;
+
+open OUT, ">example_config.pl";
+
+use Data::Dumper;
+my $str= Dumper
+  (
+   +{
+     jsonfields_top=>
+     $Chj::Ml2json::OutputJSON::default_jsonfields_top,
+     jsonfields_orig_headers=>
+     $Chj::Ml2json::OutputJSON::default_jsonfields_orig_headers,
+    }
+  );
+$str=~ s|.VAR..= |+|;
+
+print OUT $str;
+close OUT or die;
+
