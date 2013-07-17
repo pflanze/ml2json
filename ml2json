@@ -19,10 +19,11 @@ our $tmplink= "$ENV{HOME}/.$myname-tmp"; ## ok to use that path?
 
 sub usage {
     print STDERR map{"$_\n"} @_ if @_;
-    print "$myname sourcedir targetfile
+    print "$myname sourcedir-or-file targetfile
 
   sourcedir should be a directory with *.mbox files directly in it
   ($myname does not currently recurse into subdirectories).
+  If a file is given instead, it is assumed to be an mbox file.
 
   targetfile is where the JSON output should go (use '-' for stdout).
 
@@ -172,10 +173,10 @@ use Chj::Ml2json::Try;
 use Chj::xopen ':all';
 
 sub parse_and_convert {
-    my ($sourcedir, $targetfile)=@ARGV;
+    my ($sourcepath, $targetfile)=@ARGV;
 
-    #my $coll= parse_mbox ('mbox/foucault-l.mbox.crdownload.1', $tmp);
-    my $coll= parse_mbox_dir ($sourcedir, $tmp);
+    my $coll= (-f $sourcepath ? parse_mbox ($sourcepath, $tmp)->resurrect
+	       : parse_mbox_dir ($sourcepath, $tmp));
 
     my $index= $coll->index;
 
