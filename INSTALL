@@ -7,7 +7,7 @@ Github repositories).
 The other non-standard dependencies can be installed on a
 Debian-derived Linux system using:
 
- apt-get install libmime-tools-perl libmail-box-perl
+ apt-get install libmime-tools-perl libmail-box-perl libemail-date-perl
 
-Or install MIME::Tools and Mail::Box from CPAN.
+Or install MIME::Tools, Mail::Box and Email::Date from CPAN.
 

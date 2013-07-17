@@ -457,7 +457,7 @@ use Chj::Ml2json::Mbox;
 use Chj::xperlfunc ();
 use MIME::Parser;
 use Digest::MD5 'md5_hex';
-use Date::Parse 'str2time';
+use Email::Date 'find_date';
 use Chj::FP::ArrayUtil ':all';
 use Chj::Ml2json::Try;
 use Chj::chompspace;
@@ -493,27 +493,16 @@ sub parse_mbox {
 			     (lc($_)=> $$h_orig{$_})
 			 } keys %$h_orig
 			};
-		# There are really messages with multiple Date
-		# headers, too; use the *oldest* one:
-		my @unixtimes=
-		  map {
-		      my $v= chompspace $_;
-		      if (my $t= str2time ($v)) {
-			  $t
-		      } else {
-			  global::warn "unparseable Date header '$v' in: '$mboxpath' $n";
-			  0
-		      }
-		  } @{$$h{date}||[]};
+		
 		my $unixtime= do {
-		    if (@unixtimes) {
-			my $first= shift @unixtimes;
-			Array_fold(\&min, $first, \@unixtimes)
+		    if (my $date= find_date($ent)) {
+			$date->epoch;
 		    } else {
-			global::warn "missing Date header in: '$mboxpath' $n";
+			global::warn "cannot extract date from: '$mboxpath' $n";
 			0
 		    }
 		};
+
 		push @msgghost,
 		  Chj::Ml2json::Mailcollection::Message->new($ent,
 							     $h,
