@@ -495,8 +495,20 @@ sub parse_mbox {
 			};
 		
 		my $unixtime= do {
+		    my $now= time;
 		    if (my $date= find_date($ent)) {
-			$date->epoch;
+			my $t= $date->epoch;
+			my $now2= time;
+			if ($now <= $t and $t <= $now2) {
+			    global::warn "seems Email::Date could not extract date from: '$mboxpath' $n";
+			    # want to use something to better
+			    # represent the failure, and not distort
+			    # the normal thread sorting (which looks
+			    # at the newest message in a thread)
+			    0
+			} else {
+			    $t
+			}
 		    } else {
 			global::warn "cannot extract date from: '$mboxpath' $n";
 			0
