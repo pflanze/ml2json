@@ -30,6 +30,8 @@ package Chj::Ml2json::MIMEExtract;
 
 use strict;
 
+use Chj::Ml2json::Try (); # global::warn
+
 sub MIME_Entity_all_parts {
     my $s=shift;
     if (my @parts = $s->parts) {
