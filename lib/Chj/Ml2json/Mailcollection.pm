@@ -455,16 +455,17 @@ our %EXPORT_TAGS=(all=>[@EXPORT,@EXPORT_OK]);
 use Chj::Ml2json::Mbox;
 use Chj::xperlfunc ();
 use MIME::Parser;
-use Digest::MD5 ();
-use Date::Parse ();
-use Chj::Array::Util;
+use Digest::MD5 'md5_hex';
+use Date::Parse 'str2time';
+use Chj::FP::ArrayUtil ':all';
 use Chj::Ml2json::Try;
+use Chj::chompspace;
 
 sub parse_mbox {
     @_==2 or die;
     my ($mboxpath,$tmp)=@_;
 
-    my $mboxpathhash= Digest::MD5::md5_hex($mboxpath);
+    my $mboxpathhash= md5_hex($mboxpath);
     my $mboxtargetbase= "$tmp/$mboxpathhash";
 
     my $Do= sub {
@@ -491,10 +492,27 @@ sub parse_mbox {
 			     (lc($_)=> $$h_orig{$_})
 			 } keys %$h_orig
 			};
-		my $unixtime=
-		  Date::Parse::str2time
-		      (Chj::Array::Util::array_xone
-		       ($$h{date} || die "missing Date header: '$mboxpath' $n"));
+		# There are really messages with multiple Date
+		# headers, too; use the *oldest* one:
+		my @unixtimes=
+		  map {
+		      my $v= chompspace $_;
+		      if (my $t= str2time ($v)) {
+			  $t
+		      } else {
+			  global::warn "unparseable Date header '$v' in: '$mboxpath' $n";
+			  0
+		      }
+		  } @{$$h{date}||[]};
+		my $unixtime= do {
+		    if (@unixtimes) {
+			my $first= shift @unixtimes;
+			Array_fold(\&min, $first, \@unixtimes)
+		    } else {
+			global::warn "missing Date header in: '$mboxpath' $n";
+			0
+		    }
+		};
 		push @msgghost,
 		  Chj::Ml2json::Mailcollection::Message->new($ent,
 							     $h,
