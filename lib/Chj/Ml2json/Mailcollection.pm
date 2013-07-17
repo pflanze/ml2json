@@ -553,7 +553,7 @@ sub parse_mbox {
 							     $mboxpathhash,
 							     $n)
 		      ->ghost($targetdir);
-	    } "'$mboxpath' #$n";
+	    } "'$mboxpath', $mboxpathhash/$n";
 	    $n++;
 	}
 	Chj::Ml2json::Mailcollection::Mbox->new(\@msgghost,$mboxpath)
