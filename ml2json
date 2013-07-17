@@ -55,6 +55,10 @@ sub usage {
                 If --attachment-basedir was given before, it has to
                 be specified for --deidentify as well.
 
+    --show-mbox-path md5hexstring[/number]
+                show path of original mbox file for a given mbox identifier
+                (as they are used in identify strings).
+
   (Christian Jaeger <$email>)
 ";
 exit (@_ ? 1 : 0);
@@ -66,6 +70,7 @@ our $verbose=0;
 our $tmp;
 our $config;
 our $opt_deidentify;
+our $opt_show_mbox_path;
 GetOptions("verbose"=> \$verbose,
 	   "help"=> sub{usage},
 	   "cleanup"=> sub { cleanup_tmp(); exit 0; },
@@ -75,9 +80,10 @@ GetOptions("verbose"=> \$verbose,
 	       $config= require $path
 	   },
 	   "deidentify=s"=> \$opt_deidentify,
+	   "show-mbox-path=s"=> \$opt_show_mbox_path,
 	   #"dry-run"=> \$opt_dry,
 	   ) or exit 1;
-usage unless @ARGV==2 or $opt_deidentify;
+usage unless @ARGV==2 or $opt_deidentify or $opt_show_mbox_path;
 
 use Chj::tempdir;
 
@@ -117,7 +123,18 @@ sub print_deidentify {
 if ($opt_deidentify) {
     require Chj::Ml2json::Debug;
     print_deidentify $opt_deidentify;
-    exit 0;
+}
+
+if ($opt_show_mbox_path) {
+    my ($md5)= $opt_show_mbox_path=~ /\b([a-f0-9]{32})\b/
+      or usage "does not contain an md5 hex string: '$opt_show_mbox_path'";
+    my $p="$tmp/$md5";
+    my $mbox= Chj::Ml2json::Ghostable->load($p);
+    if (my $path= $mbox->path) {
+	print $path or die $!;
+    } else {
+	die "The object stored at '$p' does not have path field, seems to have been generated before adding this feature; run --cleanup and run the conversion again";
+    }
 }
 
 sub cleanup_tmp {
@@ -144,33 +161,39 @@ use Chj::Ml2json::OutputJSON::Continuous;
 use Chj::Ml2json::Try;
 use Chj::xopen ':all';
 
-our ($sourcedir, $targetfile)=@ARGV;
+sub parse_and_convert {
+    my ($sourcedir, $targetfile)=@ARGV;
 
-#our $coll= parse_mbox ('mbox/foucault-l.mbox.crdownload.1', $tmp);
-our $coll= parse_mbox_dir ($sourcedir, $tmp);
+    #my $coll= parse_mbox ('mbox/foucault-l.mbox.crdownload.1', $tmp);
+    my $coll= parse_mbox_dir ($sourcedir, $tmp);
 
-our $index= $coll->index;
+    my $index= $coll->index;
 
-our $outputjson= Chj::Ml2json::OutputJSON->new
-  ($$config{jsonfields_orig_headers},
-   $$config{jsonfields_top});
+    my $outputjson= Chj::Ml2json::OutputJSON->new
+      ($$config{jsonfields_orig_headers},
+       $$config{jsonfields_top});
 
-sub allout {
-    my $o= xopen_write $targetfile;
-    binmode $o, ":utf8" or die;
-    my $json= Chj::Ml2json::OutputJSON::Continuous->new($o,$outputjson);
-    stream_for_each sub {
-	my ($m)=@_;
-	Try {
-	    $json->message_print($m,$index);
-	} $m;
-    }, $index->messages_threadsorted;
-    $json->end;
-    $o->xclose;
+    my $allout= sub {
+	my $o= xopen_write $targetfile;
+	binmode $o, ":utf8" or die;
+	my $json= Chj::Ml2json::OutputJSON::Continuous->new($o,$outputjson);
+	stream_for_each sub {
+	    my ($m)=@_;
+	    Try {
+		$json->message_print($m,$index);
+	    } $m;
+	}, $index->messages_threadsorted;
+	$json->end;
+	$o->xclose;
+    };
+
+    &$allout;
 }
+
 
 #use Chj::Ml2json::Debug;
 #use Chj::Ml2json::MIMEExtract ':all';
 use Chj::Backtrace;
 #use Chj::repl; repl;
-allout;
+
+parse_and_convert if @ARGV;

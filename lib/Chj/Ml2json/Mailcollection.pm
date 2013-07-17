@@ -389,7 +389,7 @@ use Chj::FP2::Stream;
 
 {
     package Chj::Ml2json::Mailcollection::Mbox;
-    use Chj::Struct ["messages"], 'Chj::Ml2json::Mailcollection::Container';
+    use Chj::Struct ["messages","path"], 'Chj::Ml2json::Mailcollection::Container';
     ## ^ really messageghosts, sgh.
 
     sub messages {
@@ -505,7 +505,8 @@ sub parse_mbox {
 	    } "'$mboxpath' #$n";
 	    $n++;
 	}
-	Chj::Ml2json::Mailcollection::Mbox->new(\@msgghost)->ghost($mboxtargetbase);
+	Chj::Ml2json::Mailcollection::Mbox->new(\@msgghost,$mboxpath)
+	    ->ghost($mboxtargetbase);
     };
 
     my $mbox_stat= Chj::xperlfunc::xlstat $mboxpath;
