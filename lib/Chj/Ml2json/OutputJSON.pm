@@ -68,6 +68,7 @@ our $default_jsonfields_top=
    [orig_html=> "json_orig_html", 2],
    [html=> "json_html", 2],
    [attachments=> "json_attachments", 2],
+   [identify=> "json_identify",1],
   ];
 
 
@@ -257,6 +258,13 @@ sub json_ctime_UTC {
     @_==2 or die;
     my ($m,$index)=@_;
     Chomp(ctime($m->unixtime,0))
+}
+
+sub json_identify {
+    my $s=shift;
+    @_==2 or die;
+    my ($m,$index)=@_;
+    $m->identify
 }
 
 sub json {
