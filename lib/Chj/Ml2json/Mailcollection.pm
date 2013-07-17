@@ -341,8 +341,9 @@ use Chj::FP2::Stream;
 		     my $id= $m->id;
 		     my $t= $m->unixtime;
 		     for my $messageid (@{$m->messageids}) {
-			 if (my $formermg= $$index{messageids}{$messageid}) {
-			     my $formerm= $formermg->resurrect;
+			 if (my $former_id= $$index{messageids}{$messageid}) {
+			     my ($former_t,$former_mg)= @{$$index{ids}{$former_id}};
+			     my $formerm= $former_mg->resurrect;
 			     global::warn ("multiple messages using message-id"
 				   ." '$messageid': previously "
 				   .$formerm->identify.", now ".$m->identify
