@@ -89,29 +89,32 @@ use Chj::tempdir;
 
 use Chj::xperlfunc ':all';
 
-mkdir $opt_attachment_basedir if $opt_attachment_basedir;
-
-our $tmp= $opt_attachment_basedir || do {
-    my $create= sub {
-	my $t= tempdir $tmpbase;
-	xsymlink $t, $tmplink;
-	$t
-    };
-    if (my $p= readlink( $tmplink)) {
-	if (my $s= Xstat $p) {
-	    if ($s->uid == $>) {
-		$p
+our $tmp= do {
+    if ($opt_attachment_basedir) {
+	xmkdir $opt_attachment_basedir if not -d $opt_attachment_basedir;
+	$opt_attachment_basedir
+    } else {
+	my $create= sub {
+	    my $t= tempdir $tmpbase;
+	    xsymlink $t, $tmplink;
+	    $t
+	};
+	if (my $p= readlink( $tmplink)) {
+	    if (my $s= Xstat $p) {
+		if ($s->uid == $>) {
+		    $p
+		} else {
+		    warn "directory pointed to by '$tmplink' ('$p') is owned by somebody else, creating a new one instead";
+		    xunlink $tmplink;
+		    &$create;
+		}
 	    } else {
-		warn "directory pointed to by '$tmplink' ('$p') is owned by somebody else, creating a new one instead";
 		xunlink $tmplink;
 		&$create;
 	    }
 	} else {
-	    xunlink $tmplink;
 	    &$create;
 	}
-    } else {
-	&$create;
     }
 };
 
