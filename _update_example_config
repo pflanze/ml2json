@@ -14,18 +14,18 @@ use Chj::Ml2json::OutputJSON;
 
 open OUT, ">example_config.pl";
 
-use Data::Dumper;
-my $str= Dumper
-  (
-   +{
-     jsonfields_top=>
-     $Chj::Ml2json::OutputJSON::default_jsonfields_top,
-     jsonfields_orig_headers=>
-     $Chj::Ml2json::OutputJSON::default_jsonfields_orig_headers,
-    }
-  );
-$str=~ s|.VAR..= |+|;
+my $val=
+  +{
+    jsonfields_top=>
+    $Chj::Ml2json::OutputJSON::default_jsonfields_top,
+    jsonfields_orig_headers=>
+    $Chj::Ml2json::OutputJSON::default_jsonfields_orig_headers,
+   };
+#use Data::Dumper;
+#my $str= Dumper($val);
+#$str=~ s|.VAR..= |+|;
 
-print OUT $str;
+use JSON;
+print OUT to_json ($val, {pretty=>1});
 close OUT or die;
 
