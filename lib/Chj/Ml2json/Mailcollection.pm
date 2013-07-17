@@ -457,10 +457,15 @@ use Chj::Ml2json::Mbox;
 use Chj::xperlfunc ();
 use MIME::Parser;
 use Digest::MD5 'md5_hex';
-use Email::Date 'find_date';
 use Chj::FP::ArrayUtil ':all';
 use Chj::Ml2json::Try;
 use Chj::chompspace;
+
+# date parsing is complicated matters with there being software not
+# creating standard conform formats:
+use Date::Parse 'str2time';
+use Email::Date 'find_date';
+use Mail::Message::Field::Date;
 
 sub parse_mbox {
     @_==2 or die;
@@ -500,12 +505,30 @@ sub parse_mbox {
 			my $t= $date->epoch;
 			my $now2= time;
 			if ($now <= $t and $t <= $now2) {
-			    global::warn "seems Email::Date could not extract date from: '$mboxpath' $n";
-			    # want to use something to better
-			    # represent the failure, and not distort
-			    # the normal thread sorting (which looks
-			    # at the newest message in a thread)
-			    0
+			    global::warn "seems Email::Date could not extract date from:"
+				." '$mboxpath' $n";
+			    # get the oldest of all parseable Date headers:
+			    my @unixtimes=
+			      map {
+				  my $v= chompspace $_;
+				  if (my $t= str2time ($v)) {
+				      $t
+				  } elsif (my $t2=Mail::Message::Field::Date->new
+					   ->parse($v)) {
+				      $t2->time;
+				  } else {
+				      global::warn "unparseable Date header '$v' in: "
+					  ."'$mboxpath' $n";
+				      ()
+				  }
+			      } @{$$h{date}||[]};
+			    if (@unixtimes) {
+				my $first= shift @unixtimes;
+				Array_fold(\&min, $first, \@unixtimes)
+			    } else {
+				global::warn "cannot extract date from: '$mboxpath' $n";
+				0
+			    }
 			} else {
 			    $t
 			}
