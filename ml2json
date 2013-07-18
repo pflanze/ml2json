@@ -47,6 +47,17 @@ sub usage {
                    'jsonfields_orig_headers' and 'jsonfields_top'
                 are used. See docs in lib/Chj/Ml2json/OutputJSON.pm
 
+
+    --max-date-deviation seconds
+                When mbox separators (lines starting with 'From ')
+                contain time stamps, and those deviate more than
+                <seconds> from the Date header contained in the mail
+                (of if there is no Date header in the mail), use the
+                mbox time stamp instead. Default: off.  Note: mbox
+                time stamps are not necessarily representing the time
+                when an email was received, could also be when they
+                were copied around.
+
     --deidentify string
                 print message identified by the given string, which is
                 output into the JSON by the json_identify method (as
@@ -72,6 +83,7 @@ our $config;
 our $opt_deidentify;
 our $opt_show_mbox_path;
 our $opt_attachment_basedir;
+our $opt_max_date_deviation;
 our $opt_repl;
 GetOptions("verbose"=> \$verbose,
 	   "repl"=> \$opt_repl,
@@ -82,6 +94,7 @@ GetOptions("verbose"=> \$verbose,
 	       my ($_,$path)=@_;
 	       $config= require $path
 	   },
+	   "max-date-deviation=n"=> \$opt_max_date_deviation,
 	   "deidentify=s"=> \$opt_deidentify,
 	   "show-mbox-path=s"=> \$opt_show_mbox_path,
 	   #"dry-run"=> \$opt_dry,
@@ -177,8 +190,9 @@ use Chj::xopen ':all';
 sub parse_and_convert {
     my ($sourcepath, $targetfile)=@ARGV;
 
-    my $coll= (-f $sourcepath ? parse_mbox ($sourcepath, $tmp)->resurrect
-	       : parse_mbox_dir ($sourcepath, $tmp));
+    my $coll= (-f $sourcepath ?
+	       parse_mbox ($sourcepath, $tmp, $opt_max_date_deviation)->resurrect
+	       : parse_mbox_dir ($sourcepath, $tmp, $opt_max_date_deviation));
 
     my $index= $coll->index;
 

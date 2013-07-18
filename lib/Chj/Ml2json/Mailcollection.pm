@@ -22,9 +22,6 @@ package Chj::Ml2json::Mailcollection;
 
 use strict;
 
-our $max_Date_deviation= 24*60*60; # seconds max allowed deviation
-                                   # between Date header and mbox time
-
 # -----------------------------------------------------------------------
 # classes
 
@@ -474,8 +471,10 @@ use Mail::Message::Field::Date;
 use Chj::Parse::Mbox 'mbox_stream_open';
 
 sub parse_mbox {
-    @_==2 or die;
-    my ($mboxpath,$tmp)=@_;
+    @_==3 or die;
+    my ($mboxpath,$tmp, $maybe_max_date_deviation)=@_;
+    # $maybe_max_date_deviation: seconds max allowed deviation between
+    # Date header and mbox time
 
     my $mboxpathhash= md5_hex($mboxpath);
     my $mboxtargetbase= "$tmp/$mboxpathhash";
@@ -557,9 +556,9 @@ sub parse_mbox {
 		      };
 
 		      if ($unixtime) {
-			  if ($maybe_t and defined $max_Date_deviation) {
+			  if ($maybe_t and defined $maybe_max_date_deviation) {
 			      my $t= $maybe_t;
-			      if (abs($unixtime - $t) > $max_Date_deviation) {
+			      if (abs($unixtime - $t) > $maybe_max_date_deviation) {
 				  global::warn "parsed Date (".localtime($unixtime)
 				      .") deviates too much from mbox time record (".
 					localtime($t)."), using the latter instead";
@@ -596,13 +595,13 @@ sub parse_mbox {
 }
 
 sub parse_mbox_dir {
-    @_==2 or die;
-    my ($dirpath,$tmp)=@_;
+    @_==3 or die;
+    my ($dirpath,$tmp,$maybe_max_date_deviation)=@_;
     # don't currently go into subdirectories of $dirpath
     Chj::Ml2json::Mailcollection::Directory
 	->new([
 	       map {
-		   parse_mbox($_,$tmp)
+		   parse_mbox($_,$tmp,$maybe_max_date_deviation)
 	       } glob quotemeta($dirpath)."/*.mbox"
 	      ]);
 }
