@@ -503,6 +503,38 @@ sub parse_mbox {
 			};
 		
 		my $unixtime= do {
+		    my $fallback= sub {
+			# get the oldest of all parseable Date headers:
+			my @unixtimes=
+			  map {
+			      my $v= chompspace $_;
+			      if (my $t= str2time ($v)) {
+				  $t
+			      } elsif ($t= str2time (do {
+				  my $v=$v;
+				  # add space before '+' or '-' in something like:
+				  # '2 Oct 1994 05:27:32+1000'
+				  $v=~ s|([+-])| $1|;
+				  $v
+			      })) {
+				  $t
+			      } elsif (my $t2=Mail::Message::Field::Date->new
+				       ->parse($v)) {
+				  $t2->time;
+			      } else {
+				  global::warn "unparseable Date header '$v' in: "
+				      ."'$mboxpath' $n";
+				  ()
+			      }
+			  } @{$$h{date}||[]};
+			if (@unixtimes) {
+			    my $first= shift @unixtimes;
+			    Array_fold(\&min, $first, \@unixtimes)
+			} else {
+			    global::warn "cannot extract date from: '$mboxpath' $n";
+			    0
+			}
+		    };
 		    my $now= time;
 		    if (my $date= find_date($ent)) {
 			my $t= $date->epoch;
@@ -510,42 +542,12 @@ sub parse_mbox {
 			if ($now <= $t and $t <= $now2) {
 			    global::warn "seems Email::Date could not extract date from:"
 				." '$mboxpath' $n";
-			    # get the oldest of all parseable Date headers:
-			    my @unixtimes=
-			      map {
-				  my $v= chompspace $_;
-				  if (my $t= str2time ($v)) {
-				      $t
-				  } elsif ($t= str2time (do {
-				      my $v=$v;
-				      # add space before '+' or '-' in something like:
-				      # '2 Oct 1994 05:27:32+1000'
-				      $v=~ s|([+-])| $1|;
-				      $v
-				  })) {
-				      $t
-				  } elsif (my $t2=Mail::Message::Field::Date->new
-					   ->parse($v)) {
-				      $t2->time;
-				  } else {
-				      global::warn "unparseable Date header '$v' in: "
-					  ."'$mboxpath' $n";
-				      ()
-				  }
-			      } @{$$h{date}||[]};
-			    if (@unixtimes) {
-				my $first= shift @unixtimes;
-				Array_fold(\&min, $first, \@unixtimes)
-			    } else {
-				global::warn "cannot extract date from: '$mboxpath' $n";
-				0
-			    }
+			    &$fallback
 			} else {
 			    $t
 			}
 		    } else {
-			global::warn "cannot extract date from: '$mboxpath' $n";
-			0
+			&$fallback
 		    }
 		};
 
