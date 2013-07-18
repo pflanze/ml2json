@@ -22,6 +22,9 @@ package Chj::Ml2json::Mailcollection;
 
 use strict;
 
+our $max_Date_deviation= 24*60*60; # seconds max allowed deviation
+                                   # between Date header and mbox time
+
 # -----------------------------------------------------------------------
 # classes
 
@@ -552,6 +555,20 @@ sub parse_mbox {
 			      &$fallback
 			  }
 		      };
+
+		      if ($unixtime) {
+			  if ($maybe_t and defined $max_Date_deviation) {
+			      my $t= $maybe_t;
+			      if (abs($unixtime - $t) > $max_Date_deviation) {
+				  global::warn "parsed Date (".localtime($unixtime)
+				      .") deviates too much from mbox time record (".
+					localtime($t)."), using the latter instead";
+				  $unixtime= $t;
+			      }
+			  }
+		      } else {
+			  $unixtime= $maybe_t || 0;
+		      }
 
 		      Chj::Ml2json::Mailcollection::Message->new($ent,
 								 $h,
