@@ -72,7 +72,9 @@ our $config;
 our $opt_deidentify;
 our $opt_show_mbox_path;
 our $opt_attachment_basedir;
+our $opt_repl;
 GetOptions("verbose"=> \$verbose,
+	   "repl"=> \$opt_repl,
 	   "help"=> sub{usage},
 	   "cleanup"=> sub { cleanup_tmp(); exit 0; },
 	   "attachment-basedir=s"=> \$opt_attachment_basedir,
@@ -84,7 +86,7 @@ GetOptions("verbose"=> \$verbose,
 	   "show-mbox-path=s"=> \$opt_show_mbox_path,
 	   #"dry-run"=> \$opt_dry,
 	   ) or exit 1;
-usage unless @ARGV==2 or $opt_deidentify or $opt_show_mbox_path;
+usage unless @ARGV==2 or $opt_deidentify or $opt_show_mbox_path or $opt_repl;
 
 use Chj::tempdir;
 
@@ -202,9 +204,11 @@ sub parse_and_convert {
 }
 
 
-#use Chj::Ml2json::Debug;
-#use Chj::Ml2json::MIMEExtract ':all';
 use Chj::Backtrace;
-#use Chj::repl; repl;
-
-parse_and_convert if @ARGV;
+if ($opt_repl) {
+    #use Chj::Ml2json::Debug;
+    #use Chj::Ml2json::MIMEExtract ':all';
+    require Chj::repl; Chj::repl::repl();
+} else {
+    parse_and_convert if @ARGV;
+}
