@@ -518,9 +518,9 @@ sub parse_mbox {
 				      $t
 				  } elsif ($t= str2time (do {
 				      my $v=$v;
-				      # add space before '+' in something like:
+				      # add space before '+' or '-' in something like:
 				      # '2 Oct 1994 05:27:32+1000'
-				      $v=~ s|\+| +|;
+				      $v=~ s|([+-])| $1|;
 				      $v
 				  })) {
 				      $t
