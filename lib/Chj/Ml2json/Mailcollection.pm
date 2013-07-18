@@ -453,7 +453,6 @@ our @EXPORT_OK= qw(
 our %EXPORT_TAGS=(all=>[@EXPORT,@EXPORT_OK]);
 
 
-use Chj::Ml2json::Mbox;
 use Chj::xperlfunc ();
 use MIME::Parser;
 use Digest::MD5 'md5_hex';
@@ -469,6 +468,7 @@ use Chj::chompspace;
 use Date::Parse 'str2time';
 use Email::Date 'find_date';
 use Mail::Message::Field::Date;
+use Chj::Parse::Mbox 'mbox_stream_open';
 
 sub parse_mbox {
     @_==2 or die;
@@ -480,88 +480,87 @@ sub parse_mbox {
     my $Do= sub {
 	mkdir $mboxtargetbase;
 
-	my $box = Chj::Ml2json::Mbox->new($mboxpath);
+	my $msgs = mbox_stream_open($mboxpath);
 
 	my $n=0;
-	my @msgghost;
-	## build up threads already? any other index?
-	while ( my ($mail) = $box->next_message ) {
+	my $msgghosts=
+	  stream_map sub {
+	      my ($i,$v)= @{$_[0]};
+	      my ($maybe_t,$lines)=@$v;
 
-	    Try {
-		my $targetdir= "$mboxtargetbase/$n";
-		mkdir $targetdir;
+	      Try {
+		  my $targetdir= "$mboxtargetbase/$i";
+		  mkdir $targetdir;
 
-		my $parser = new MIME::Parser;
-		$parser->output_dir($targetdir);
-		my $ent= $parser->parse_data($mail);
-		my $head=$ent->head;
-		my $h_orig= $head->header_hashref;
-		my $h= +{
-			 map {
-			     (lc($_)=> $$h_orig{$_})
-			 } keys %$h_orig
-			};
+		  my $parser = new MIME::Parser;
+		  $parser->output_dir($targetdir);
+		  my $ent= $parser->parse_data(join("",@$lines));
+		  my $head=$ent->head;
+		  my $h_orig= $head->header_hashref;
+		  my $h= +{
+			   map {
+			       (lc($_)=> $$h_orig{$_})
+			   } keys %$h_orig
+			  };
 		
-		my $unixtime= do {
-		    my $fallback= sub {
-			# get the oldest of all parseable Date headers:
-			my @unixtimes=
-			  map {
-			      my $v= chompspace $_;
-			      if (my $t= str2time ($v)) {
-				  $t
-			      } elsif ($t= str2time (do {
-				  my $v=$v;
-				  # add space before '+' or '-' in something like:
-				  # '2 Oct 1994 05:27:32+1000'
-				  $v=~ s|([+-])| $1|;
-				  $v
-			      })) {
-				  $t
-			      } elsif (my $t2=Mail::Message::Field::Date->new
-				       ->parse($v)) {
-				  $t2->time;
-			      } else {
-				  global::warn "unparseable Date header '$v' in: "
-				      ."'$mboxpath' $n";
-				  ()
-			      }
-			  } @{$$h{date}||[]};
-			if (@unixtimes) {
-			    my $first= shift @unixtimes;
-			    Array_fold(\&min, $first, \@unixtimes)
-			} else {
-			    global::warn "cannot extract date from: '$mboxpath' $n";
-			    0
-			}
-		    };
-		    my $now= time;
-		    if (my $date= find_date($ent)) {
-			my $t= $date->epoch;
-			my $now2= time;
-			if ($now <= $t and $t <= $now2) {
-			    global::warn "seems Email::Date could not extract date from:"
-				." '$mboxpath' $n";
-			    &$fallback
-			} else {
-			    $t
-			}
-		    } else {
-			&$fallback
-		    }
-		};
+		  my $unixtime= do {
+		      my $fallback= sub {
+			  # get the oldest of all parseable Date headers:
+			  my @unixtimes=
+			    map {
+				my $v= chompspace $_;
+				if (my $t= str2time ($v)) {
+				    $t
+				} elsif ($t= str2time (do {
+				    my $v=$v;
+				    # add space before '+' or '-' in something like:
+				    # '2 Oct 1994 05:27:32+1000'
+				    $v=~ s|([+-])| $1|;
+				    $v
+				})) {
+				    $t
+				} elsif (my $t2=Mail::Message::Field::Date->new
+					 ->parse($v)) {
+				    $t2->time;
+				} else {
+				    global::warn "unparseable Date header '$v' in: "
+					."'$mboxpath' $i";
+				    ()
+				}
+			    } @{$$h{date}||[]};
+			  if (@unixtimes) {
+			      my $first= shift @unixtimes;
+			      Array_fold(\&min, $first, \@unixtimes)
+			  } else {
+			      global::warn "cannot extract date from: '$mboxpath' $i";
+			      0
+			  }
+		      };
+		      my $now= time;
+		      if (my $date= find_date($ent)) {
+			  my $t= $date->epoch;
+			  my $now2= time;
+			  if ($now <= $t and $t <= $now2) {
+			      global::warn "seems Email::Date could not extract date from:"
+				  ." '$mboxpath' $i";
+			      &$fallback
+			  } else {
+			      $t
+			  }
+		      } else {
+			  &$fallback
+		      }
+		  };
 
-		push @msgghost,
 		  Chj::Ml2json::Mailcollection::Message->new($ent,
 							     $h,
 							     $unixtime,
 							     $mboxpathhash,
-							     $n)
+							     $i)
 		      ->ghost($targetdir);
-	    } "'$mboxpath', $mboxpathhash/$n";
-	    $n++;
-	}
-	Chj::Ml2json::Mailcollection::Mbox->new(\@msgghost,$mboxpath)
+	      } "'$mboxpath', $mboxpathhash/$n"
+	  }, stream_zip2 stream_iota(), $msgs;
+	Chj::Ml2json::Mailcollection::Mbox->new(stream2array($msgghosts),$mboxpath)
 	    ->ghost($mboxtargetbase);
     };
 
