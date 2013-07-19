@@ -1,0 +1,23 @@
+1. collect all mbox files your archive is comprised of into one
+directory.
+
+2. decide upon a base directory where all the unpacked attachments (as
+well as serialized state--for details see phases.txt) should be
+stored; if you don't care, no problem, some directory under /tmp will
+be choosen. ml2json will create a symlink at ~/.ml2json-tmp which
+points to that generated directory, so that subsequent runs of ml2json
+will find it again and can omit part of the work that was already
+done. If you want to keep the generated attachments, specify the
+--attachment-basedir option.
+
+3. it's possible to customize what fields are output in the JSON by
+using a config file; see example_config.pl and ./mk2json --help.
+
+4. run './mk2json sourcedir targetfile', perhaps with the additional
+options of your choice.
+
+5. optionally, to clean up the generated temporary / attachments
+files, run ml2json with the --cleanup option; if you gave the
+--attachment-basedir option before, it has to be given again,
+otherwise ml2json will just look at ~/.ml2json-tmp (or do nothing if
+not present).
