@@ -390,8 +390,7 @@ use Chj::FP2::Stream;
 
 {
     package Chj::Ml2json::Mailcollection::Mbox;
-    use Chj::Struct ["messages","path"], 'Chj::Ml2json::Mailcollection::Container';
-    ## ^ really messageghosts, sgh.
+    use Chj::Struct ["messageghosts","path"], 'Chj::Ml2json::Mailcollection::Container';
 
     sub messages {
 	my $s=shift;
@@ -402,12 +401,12 @@ use Chj::FP2::Stream;
 		 Chj::FP2::List::cons $v->resurrect,$tail
 	     },
 	     $tail,
-	     Chj::FP2::Stream::array2stream ($$s{messages}));
+	     Chj::FP2::Stream::array2stream ($$s{messageghosts}));
     }
     sub messageghosts {
 	my $s=shift;
 	my ($tail)=@_;
-	Chj::FP2::Stream::array2stream ($$s{messages}, $tail);
+	Chj::FP2::Stream::array2stream ($$s{messageghosts}, $tail);
     }
     _END_
 }
