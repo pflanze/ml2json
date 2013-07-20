@@ -289,7 +289,8 @@ use Chj::PXHTML ":all";
 use Chj::PXML::Serialize 'pxml_print_fragment_fast';
 use Chj::tempdir;
 
-sub PXML_fragment2string {
+#XX monkey patching.
+sub Chj::PXML::fragment2string {
     my $s=shift;
     my $tmpdir= tempdir "/tmp/PXML_fragment2string";##XXX how to standardize that? configure once per app.
     my $tmppath= "$tmpdir/1";
@@ -313,12 +314,11 @@ sub MIME_Entity_cleanuphtml {
 sub MIME_Entity_plain2html {
     my $s=shift;
     # XXX unfinished
-    PXML_fragment2string
-      (
-       DIV(
-	   map {
-	       TT($_)
-	   } @{$s->body}));
+    (
+     DIV(
+	 map {
+	     TT($_)
+	 } @{$s->body}))->fragment2string;
 }
 
 use Chj::xopen 'xopen_write';
