@@ -36,7 +36,7 @@ sub MIME_Entity_all_parts {
     my $s=shift;
     if (my @parts = $s->parts) {
 	map {
-	    $_->all_parts
+	    MIME_Entity_all_parts($_)
 	} @parts
     } else {
 	$s
