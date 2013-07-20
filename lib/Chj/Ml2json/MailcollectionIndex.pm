@@ -6,7 +6,7 @@
 
 =head1 NAME
 
-Chj::Ml2json::Mailcollection::Index
+Chj::Ml2json::MailcollectionIndex
 
 =head1 SYNOPSIS
 
@@ -16,7 +16,7 @@ Chj::Ml2json::Mailcollection::Index
 =cut
 
 
-package Chj::Ml2json::Mailcollection::Index;
+package Chj::Ml2json::MailcollectionIndex;
 
 use strict;
 

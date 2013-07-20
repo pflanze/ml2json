@@ -16,6 +16,7 @@ use lib "$mydir/lib";
 
 our $tmpbase="/tmp/$myname";
 our $tmplink= "$ENV{HOME}/.$myname-tmp"; ## ok to use that path?
+our $mbox_glob= '*.mbox';
 
 sub usage {
     print STDERR map{"$_\n"} @_ if @_;
@@ -28,6 +29,12 @@ sub usage {
   targetfile is where the JSON output should go (use '-' for stdout).
 
   Options:
+
+    --recurse   recurse into subdirectories of sourcedir-or-file
+
+    --mbox-glob globstring
+                glob to use to find files in directories that contain
+                mboxes. Defaults to '$mbox_glob'.
 
     --cleanup   delete currently used temp directory at $tmpbase*
 
@@ -84,12 +91,15 @@ our $opt_deidentify;
 our $opt_show_mbox_path;
 our $opt_attachment_basedir;
 our $opt_max_date_deviation;
+our $opt_recurse;
 our $opt_repl;
 GetOptions("verbose"=> \$verbose,
 	   "repl"=> \$opt_repl,
 	   "help"=> sub{usage},
 	   "cleanup"=> sub { cleanup_tmp(); exit 0; },
 	   "attachment-basedir=s"=> \$opt_attachment_basedir,
+	   "mbox-glob=s"=> \$mbox_glob,
+	   "recurse"=> \$opt_recurse,
 	   "config=s"=> sub {
 	       my ($_,$path)=@_;
 	       $config= require $path
@@ -180,7 +190,7 @@ sub cleanup_tmp {
     }
 }
 
-use Chj::Ml2json::Mailcollection;
+use Chj::Ml2json::MailcollectionParser;
 use Chj::Ml2json::Message;
 use Chj::FP2::Stream ':all';
 use Chj::Ml2json::OutputJSON;
@@ -188,13 +198,15 @@ use Chj::Ml2json::OutputJSON::Continuous;
 use Chj::Ml2json::Try;
 use Chj::xopen ':all';
 
-our $collectionparser= Chj::Ml2json::Mailcollection->new('Chj::Ml2json::Message');
+our $collectionparser= Chj::Ml2json::MailcollectionParser->new
+  ('Chj::Ml2json::Message',
+   $mbox_glob,
+   $opt_recurse);
 
 sub parse_and_convert {
     my ($sourcepath, $targetfile)=@ARGV;
 
-    my $method= (-f $sourcepath ? "parse_mbox" : "parse_mbox_dir");
-    my $coll= $collectionparser->$method($sourcepath, $tmp, $opt_max_date_deviation);
+    my $coll= $collectionparser->parse_tree($sourcepath, $tmp, $opt_max_date_deviation);
 
     my $index= $coll->index;
 
