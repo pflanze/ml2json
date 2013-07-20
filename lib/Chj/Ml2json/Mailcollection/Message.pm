@@ -199,20 +199,4 @@ sub references {
 }
 
 
-# body conversion see Chj::Ml2json::MIMEExtract
-sub origplain_orightml_html { # a little evil here
-    my ($m)=@_;
-    $$m{_origplain_orightml_html}||= do {
-	my ($orig_plain, $orig_html, $html)=
-	  Chj::Ml2json::MIMEExtract::MIME_Entity_origplain_orightml_html ($m->ent);
-	[($orig_plain, $orig_html, $html)]
-    };
-    @{$$m{_origplain_orightml_html}}
-}
-sub attachments {
-    my $s=shift;
-    Chj::Ml2json::MIMEExtract::MIME_Entity_attachments ($$s{ent})
-}
-
-
 _END_

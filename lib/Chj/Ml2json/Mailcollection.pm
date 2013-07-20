@@ -10,7 +10,12 @@ Chj::Ml2json::Mailcollection
 
 =head1 SYNOPSIS
 
- use Chj::Ml2json::Mailcollection ":all";
+ use Chj::Ml2json::Mailcollection;
+ our $Message= "Chj::Ml2json::Mailcollection::Message";
+ our $collectionparser= Chj::Ml2json::Mailcollection->new($Message);
+ $collectionparser->parse_mbox($mboxpath,$tmp, $maybe_max_date_deviation)
+ #or
+ $collectionparser->parse_mbox($dirpath,$tmp,$maybe_max_date_deviation)
 
 =head1 DESCRIPTION
 
@@ -108,16 +113,8 @@ use Chj::FP2::Stream;
 
 
 # -----------------------------------------------------------------------
-# procedures
 
-our @ISA="Exporter"; require Exporter;
-our @EXPORT=qw();
-our @EXPORT_OK= qw(
-		      parse_mbox
-		      parse_mbox_dir
-		 );
-our %EXPORT_TAGS=(all=>[@EXPORT,@EXPORT_OK]);
-
+use Chj::Struct ['messageclass'];
 
 use Chj::xperlfunc ();
 use MIME::Parser;
@@ -136,9 +133,8 @@ use Email::Date 'find_date';
 use Mail::Message::Field::Date;
 use Chj::Parse::Mbox 'mbox_stream_open';
 
-use Chj::Ml2json::Mailcollection::Message;
-
-sub parse_mbox {
+sub parse_mbox_ghost {
+    my $s=shift;
     @_==3 or die;
     my ($mboxpath,$tmp, $maybe_max_date_deviation)=@_;
     # $maybe_max_date_deviation: seconds max allowed deviation between
@@ -237,12 +233,12 @@ sub parse_mbox {
 			  $unixtime= $maybe_t || 0;
 		      }
 
-		      Chj::Ml2json::Mailcollection::Message->new($ent,
-								 $h,
-								 $unixtime,
-								 $mboxpathhash,
-								 $i)
-			  ->ghost($targetdir);
+		      $$s{messageclass}->new($ent,
+					     $h,
+					     $unixtime,
+					     $mboxpathhash,
+					     $i)
+			->ghost($targetdir);
 		  } "'$mboxpath', $mboxpathhash/$n"
 	      }, stream_zip2 stream_iota(), $msgs;
 	    Chj::Ml2json::Mailcollection::Mbox->new(stream2array($msgghosts),$mboxpath)
@@ -263,15 +259,22 @@ sub parse_mbox {
 }
 
 sub parse_mbox_dir {
+    my $s=shift;
     @_==3 or die;
     my ($dirpath,$tmp,$maybe_max_date_deviation)=@_;
     # don't currently go into subdirectories of $dirpath
     Chj::Ml2json::Mailcollection::Directory
 	->new([
 	       map {
-		   parse_mbox($_,$tmp,$maybe_max_date_deviation)
+		   $s->parse_mbox_ghost($_,$tmp,$maybe_max_date_deviation)
 	       } glob quotemeta($dirpath)."/*.mbox"
 	      ]);
 }
 
-1
+sub parse_mbox {
+    my $s=shift;
+    $s->parse_mbox_ghost(@_)->resurrect;
+}
+
+
+_END_

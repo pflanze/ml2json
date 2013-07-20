@@ -180,19 +180,21 @@ sub cleanup_tmp {
     }
 }
 
-use Chj::Ml2json::Mailcollection ':all';
+use Chj::Ml2json::Mailcollection;
+use Chj::Ml2json::Message;
 use Chj::FP2::Stream ':all';
 use Chj::Ml2json::OutputJSON;
 use Chj::Ml2json::OutputJSON::Continuous;
 use Chj::Ml2json::Try;
 use Chj::xopen ':all';
 
+our $collectionparser= Chj::Ml2json::Mailcollection->new('Chj::Ml2json::Message');
+
 sub parse_and_convert {
     my ($sourcepath, $targetfile)=@ARGV;
 
-    my $coll= (-f $sourcepath ?
-	       parse_mbox ($sourcepath, $tmp, $opt_max_date_deviation)->resurrect
-	       : parse_mbox_dir ($sourcepath, $tmp, $opt_max_date_deviation));
+    my $method= (-f $sourcepath ? "parse_mbox" : "parse_mbox_dir");
+    my $coll= $collectionparser->$method($sourcepath, $tmp, $opt_max_date_deviation);
 
     my $index= $coll->index;
 
