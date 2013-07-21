@@ -30,7 +30,7 @@ package Chj::Ml2json::MIMEExtract;
 
 use strict;
 
-use Chj::Try (); # global::warn
+use Chj::NoteWarn;
 
 sub MIME_Entity_all_parts {
     my $s=shift;
@@ -112,7 +112,7 @@ sub MIME_Entity_alternative_entity_list {
 		    \@ct) {
 		    cons(Found($s),$tail)
 		} else {
-		    global::warn "multipart/alternative with non-text parts";
+		    WARN "multipart/alternative with non-text parts";
 		    $tail
 		}
 	    } elsif ($ct_subkind eq "mixed") {
@@ -121,7 +121,7 @@ sub MIME_Entity_alternative_entity_list {
 			$$ct[0] eq "text"
 		    },
 		    \@ct) {
-		    global::warn "multipart/mixed with only text parts [NOTE]";##XX note only
+		    WARN "multipart/mixed with only text parts [NOTE]";##XX note only
 		    cons(Found($s),$tail)
 		} else {
 		    # recurse
@@ -137,14 +137,14 @@ sub MIME_Entity_alternative_entity_list {
 		    &$tmp(array2list(\@parts));
 		}
 	    } else {
-		global::warn "unknown subkind '$ct_subkind' in content-type";
+		WARN "unknown subkind '$ct_subkind' in content-type";
 		$tail
 	    }
 	} else {
 	    $tail
 	}
     } else {
-	#global::warn "head without content-type";
+	#WARN "head without content-type";
 	#   this happens quite frequently
 	#   (e.g. X-Mailer: Microsoft Outlook 8.5, Build 4.71.2173.0)
 	$tail
@@ -178,7 +178,7 @@ sub MIME_Entity_attachment_list {
     if (my ($ct_kind,$ct_subkind,$ct_rest)=
 	MIME_Entity_maybe_content_type_lc_split($s)) {
 
-	#global::warn "ct_kind=$ct_kind ($ct_subkind, ct_rest)";
+	#WARN "ct_kind=$ct_kind ($ct_subkind, ct_rest)";
 	if ($ct_kind eq "multipart") {
 	    # recurse
 	    my $rec; $rec= sub {
@@ -203,11 +203,11 @@ sub MIME_Entity_attachment_list {
 	    # XXX only if referenced by html code ?
 	    cons (Inline $s, $tail)
 	} else {
-	    global::warn "content type $ct_kind/$ct_subkind ($ct_rest)";
+	    WARN "content type $ct_kind/$ct_subkind ($ct_rest)";
 	    $tail
 	}
     } else {
-	#global::warn "head without content-type";
+	#WARN "head without content-type";
 	$tail
     }
 }
@@ -257,20 +257,20 @@ sub MIME_Entity_origplain_origrich_orightml {
 	      [ @{$parts_by_ct{"text/enriched"}||[]},
 		@{$parts_by_ct{"text/richtext"}||[]} ];
 	    if (@{$parts_by_ct{"text/plain"}||[]} > 1) {
-		global::warn("multiple text/plain parts, choosing first one");
+		WARN("multiple text/plain parts, choosing first one");
 	    }
 	    if (@$enriched > 1) {
-		global::warn("multiple text/enriched or text/richtext parts, "
-			     ."choosing first one");
+		WARN("multiple text/enriched or text/richtext parts, "
+		     ."choosing first one");
 	    }
 	    if (@{$parts_by_ct{"text/html"}||[]} > 1) {
-		global::warn("multiple text/html parts, choosing first one");
+		WARN("multiple text/html parts, choosing first one");
 	    }
 	    (perhaps_body_as_string($parts_by_ct{"text/plain"}->[0]),
 	     perhaps_body_as_string($$enriched[0]),
 	     perhaps_body_as_string($parts_by_ct{"text/html"}->[0]))
 	} else {
-	    global::warn ("no textual part found in alt entity, BUG? (ERROR)");
+	    WARN ("no textual part found in alt entity, BUG? (ERROR)");
 	    return &$wholemsg;
 	}
     } else {
@@ -298,7 +298,7 @@ sub MIME_Entity_path {
 	my $path= $main::tmp # XXX: how to better pass this around?
 	  . "/" . $m->identify . "/$filenamepart-$hash.txt";
 	if (not -f $path) {
-	    global::warn("'attachment' with no file, creating file '$path'");
+	    WARN("'attachment' with no file, creating file '$path'");
 	    my $o= xopen_write $path;
 	    binmode $o, ":utf8" or die;
 	    $o->xprint($str);

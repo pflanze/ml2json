@@ -20,6 +20,8 @@ package Chj::Ml2json::Mailcollection::Message;
 
 use strict;
 
+use Chj::NoteWarn;
+
 use Chj::Struct ["ent", "h", "unixtime", "mboxpathhash", "n"],
   'Chj::Ml2json::Ghostable';
 # cache values: messageids
@@ -95,27 +97,24 @@ sub messageids {
 	   sub { # foundangle
 	       my ($deangled, $res)=@_;
 	       if (@$deangled > 1) {
-		   global::warn
-		       ($s->identify
+		   WARN($s->identify
 			." has message-id header with multiple entries");
 	       }
 	       Chj::FP2::List::array2list($deangled, $res);
 	   },
 	   sub { # noangle
 	       my ($val, $res)=@_;
-	       global::warn
-		   ($s->identify." has message-id with no angle brackets, "
+	       WARN($s->identify." has message-id with no angle brackets, "
 		    ."using whole header value instead");
 	       Chj::FP2::List::cons (Chj::chompspace($val), $res);
 	   },
 	   sub { # nosuchheader
-	       global::warn ($s->identify." has no message-id");
+	       WARN ($s->identify." has no message-id");
 	       Chj::FP2::List::cons($s->fakeid, undef)
 	   },
 	   sub { # multipleheaders
 	       my ($h,$parseallheaders)=@_;
-	       global::warn
-		   ($s->identify." has multiple message-id headers");
+	       WARN($s->identify." has multiple message-id headers");
 	       goto $parseallheaders;
 	   });
 	Chj::FP2::List::list2array ($res);
@@ -155,8 +154,7 @@ sub all_headers_possibly_anglebracketed {
 	   sub { # foundangle
 	       my ($deangled, $res)=@_;
 	       if ($warn_multideangled and @$deangled > 1) {
-		   global::warn
-		       ($s->identify
+		   WARN($s->identify
 			." has '$key' header with multiple entries");
 	       }
 	       Chj::FP2::List::array2list($deangled, $res);
@@ -164,21 +162,20 @@ sub all_headers_possibly_anglebracketed {
 	   sub { # noangle
 	       my ($val, $res)=@_;
 	       if ($warn_noangle) {
-		   global::warn
-		       ($s->identify
+		   WARN($s->identify
 			." has '$key' header with no angle brackets,"
 			." using whole header value instead");
 	       }
 	       Chj::FP2::List::cons (Chj::chompspace($val), $res);
 	   },
 	   sub { # nosuchheader
-	       global::warn ($s->identify." has no '$key' header")
+	       WARN ($s->identify." has no '$key' header")
 		 if $warn_nosuchheader;
 	       undef
 	   },
 	   sub { # multipleheaders
 	       my ($h,$parseallheaders)=@_;
-	       global::warn ($s->identify." has multiple message-id headers")
+	       WARN ($s->identify." has multiple message-id headers")
 		 if $warn_multipleheaders;
 	       goto $parseallheaders;
 	   });

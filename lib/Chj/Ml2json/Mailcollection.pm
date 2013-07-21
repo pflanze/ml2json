@@ -96,6 +96,7 @@ use Chj::FP2::List ':all';
 
 @Chj::Ml2json::Mailcollection::ISA= 'Chj::Ml2json::Ghostable';
 use Chj::Try;
+use Chj::NoteWarn;
 use Chj::Ml2json::MailcollectionIndex;
 
 
@@ -125,7 +126,7 @@ sub Chj::Ml2json::Mailcollection::index {
 		     if (my $former_id= $$index{messageids}{$messageid}) {
 			 my ($former_t,$former_mg)= @{$$index{ids}{$former_id}};
 			 my $formerm= $former_mg->resurrect;
-			 global::warn ("multiple messages using message-id"
+			 WARN ("multiple messages using message-id"
 			       ." '$messageid': previously "
 			       .$formerm->identify.", now ".$m->identify
 			       ." - ignoring the latter!");
@@ -151,9 +152,9 @@ sub Chj::Ml2json::Mailcollection::index {
 		     # Map inreplyto to normalized id:
 		     my $inreplyto_id= $$index{messageids}{$inreplyto}
 		       || do {
-			   global::warn("unknown message with messageid "
-			      ."'$inreplyto' given in in-reply-to "
-			      ."header of ".$m->identify);
+			   WARN("unknown message with messageid "
+				."'$inreplyto' given in in-reply-to "
+				."header of ".$m->identify);
 			   $inreplyto
 		       };
 		     push @{ $$index{replies}{$inreplyto_id} }, $id;

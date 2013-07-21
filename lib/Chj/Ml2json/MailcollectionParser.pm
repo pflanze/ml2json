@@ -44,6 +44,8 @@ package Chj::Ml2json::MailcollectionParser_;
 
 use strict;
 
+use Chj::NoteWarn;
+
 use Chj::Struct "Chj::Ml2json::MailcollectionParser"=>
   ['messageclass', # class name
    'mbox_glob', # filename-matching glob string
@@ -127,8 +129,8 @@ sub Chj::Ml2json::MailcollectionParser::parse_mbox_ghost {
 					     ->parse($v)) {
 					$t2->time;
 				    } else {
-					global::warn "unparseable Date header '$v' in: "
-					    ."'$mboxpath' $i";
+					WARN "unparseable Date header '$v' in: "
+					  ."'$mboxpath' $i";
 					()
 				    }
 				} @{$$h{date}||[]};
@@ -136,7 +138,7 @@ sub Chj::Ml2json::MailcollectionParser::parse_mbox_ghost {
 				  my $first= shift @unixtimes;
 				  array_fold(\&min, $first, \@unixtimes)
 			      } else {
-				  global::warn "cannot extract date from: '$mboxpath' $i";
+				  WARN "cannot extract date from: '$mboxpath' $i";
 				  0
 			      }
 			  };
@@ -145,8 +147,8 @@ sub Chj::Ml2json::MailcollectionParser::parse_mbox_ghost {
 			      my $t= $date->epoch;
 			      my $now2= time;
 			      if ($now <= $t and $t <= $now2) {
-				  global::warn "seems Email::Date could not extract date from:"
-				      ." '$mboxpath' $i";
+				  WARN "seems Email::Date could not extract date from:"
+				    ." '$mboxpath' $i";
 				  &$fallback
 			      } else {
 				  $t
@@ -160,9 +162,9 @@ sub Chj::Ml2json::MailcollectionParser::parse_mbox_ghost {
 			  if ($maybe_t and defined $maybe_max_date_deviation) {
 			      my $t= $maybe_t;
 			      if (abs($unixtime - $t) > $maybe_max_date_deviation) {
-				  global::warn "parsed Date (".localtime($unixtime)
-				      .") deviates too much from mbox time record (".
-					localtime($t)."), using the latter instead";
+				  WARN "parsed Date (".localtime($unixtime)
+				    .") deviates too much from mbox time record (".
+				      localtime($t)."), using the latter instead";
 				  $unixtime= $t;
 			      }
 			  }
@@ -236,7 +238,7 @@ sub Chj::Ml2json::MailcollectionParser::parse_tree {
 	    $mboxcoll
 	}
     } else {
-	global::warn "ignoring item '$path' which is not a dir nor file";
+	WARN "ignoring item '$path' which is not a dir nor file";
 	$nothing
     }
 }
