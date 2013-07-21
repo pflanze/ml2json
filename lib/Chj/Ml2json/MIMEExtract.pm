@@ -258,7 +258,7 @@ sub MIME_Entity_origplain_orightml_html {
 		    my $p= $parts[0]; # XX improve?
 		    return ($p->body_as_string, undef, MIME_Entity_plain2html($p))
 		} elsif ($ct eq "text/html") {
-		    global::warn("multiple text/plain parts, choosing first one");
+		    global::warn("multiple text/html parts, choosing first one");
 		    my $p= $parts[0]; # XX improve?
 		    return (undef, $p->body_as_string, MIME_Entity_cleanuphtml($p))
 		} else {
