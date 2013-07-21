@@ -65,6 +65,7 @@ our $default_jsonfields_top=
    [unixtime=> "json_unixtime", 1],
    [ctime_UTC=> "json_ctime_UTC", 1],
    [orig_plain=> "json_orig_plain", 2],
+   [orig_enriched=> "json_orig_enriched", 2],
    [orig_html=> "json_orig_html", 2],
    [html=> "json_html", 2],
    [attachments=> "json_attachments", 2],
@@ -250,14 +251,21 @@ sub json_orig_plain {
     my $s=shift;
     @_==2 or die;
     my ($m,$index)=@_;
-    ($m->origplain_orightml)[0]
+    ($m->origplain_origrich_orightml)[0]
+}
+
+sub json_orig_enriched {
+    my $s=shift;
+    @_==2 or die;
+    my ($m,$index)=@_;
+    ($m->origplain_origrich_orightml)[1]
 }
 
 sub json_orig_html {
     my $s=shift;
     @_==2 or die;
     my ($m,$index)=@_;
-    ($m->origplain_orightml)[1]
+    ($m->origplain_origrich_orightml)[2]
 }
 
 sub json_html {

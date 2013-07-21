@@ -19,7 +19,7 @@ Chj::Ml2json::MIMEExtract
 package Chj::Ml2json::MIMEExtract;
 @ISA="Exporter"; require Exporter;
 @EXPORT=qw(MIME_Entity_maybe_alternative_entity
-	   MIME_Entity_origplain_orightml);
+	   MIME_Entity_origplain_origrich_orightml);
 @EXPORT_OK=qw(MIME_Entity_attachment_list
 	      MIME_Entity_attachments
 	      MIME_Entity_maybe_content_type_lc_split
@@ -89,6 +89,8 @@ sub Perhaps ($) {
     Chj::Ml2json::MIMEExtract::Alternative->new(1,$_[0])
 }
 
+use Chj::FP::ArrayUtil ':all';
+
 # linked list of all Found or Perhaps multipart/alternative entities;
 sub MIME_Entity_alternative_entity_list {
     my $s=shift;
@@ -98,33 +100,28 @@ sub MIME_Entity_alternative_entity_list {
 	if ($ct_kind eq "multipart") {
 	    defined $ct_subkind or die "missing subkind in content-type";
 	    # ^ XX better fallback?
+	    my @parts= $s->parts;
+	    my @ct= sort map {
+		[MIME_Entity_maybe_content_type_lc_split($_)]
+	    } @parts;
 	    if ($ct_subkind eq "alternative") {
-		my @parts= $s->parts;
-		if (@parts==2) {
-		    my @ct= sort map {
-			MIME_Entity_maybe_content_type_lc($_)
-		    } @parts;
-		    if (@ct == 2
-			and $ct[0] eq 'text/html'
-			and $ct[1] eq 'text/plain') {
-			cons(Found($s),$tail)
-		    } else {
-			cons(Perhaps($s), $tail)
-		    }
+		if (array_every sub {
+			my ($ct)=@_;
+			$$ct[0] eq "text"
+		    },
+		    \@ct) {
+		    cons(Found($s),$tail)
 		} else {
+		    global::warn "multipart/alternative with non-text parts";
 		    $tail
 		}
 	    } elsif ($ct_subkind eq "mixed") {
-		my @parts= $s->parts;
-		if (@parts==2 and do {#COPYPASTE from just above
-		    my @ct= sort map {
-			MIME_Entity_maybe_content_type_lc($_)
-		    } @parts;
-		    (@ct == 2
-			and $ct[0] eq 'text/html'
-			and $ct[1] eq 'text/plain')
-		}) {
-		    global::warn "multipart/mixed with html+plain alternatives";
+		if (array_every sub {
+			my ($ct)=@_;
+			$$ct[0] eq "text"
+		    },
+		    \@ct) {
+		    global::warn "multipart/mixed with only text parts [NOTE]";##XX note only
 		    cons(Found($s),$tail)
 		} else {
 		    # recurse
@@ -241,10 +238,10 @@ sub perhaps_body_as_string {
     $maybe_s and $maybe_s->body_as_string
 }
 
-sub MIME_Entity_origplain_orightml {
+sub MIME_Entity_origplain_origrich_orightml {
     my $s=shift;
     my $wholemsg= sub {
-	($s->body_as_string, undef)
+	($s->body_as_string, undef, undef)
     };
     if (my $alt= MIME_Entity_maybe_alternative_entity ($s)) {
 	my @parts= $alt->parts;
@@ -253,19 +250,27 @@ sub MIME_Entity_origplain_orightml {
 	    my $ct= MIME_Entity_maybe_content_type_lc ($part);
 	    push @{$parts_by_ct{$ct}}, $part;
 	}
-	if ($parts_by_ct{"text/html"} or $parts_by_ct{"text/plain"}) {
+	if ($parts_by_ct{"text/html"}
+	    or $parts_by_ct{"text/enriched"} or $parts_by_ct{"text/richtext"}
+	    or $parts_by_ct{"text/plain"}) {
+	    my $enriched =
+	      [ @{$parts_by_ct{"text/enriched"}||[]},
+		@{$parts_by_ct{"text/richtext"}||[]} ];
 	    if (@{$parts_by_ct{"text/plain"}||[]} > 1) {
-		# so, both (well, is that ALL of them?) are plain;
 		global::warn("multiple text/plain parts, choosing first one");
+	    }
+	    if (@$enriched > 1) {
+		global::warn("multiple text/enriched or text/richtext parts, "
+			     ."choosing first one");
 	    }
 	    if (@{$parts_by_ct{"text/html"}||[]} > 1) {
 		global::warn("multiple text/html parts, choosing first one");
 	    }
-
 	    (perhaps_body_as_string($parts_by_ct{"text/plain"}->[0]),
+	     perhaps_body_as_string($$enriched[0]),
 	     perhaps_body_as_string($parts_by_ct{"text/html"}->[0]))
 	} else {
-	    global::warn ("neither text/html nor text/plain in alt entity, BUG?");
+	    global::warn ("no textual part found in alt entity, BUG? (ERROR)");
 	    return &$wholemsg;
 	}
     } else {
