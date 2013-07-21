@@ -175,7 +175,7 @@ sub all_headers_possibly_anglebracketed {
 	   },
 	   sub { # multipleheaders
 	       my ($h,$parseallheaders)=@_;
-	       NOTE ($s->identify." has multiple message-id headers")
+	       NOTE ($s->identify." has multiple '$key' headers")
 		 if $warn_multipleheaders;
 	       goto $parseallheaders;
 	   });
