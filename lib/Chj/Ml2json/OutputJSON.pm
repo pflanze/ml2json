@@ -98,8 +98,57 @@ our $default_jsonfields_orig_headers=
   ];
 
 
+use Chj::Ml2json::MIMEExtract ':all';
+use Chj::xperlfunc ':all'; # basename, xstat
+use Date::Format 'ctime';
+use Chj::Chomp;
+use URI::file;
 
-use Chj::Struct ["jsonfields_orig_headers", "jsonfields_top"];
+
+use Chj::PXHTML ":all";
+use Chj::PXML::Serialize 'pxml_print_fragment_fast';
+use Chj::tempdir;
+
+
+#XX monkey patching.
+sub Chj::PXML::fragment2string {
+    my $s=shift;
+    my $tmpdir= tempdir "/tmp/PXML_fragment2string";##XXX how to standardize that? configure once per app.
+    my $tmppath= "$tmpdir/1";
+    open my $o, ">", $tmppath or die "open '$tmppath': $!";
+    pxml_print_fragment_fast($s, $o);
+    close $o or die $!;
+    open my $i, "<", $tmppath or die $!;
+    local $/;
+    my $str= <$i>;
+    close $i or die $!;
+    unlink $tmppath; rmdir $tmpdir;
+    $str
+}
+
+sub _cleanuphtml {
+    my $str=shift;
+    # XXX unfinished
+    $str
+}
+
+sub _plain2html {
+    my $str=shift;
+    # XXX unfinished
+    (
+     DIV(
+	 map {
+	     TT("$_\n")
+	 } split /\r?\n/, $str
+	)
+    )->fragment2string;
+}
+
+
+
+use Chj::Struct ["jsonfields_orig_headers",
+		 "jsonfields_top",
+		 "htmlmapper"];
 
 sub jsonfields_orig_headers {
     my $s=shift;
@@ -165,13 +214,6 @@ sub json_orig_headers {
     \%res
 }
 
-use Chj::Ml2json::MIMEExtract ':all';
-use Chj::xperlfunc ':all'; # basename, xstat
-use Date::Format 'ctime';
-use Chj::Chomp;
-use URI::file;
-
-
 sub json_attachments {
     my $s=shift;
     @_==2 or die;
@@ -208,21 +250,23 @@ sub json_orig_plain {
     my $s=shift;
     @_==2 or die;
     my ($m,$index)=@_;
-    ($m->origplain_orightml_html)[0]
+    ($m->origplain_orightml)[0]
 }
 
 sub json_orig_html {
     my $s=shift;
     @_==2 or die;
     my ($m,$index)=@_;
-    ($m->origplain_orightml_html)[1]
+    ($m->origplain_orightml)[1]
 }
 
 sub json_html {
     my $s=shift;
     @_==2 or die;
     my ($m,$index)=@_;
-    ($m->origplain_orightml_html)[2]
+    my $pl= $s->json_orig_plain($m,$index);
+    my $ht= $s->json_orig_html($m,$index);
+    $ht ? _cleanuphtml($ht) : _plain2html($pl)
 }
 
 sub json_message_id {

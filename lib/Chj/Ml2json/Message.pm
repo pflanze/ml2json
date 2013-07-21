@@ -24,14 +24,14 @@ use Chj::Ml2json::MIMEExtract ":all"; # MIME_Entity_*
 
 use Chj::Struct [], 'Chj::Ml2json::Mailcollection::Message';
 
-sub origplain_orightml_html {
+sub origplain_orightml {
     my ($m)=@_;
-    $$m{_origplain_orightml_html}||= do {
-	my ($orig_plain, $orig_html, $html)=
-	  MIME_Entity_origplain_orightml_html ($m->ent);
-	[($orig_plain, $orig_html, $html)]
+    $$m{_origplain_orightml}||= do {
+	my ($orig_plain, $orig_html)=
+	  MIME_Entity_origplain_orightml ($m->ent);
+	[($orig_plain, $orig_html)]
     };
-    @{$$m{_origplain_orightml_html}}
+    @{$$m{_origplain_orightml}}
 }
 
 sub attachments {

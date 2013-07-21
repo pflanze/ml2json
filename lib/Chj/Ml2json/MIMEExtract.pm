@@ -19,7 +19,7 @@ Chj::Ml2json::MIMEExtract
 package Chj::Ml2json::MIMEExtract;
 @ISA="Exporter"; require Exporter;
 @EXPORT=qw(MIME_Entity_maybe_alternative_entity
-	   MIME_Entity_origplain_orightml_html);
+	   MIME_Entity_origplain_orightml);
 @EXPORT_OK=qw(MIME_Entity_attachment_list
 	      MIME_Entity_attachments
 	      MIME_Entity_maybe_content_type_lc_split
@@ -241,84 +241,36 @@ sub perhaps_body_as_string {
     $maybe_s and $maybe_s->body_as_string
 }
 
-sub MIME_Entity_origplain_orightml_html {
+sub MIME_Entity_origplain_orightml {
     my $s=shift;
     my $wholemsg= sub {
-	($s->body_as_string, undef, MIME_Entity_plain2html($s))
+	($s->body_as_string, undef)
     };
     if (my $alt= MIME_Entity_maybe_alternative_entity ($s)) {
 	my @parts= $alt->parts;
-	my %part_by_ct;
+	my %parts_by_ct;
 	for my $part (@parts) {
 	    my $ct= MIME_Entity_maybe_content_type_lc ($part);
-	    if (exists $part_by_ct{$ct}) {
-		if ($ct eq "text/plain") {
-		    # so, both (well, is that ALL of them?) are plain;
-		    global::warn("multiple text/plain parts, choosing first one");
-		    my $p= $parts[0]; # XX improve?
-		    return ($p->body_as_string, undef, MIME_Entity_plain2html($p))
-		} elsif ($ct eq "text/html") {
-		    global::warn("multiple text/html parts, choosing first one");
-		    my $p= $parts[0]; # XX improve?
-		    return (undef, $p->body_as_string, MIME_Entity_cleanuphtml($p))
-		} else {
-		    global::warn ("can't figure out what part to take, go with whole message");
-		    return &$wholemsg
-		}
-	    } else {
-		$part_by_ct{$ct}= $part;
-	    }
+	    push @{$parts_by_ct{$ct}}, $part;
 	}
-	
-	(perhaps_body_as_string($part_by_ct{"text/plain"}),
-	 perhaps_body_as_string($part_by_ct{"text/html"}),
-	 exists $part_by_ct{"text/html"} ?
-	 MIME_Entity_cleanuphtml ($part_by_ct{"text/html"})
-	 : exists $part_by_ct{"text/plain"} ?
-	 MIME_Entity_plain2html ($part_by_ct{"text/plain"})
-	 : do {
-	     global::warn ("neither text/html nor text/plain in alt entity, BUG?");
-	     return &$wholemsg;
-	 })
+	if ($parts_by_ct{"text/html"} or $parts_by_ct{"text/plain"}) {
+	    if (@{$parts_by_ct{"text/plain"}||[]} > 1) {
+		# so, both (well, is that ALL of them?) are plain;
+		global::warn("multiple text/plain parts, choosing first one");
+	    }
+	    if (@{$parts_by_ct{"text/html"}||[]} > 1) {
+		global::warn("multiple text/html parts, choosing first one");
+	    }
+
+	    (perhaps_body_as_string($parts_by_ct{"text/plain"}->[0]),
+	     perhaps_body_as_string($parts_by_ct{"text/html"}->[0]))
+	} else {
+	    global::warn ("neither text/html nor text/plain in alt entity, BUG?");
+	    return &$wholemsg;
+	}
     } else {
 	&$wholemsg
     }
-}
-
-use Chj::PXHTML ":all";
-use Chj::PXML::Serialize 'pxml_print_fragment_fast';
-use Chj::tempdir;
-
-#XX monkey patching.
-sub Chj::PXML::fragment2string {
-    my $s=shift;
-    my $tmpdir= tempdir "/tmp/PXML_fragment2string";##XXX how to standardize that? configure once per app.
-    my $tmppath= "$tmpdir/1";
-    open my $o, ">", $tmppath or die "open '$tmppath': $!";
-    pxml_print_fragment_fast($s, $o);
-    close $o or die $!;
-    open my $i, "<", $tmppath or die $!;
-    local $/;
-    my $str= <$i>;
-    close $i or die $!;
-    unlink $tmppath; rmdir $tmpdir;
-    $str
-}
-
-sub MIME_Entity_cleanuphtml {
-    my $s=shift;
-    # XXX unfinished
-    $s->body_as_string
-}
-
-sub MIME_Entity_plain2html {
-    my $s=shift;
-    # XXX unfinished
-    (
-     DIV(
-	 map {
-	     TT($_)
-	 } @{$s->body}))->fragment2string;
 }
 
 use Chj::xopen 'xopen_write';

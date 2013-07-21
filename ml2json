@@ -208,8 +208,8 @@ our $htmlmapper= Chj::Ml2json::Parse::HTML->new; ## config file input ?
 
 our $outputjson= Chj::Ml2json::OutputJSON->new
   ($$config{jsonfields_orig_headers},
-   $$config{jsonfields_top});
-##^ inserthere
+   $$config{jsonfields_top},
+   $htmlmapper);
 
 sub parse_and_convert {
     my ($sourcepath, $targetfile)=@ARGV;
