@@ -134,7 +134,7 @@ sub Chj::Ml2json::MailcollectionParser::parse_mbox_ghost {
 				} @{$$h{date}||[]};
 			      if (@unixtimes) {
 				  my $first= shift @unixtimes;
-				  Array_fold(\&min, $first, \@unixtimes)
+				  array_fold(\&min, $first, \@unixtimes)
 			      } else {
 				  global::warn "cannot extract date from: '$mboxpath' $i";
 				  0
