@@ -16,18 +16,15 @@ Chj::Ml2json::Message
 =cut
 
 
-package Chj::Ml2json::Message_;
+package Chj::Ml2json::Message;
 
 use strict;
 
-{
-    package Chj::Ml2json::Message;
-    use base 'Chj::Ml2json::Mailcollection::Message';
-}
-
 use Chj::Ml2json::MIMEExtract ":all"; # MIME_Entity_*
 
-sub Chj::Ml2json::Message::origplain_orightml_html {
+use Chj::Struct [], 'Chj::Ml2json::Mailcollection::Message';
+
+sub origplain_orightml_html {
     my ($m)=@_;
     $$m{_origplain_orightml_html}||= do {
 	my ($orig_plain, $orig_html, $html)=
@@ -37,9 +34,15 @@ sub Chj::Ml2json::Message::origplain_orightml_html {
     @{$$m{_origplain_orightml_html}}
 }
 
-sub Chj::Ml2json::Message::attachments {
+sub attachments {
     my $s=shift;
     MIME_Entity_attachments ($$s{ent})
 }
 
-1
+sub maybe_orightml {
+    my $s=shift;
+    ($s->origplain_orightml_html)[1]
+}
+
+
+_END_
