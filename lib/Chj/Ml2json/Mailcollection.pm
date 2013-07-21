@@ -152,7 +152,7 @@ sub Chj::Ml2json::Mailcollection::index {
 		     # Map inreplyto to normalized id:
 		     my $inreplyto_id= $$index{messageids}{$inreplyto}
 		       || do {
-			   WARN("unknown message with messageid "
+			   NOTE("unknown message with messageid "
 				."'$inreplyto' given in in-reply-to "
 				."header of ".$m->identify);
 			   $inreplyto

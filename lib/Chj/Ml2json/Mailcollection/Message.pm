@@ -97,24 +97,24 @@ sub messageids {
 	   sub { # foundangle
 	       my ($deangled, $res)=@_;
 	       if (@$deangled > 1) {
-		   WARN($s->identify
+		   NOTE($s->identify
 			." has message-id header with multiple entries");
 	       }
 	       Chj::FP2::List::array2list($deangled, $res);
 	   },
 	   sub { # noangle
 	       my ($val, $res)=@_;
-	       WARN($s->identify." has message-id with no angle brackets, "
+	       NOTE($s->identify." has message-id with no angle brackets, "
 		    ."using whole header value instead");
 	       Chj::FP2::List::cons (Chj::chompspace($val), $res);
 	   },
 	   sub { # nosuchheader
-	       WARN ($s->identify." has no message-id");
+	       NOTE ($s->identify." has no message-id");
 	       Chj::FP2::List::cons($s->fakeid, undef)
 	   },
 	   sub { # multipleheaders
 	       my ($h,$parseallheaders)=@_;
-	       WARN($s->identify." has multiple message-id headers");
+	       NOTE($s->identify." has multiple message-id headers");
 	       goto $parseallheaders;
 	   });
 	Chj::FP2::List::list2array ($res);
@@ -154,7 +154,7 @@ sub all_headers_possibly_anglebracketed {
 	   sub { # foundangle
 	       my ($deangled, $res)=@_;
 	       if ($warn_multideangled and @$deangled > 1) {
-		   WARN($s->identify
+		   NOTE($s->identify
 			." has '$key' header with multiple entries");
 	       }
 	       Chj::FP2::List::array2list($deangled, $res);
@@ -162,20 +162,20 @@ sub all_headers_possibly_anglebracketed {
 	   sub { # noangle
 	       my ($val, $res)=@_;
 	       if ($warn_noangle) {
-		   WARN($s->identify
+		   NOTE($s->identify
 			." has '$key' header with no angle brackets,"
 			." using whole header value instead");
 	       }
 	       Chj::FP2::List::cons (Chj::chompspace($val), $res);
 	   },
 	   sub { # nosuchheader
-	       WARN ($s->identify." has no '$key' header")
+	       NOTE ($s->identify." has no '$key' header")
 		 if $warn_nosuchheader;
 	       undef
 	   },
 	   sub { # multipleheaders
 	       my ($h,$parseallheaders)=@_;
-	       WARN ($s->identify." has multiple message-id headers")
+	       NOTE ($s->identify." has multiple message-id headers")
 		 if $warn_multipleheaders;
 	       goto $parseallheaders;
 	   });

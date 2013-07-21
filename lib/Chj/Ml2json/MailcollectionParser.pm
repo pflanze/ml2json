@@ -129,7 +129,7 @@ sub Chj::Ml2json::MailcollectionParser::parse_mbox_ghost {
 					     ->parse($v)) {
 					$t2->time;
 				    } else {
-					WARN "unparseable Date header '$v' in: "
+					NOTE "unparseable Date header '$v' in: "
 					  ."'$mboxpath' $i";
 					()
 				    }
@@ -147,7 +147,7 @@ sub Chj::Ml2json::MailcollectionParser::parse_mbox_ghost {
 			      my $t= $date->epoch;
 			      my $now2= time;
 			      if ($now <= $t and $t <= $now2) {
-				  WARN "seems Email::Date could not extract date from:"
+				  NOTE "seems Email::Date could not extract date from:"
 				    ." '$mboxpath' $i";
 				  &$fallback
 			      } else {

@@ -121,7 +121,7 @@ sub MIME_Entity_alternative_entity_list {
 			$$ct[0] eq "text"
 		    },
 		    \@ct) {
-		    WARN "multipart/mixed with only text parts [NOTE]";##XX note only
+		    NOTE "multipart/mixed with only text parts";
 		    cons(Found($s),$tail)
 		} else {
 		    # recurse
@@ -203,7 +203,7 @@ sub MIME_Entity_attachment_list {
 	    # XXX only if referenced by html code ?
 	    cons (Inline $s, $tail)
 	} else {
-	    WARN "content type $ct_kind/$ct_subkind ($ct_rest)";
+	    NOTE "content type $ct_kind/$ct_subkind ($ct_rest)";
 	    $tail
 	}
     } else {
@@ -298,7 +298,7 @@ sub MIME_Entity_path {
 	my $path= $main::tmp # XXX: how to better pass this around?
 	  . "/" . $m->identify . "/$filenamepart-$hash.txt";
 	if (not -f $path) {
-	    WARN("'attachment' with no file, creating file '$path'");
+	    NOTE("'attachment' with no file, creating file '$path'");
 	    my $o= xopen_write $path;
 	    binmode $o, ":utf8" or die;
 	    $o->xprint($str);
