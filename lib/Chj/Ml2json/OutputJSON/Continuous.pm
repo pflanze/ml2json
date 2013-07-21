@@ -31,7 +31,7 @@ package Chj::Ml2json::OutputJSON::Continuous;
 use strict;
 
 use Chj::Format::JSON ();
-use Chj::Struct ["fh", "OutputJSON"], "Chj::Format::JSON::Continuous";
+use Chj::Struct ["OutputJSON"], "Chj::Format::JSON::Continuous";
 
 use Chj::Ml2json::OutputJSON;
 
