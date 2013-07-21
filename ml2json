@@ -29,6 +29,7 @@ sub usage {
   targetfile is where the JSON output should go (use '-' for stdout).
 
   Options:
+    --verbose   show NOTEs in addition to WARNings on stderr
 
     --recurse   recurse into subdirectories of sourcedir-or-file
 
@@ -110,6 +111,9 @@ GetOptions("verbose"=> \$verbose,
 	   #"dry-run"=> \$opt_dry,
 	   ) or exit 1;
 usage unless @ARGV==2 or $opt_deidentify or $opt_show_mbox_path or $opt_repl;
+
+use Chj::NoteWarn;
+NoteWarn_attenuation_level($verbose ? 0 : 1);
 
 use Chj::tempdir;
 
