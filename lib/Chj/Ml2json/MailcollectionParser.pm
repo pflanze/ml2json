@@ -54,7 +54,7 @@ use Chj::xperlfunc ":all";
 use MIME::Parser;
 use Digest::MD5 'md5_hex';
 use Chj::FP::ArrayUtil ':all';
-use Chj::Ml2json::Try;
+use Chj::Try;
 use Chj::chompspace;
 use Chj::Parse::Mbox 'mbox_stream_open';
 use Chj::FP2::Stream ':all';

@@ -195,7 +195,7 @@ use Chj::Ml2json::Message;
 use Chj::FP2::Stream ':all';
 use Chj::Ml2json::OutputJSON;
 use Chj::Ml2json::OutputJSON::Continuous;
-use Chj::Ml2json::Try;
+use Chj::Try;
 use Chj::xopen ':all';
 use Chj::Ml2json::Parse::HTML;
 

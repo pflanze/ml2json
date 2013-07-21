@@ -95,7 +95,7 @@ use Chj::FP2::List ':all';
 # -----------------------------------------------------------------------
 
 @Chj::Ml2json::Mailcollection::ISA= 'Chj::Ml2json::Ghostable';
-use Chj::Ml2json::Try;
+use Chj::Try;
 use Chj::Ml2json::MailcollectionIndex;
 
 
