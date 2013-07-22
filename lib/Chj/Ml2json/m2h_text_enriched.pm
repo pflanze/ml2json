@@ -34,7 +34,18 @@
 ##    02111-1307, USA
 ##---------------------------------------------------------------------------##
 
-package m2h_text_enriched;
+## This has been modified 2003 by Christian Jaeger to suit the needs
+## of ml2json. (See Git history for details.)
+
+package Chj::Ml2json::m2h_text_enriched;
+
+@ISA="Exporter"; require Exporter;
+@EXPORT=qw(m2h_text_enriched);
+@EXPORT_OK=qw();
+%EXPORT_TAGS=(all=>[@EXPORT,@EXPORT_OK]);
+
+use strict;
+
 
 my %enriched_tags = (
     'bigger' => 1,
@@ -75,30 +86,18 @@ my %special_to_char = (
 ##	XXX: Need to update this filter.  However, does anyone still use
 ##	     text/enriched anymore.
 ##
-sub filter {
-    my($fields, $data, $isdecode, $args) = @_;
-    my($innofill, $chunk);
-    my $charset = $fields->{'x-mha-charset'};
-    my($charcnv, $real_charset_name) =
-	    readmail::MAILload_charset_converter($charset);
-    my $ret = "";
-    $args   = ""  unless defined($args);
+sub m2h_text_enriched {
+    @_==2 or die "need 2 arguments";
+    my($str, $ctype) = @_;
+    # $str must be already character-decoded;
+    # $ctype must be 'text/enriched' or 'text/richtext'
 
-    ## Get content-type
-    my($ctype) = $fields->{'content-type'}[0] =~ m%^\s*([\w\-\./]+)%;
+    my $data= \$str; # so that I don't have to change $$data into $str
+    my($innofill, $chunk);
+    my $ret = "";
+
     my $richtext = $ctype =~ /\btext\/richtext\b/i;
 
-    if (defined($charcnv) && defined(&$charcnv)) {
-	$$data = &$charcnv($$data, $real_charset_name);
-    } else {
-	mhonarc::htmlize($data);
-	warn qq/\n/,
-	     qq/Warning: Unrecognized character set: $charset\n/,
-	     qq/         Message-Id: <$mhonarc::MHAmsgid>\n/,
-             qq/         Message Subject: /, $fields->{'x-mha-subject'}, qq/\n/,
-	     qq/         Message Number: $mhonarc::MHAmsgnum\n/
-		unless ($charcnv eq '-decode-');
-    }
     ## Fixup any EOL mess
     $$data =~ s/\r?\n/\n/g;
     $$data =~ s/\r/\n/g;
