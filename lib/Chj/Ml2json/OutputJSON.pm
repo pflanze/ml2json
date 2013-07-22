@@ -145,6 +145,12 @@ sub _plain2html {
     )->fragment2string;
 }
 
+use Chj::Ml2json::m2h_text_enriched;
+
+sub _enriched2html {
+    my ($str,$ent)=@_;
+    m2h_text_enriched ($str, MIME_Entity_maybe_content_type_lc ($ent))
+}
 
 
 use Chj::Struct ["jsonfields_orig_headers",
@@ -251,30 +257,32 @@ sub json_orig_plain {
     my $s=shift;
     @_==2 or die;
     my ($m,$index)=@_;
-    ($m->origplain_origrich_orightml)[0]
+    ($m->origplain_origrich_orightml_string)[0]
 }
 
 sub json_orig_enriched {
     my $s=shift;
     @_==2 or die;
     my ($m,$index)=@_;
-    ($m->origplain_origrich_orightml)[1]
+    ($m->origplain_origrich_orightml_string)[1]
 }
 
 sub json_orig_html_dangerous {
     my $s=shift;
     @_==2 or die;
     my ($m,$index)=@_;
-    ($m->origplain_origrich_orightml)[2]
+    ($m->origplain_origrich_orightml_string)[2]
 }
 
 sub json_html {
     my $s=shift;
     @_==2 or die;
     my ($m,$index)=@_;
-    my $pl= $s->json_orig_plain($m,$index);
-    my $ht= $s->json_orig_html_dangerous($m,$index);
-    $ht ? _cleanuphtml($ht) : _plain2html($pl)
+    my ($pl,$rt,$ht)= $m->origplain_origrich_orightml;
+    my ($pl_,$rt_,$ht_)= $m->origplain_origrich_orightml_string;
+    ($ht_ ? _cleanuphtml($ht_,$ht) :
+     $rt_ ? _enriched2html($rt_,$rt) :
+     $pl_ ? _plain2html($pl_,$pl) : die "message with no text part")
 }
 
 sub json_message_id {

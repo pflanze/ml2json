@@ -233,15 +233,10 @@ sub MIME_Entity_maybe_alternative_entity {
     }
 }
 
-sub perhaps_body_as_string {
-    my ($maybe_s)=@_;
-    $maybe_s and $maybe_s->body_as_string
-}
-
 sub MIME_Entity_origplain_origrich_orightml {
     my $s=shift;
     my $wholemsg= sub {
-	($s->body_as_string, undef, undef)
+	($s, undef, undef)
     };
     if (my $alt= MIME_Entity_maybe_alternative_entity ($s)) {
 	my @parts= $alt->parts;
@@ -266,15 +261,15 @@ sub MIME_Entity_origplain_origrich_orightml {
 	    if (@{$parts_by_ct{"text/html"}||[]} > 1) {
 		WARN("multiple text/html parts, choosing first one");
 	    }
-	    (perhaps_body_as_string($parts_by_ct{"text/plain"}->[0]),
-	     perhaps_body_as_string($$enriched[0]),
-	     perhaps_body_as_string($parts_by_ct{"text/html"}->[0]))
+	    ($parts_by_ct{"text/plain"}->[0],
+	     $$enriched[0],
+	     $parts_by_ct{"text/html"}->[0])
 	} else {
 	    WARN ("no textual part found in alt entity, BUG? (ERROR)");
-	    return &$wholemsg;
+	    goto $wholemsg;
 	}
     } else {
-	&$wholemsg
+	goto $wholemsg
     }
 }
 

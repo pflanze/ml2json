@@ -26,11 +26,22 @@ use Chj::Struct [], 'Chj::Ml2json::Mailcollection::Message';
 
 sub origplain_origrich_orightml {
     my ($m)=@_;
-    $$m{_origplain_orightml}||= do {
-	[MIME_Entity_origplain_origrich_orightml ($m->ent)]
-    };
-    @{$$m{_origplain_orightml}}
+    $$m{_origplain_origrich_orightml}||=
+      [MIME_Entity_origplain_origrich_orightml ($m->ent)];
+    @{$$m{_origplain_origrich_orightml}}
 }
+
+sub origplain_origrich_orightml_string {
+    my ($m)=@_;
+    $$m{_origplain_origrich_orightml_string}||=
+      [
+       map {
+	   defined ($_) ? $_->body_as_string : $_
+       } $m->origplain_origrich_orightml
+      ];
+    @{$$m{_origplain_origrich_orightml_string}}
+}
+
 
 sub attachments {
     my $s=shift;
