@@ -66,7 +66,7 @@ our $default_jsonfields_top=
    [ctime_UTC=> "json_ctime_UTC", 1],
    [orig_plain=> "json_orig_plain", 2],
    [orig_enriched=> "json_orig_enriched", 2],
-   [orig_html=> "json_orig_html", 2],
+   [orig_html_dangerous=> "json_orig_html_dangerous", 2],
    [html=> "json_html", 2],
    [attachments=> "json_attachments", 2],
    [identify=> "json_identify",1],
@@ -261,7 +261,7 @@ sub json_orig_enriched {
     ($m->origplain_origrich_orightml)[1]
 }
 
-sub json_orig_html {
+sub json_orig_html_dangerous {
     my $s=shift;
     @_==2 or die;
     my ($m,$index)=@_;
@@ -273,7 +273,7 @@ sub json_html {
     @_==2 or die;
     my ($m,$index)=@_;
     my $pl= $s->json_orig_plain($m,$index);
-    my $ht= $s->json_orig_html($m,$index);
+    my $ht= $s->json_orig_html_dangerous($m,$index);
     $ht ? _cleanuphtml($ht) : _plain2html($pl)
 }
 

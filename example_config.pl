@@ -25,7 +25,7 @@
    [ctime_UTC=> "json_ctime_UTC", 1],
    [orig_plain=> "json_orig_plain", 2],
    [orig_enriched=> "json_orig_enriched", 2],
-   [orig_html=> "json_orig_html", 2],
+   [orig_html_dangerous=> "json_orig_html_dangerous", 2],
    [html=> "json_html", 2],
    [attachments=> "json_attachments", 2],
    [identify=> "json_identify",1],
