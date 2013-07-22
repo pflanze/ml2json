@@ -18,15 +18,12 @@ Created by Chj::Ml2json::MailcollectionParser, see there.
 =cut
 
 
-package Chj::Ml2json::Mailcollection_;
+package Chj::Ml2json::Mailcollection;
 
 use strict;
 
 # -----------------------------------------------------------------------
-# helper / super classes
-
-use Chj::FP2::Stream ':all';
-use Chj::FP2::List ':all';
+# super and sub classes
 
 {
     package Chj::Ml2json::Ghost;
@@ -58,25 +55,27 @@ use Chj::FP2::List ':all';
 
 {
     package Chj::Ml2json::Mailcollection::Mbox;
+    use Chj::FP2::Stream ':all';
     use Chj::Struct ["messageghosts","path"], 'Chj::Ml2json::Mailcollection';
 
     sub messageghosts {
 	my $s=shift;
 	my ($tail)=@_;
-	Chj::FP2::Stream::array2stream ($$s{messageghosts}, $tail);
+	array2stream ($$s{messageghosts}, $tail);
     }
     _END_
 }
 
 {
     package Chj::Ml2json::Mailcollection::Tree;
+    use Chj::FP2::Stream ':all';
     use Chj::Struct ["collections" # array of ::Mbox, mbox ghosts, or ::Tree
 		    ], 'Chj::Ml2json::Mailcollection';
 
     sub messageghosts {
 	my $s=shift;
 	my ($tail)=@_;
-	Chj::FP2::Stream::stream_fold_right
+	stream_fold_right
 	  (sub {
 	       my ($collection,$tail)=@_;
 	       if ($collection->isa("Chj::Ghostable::Ghost")) {
@@ -85,7 +84,7 @@ use Chj::FP2::List ':all';
 	       $collection->messageghosts($tail);
 	   },
 	   $tail,
-	   Chj::FP2::Stream::array2stream ($$s{collections}));
+	   array2stream ($$s{collections}));
     }
     _END_
 }
@@ -94,13 +93,14 @@ use Chj::FP2::List ':all';
 
 # -----------------------------------------------------------------------
 
-@Chj::Ml2json::Mailcollection::ISA= 'Chj::Ml2json::Ghostable';
 use Chj::Try;
 use Chj::NoteWarn;
 use Chj::Ml2json::MailcollectionIndex;
+use Chj::FP2::Stream ':all';
 
+use Chj::Struct [], 'Chj::Ml2json::Ghostable';
 
-sub Chj::Ml2json::Mailcollection::messages {
+sub messages {
     my $s=shift;
     my ($tail)=@_;
     stream_fold_right
@@ -112,7 +112,7 @@ sub Chj::Ml2json::Mailcollection::messages {
 	 $s->messageghosts);
 }
 
-sub Chj::Ml2json::Mailcollection::index {
+sub index {
     my $s=shift;
     my $index = new Chj::Ml2json::MailcollectionIndex;
     stream_for_each
@@ -169,3 +169,4 @@ sub Chj::Ml2json::Mailcollection::index {
     $index
 }
 
+_END_

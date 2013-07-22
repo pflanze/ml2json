@@ -40,18 +40,11 @@ $parse is true, it will also parse subdirectories.
 =cut
 
 
-package Chj::Ml2json::MailcollectionParser_;
+package Chj::Ml2json::MailcollectionParser;
 
 use strict;
 
 use Chj::NoteWarn;
-
-use Chj::Struct "Chj::Ml2json::MailcollectionParser"=>
-  ['messageclass', # class name
-   'mbox_glob', # filename-matching glob string
-   'recurse', # bool
-  ];
-
 use Chj::xperlfunc ":all";
 use MIME::Parser;
 use Digest::MD5 'md5_hex';
@@ -72,7 +65,14 @@ use Email::Date 'find_date';
 use Mail::Message::Field::Date;
 
 
-sub Chj::Ml2json::MailcollectionParser::parse_mbox_ghost {
+use Chj::Struct "Chj::Ml2json::MailcollectionParser"=>
+  ['messageclass', # class name
+   'mbox_glob', # filename-matching glob string
+   'recurse', # bool
+  ];
+
+
+sub parse_mbox_ghost {
     my $s=shift;
     @_==3 or die;
     my ($mboxpath,$tmp, $maybe_max_date_deviation)=@_;
@@ -197,7 +197,7 @@ sub Chj::Ml2json::MailcollectionParser::parse_mbox_ghost {
     }
 }
 
-sub Chj::Ml2json::MailcollectionParser::parse_mbox_dir {
+sub parse_mbox_dir {
     my $s=shift;
     @_==3 or die;
     my ($dirpath,$tmp,$maybe_max_date_deviation)=@_;
@@ -210,14 +210,14 @@ sub Chj::Ml2json::MailcollectionParser::parse_mbox_dir {
 	      ]);
 }
 
-sub Chj::Ml2json::MailcollectionParser::parse_mbox {
+sub parse_mbox {
     my $s=shift;
     $s->parse_mbox_ghost(@_)->resurrect;
 }
 
 our $nothing= Chj::Ml2json::Mailcollection::Tree->new([]);
 
-sub Chj::Ml2json::MailcollectionParser::parse_tree {
+sub parse_tree {
     my $s=shift;
     @_==3 or die;
     my ($path,$tmp,$maybe_max_date_deviation)=@_;
@@ -243,4 +243,4 @@ sub Chj::Ml2json::MailcollectionParser::parse_tree {
     }
 }
 
-Chj::Ml2json::MailcollectionParser::_END_
+_END_
