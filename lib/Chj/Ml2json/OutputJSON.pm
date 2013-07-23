@@ -127,17 +127,26 @@ sub Chj::PXML::fragment2string {
     $str
 }
 
+use Chj::Ml2json::m2h_text_enriched;
+
+
+use Chj::Struct ["jsonfields_orig_headers",
+		 "jsonfields_top",
+		 "htmlmapper"];
+
+
 sub _cleanuphtml {
-    my $str=shift;
-    # XXX unfinished
-    $str
+    my $s=shift;
+    my ($str,$ent)=@_;
+    $s->htmlmapper->parse_map_body($str)
 }
 
 sub _plain2html {
-    my $str=shift;
+    my $s=shift;
+    my ($str,$ent)=@_;
     # XXX unfinished
     (
-     DIV(
+     SPAN(
 	 map {
 	     TT("$_\n")
 	 } split /\r?\n/, $str
@@ -145,17 +154,13 @@ sub _plain2html {
     )->fragment2string;
 }
 
-use Chj::Ml2json::m2h_text_enriched;
-
 sub _enriched2html {
+    my $s=shift;
     my ($str,$ent)=@_;
-    m2h_text_enriched ($str, MIME_Entity_maybe_content_type_lc ($ent))
+    $s->htmlmapper->parse_map_body
+      (m2h_text_enriched ($str, MIME_Entity_maybe_content_type_lc ($ent)))
 }
 
-
-use Chj::Struct ["jsonfields_orig_headers",
-		 "jsonfields_top",
-		 "htmlmapper"];
 
 sub jsonfields_orig_headers {
     my $s=shift;
@@ -280,9 +285,9 @@ sub json_html {
     my ($m,$index)=@_;
     my ($pl,$rt,$ht)= $m->origplain_origrich_orightml;
     my ($pl_,$rt_,$ht_)= $m->origplain_origrich_orightml_string;
-    ($ht_ ? _cleanuphtml($ht_,$ht) :
-     $rt_ ? _enriched2html($rt_,$rt) :
-     $pl_ ? _plain2html($pl_,$pl) : die "message with no text part")
+    ($ht_ ? $s->_cleanuphtml($ht_,$ht) :
+     $rt_ ? $s->_enriched2html($rt_,$rt) :
+     $pl_ ? $s->_plain2html($pl_,$pl) : die "message with no text part")
 }
 
 sub json_message_id {
