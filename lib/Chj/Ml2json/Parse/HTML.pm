@@ -26,11 +26,13 @@ use strict;
 
 use Chj::NoteWarn;
 
+use Chj::PXHTML ":all";
+
 BEGIN {
     for (@$Chj::PXHTML::tags) {
 	no strict 'refs';
 	my $el= *{"Chj::PXHTML::".uc $_}{CODE};
-	*{uc $_}= sub (&) {
+	*{"_". uc($_)}= sub (&) {
 	    my ($c)=@_;
 	    sub {
 		&$el(&$c)
@@ -363,74 +365,74 @@ our $keepbody= sub{$body};
 
 our $map=
   +{
-    body=> SPAN{ paragraphy($body) },
+    body=> _SPAN{ paragraphy($body) },
     #"body/" => DIV { $body },
-    p=> P{ $body },
-    div=> DIV{ $body },##P ?
-    a=> A{ {href=> check_href($att{href})}, $body },
-    i=> I{ $body },
-    b=> B{$body},
-    u=> U{$body},
-    em=> I{$body},
-    strong=> B{$body},
-    br=> BR{},
-    blockquote=> BLOCKQUOTE{$body},
-    small=> SMALL{$body},
-    big=> BIG{$body},
+    p=> _P{ $body },
+    div=> _DIV{ $body },##P ?
+    a=> _A{ {href=> check_href($att{href})}, $body },
+    i=> _I{ $body },
+    b=> _B{$body},
+    u=> _U{$body},
+    em=> _I{$body},
+    strong=> _B{$body},
+    br=> _BR{},
+    blockquote=> _BLOCKQUOTE{$body},
+    small=> _SMALL{$body},
+    big=> _BIG{$body},
     font=> $keepbody, # XXX
     #blink
-    sub=> SUB{$body},
-    sup=> SUP{$body},
-    span=> SPAN{$body},
+    sub=> _SUB{$body},
+    sup=> _SUP{$body},
+    span=> _SPAN{$body},
     style=> sub {
 	#NOTE "relevant?: ".Chj::PXHTML::STYLE(\%att,$body)->fragment2string;
 	undef
     },
-    center=>CENTER{$body},
-    img=> IMG{atts"img",$body},
+    center=>_CENTER{$body},
+    img=> _IMG{atts"img",$body},
 
-    h1=> H3{$body}, #ok?
-    h2=> H3{$body}, #ok?
+    h1=> _H3{$body}, #ok?
+    h2=> _H3{$body}, #ok?
     # see what the mail starts with? then add 3?
-    h3=> H3{$body},
-    h4=> H4{$body},
-    h5=> H5{$body},
-    h6=> H6{$body},
+    h3=> _H3{$body},
+    h4=> _H4{$body},
+    h5=> _H5{$body},
+    h6=> _H6{$body},
 
-    pre=> PRE{$body},
-    tt=> TT{$body},
-    cite=> CITE{$body},
-    code=> CODE{$body},
-    samp=> SAMP{$body},
-    kbd=> KBD{$body},
-    var=> VAR{$body},
-    dfn=> CODE{$body}, #? "DFN: not widely implemented"
-    #q=> Q{atts"q",$body}, #XXX check security
-    address=> ADDRESS{$body},
-    #del=> DEL{$body}, #crazy stuff?
-    #ins=> INS{$body}, #
+    pre=> _PRE{$body},
+    tt=> _TT{$body},
+    cite=> _CITE{$body},
+    code=> _CODE{$body},
+    samp=> _SAMP{$body},
+    kbd=> _KBD{$body},
+    var=> _VAR{$body},
+    dfn=> _CODE{$body}, #? "DFN: not widely implemented"
+    #q=> _Q{atts"q",$body}, #XXX check security
+    address=> _ADDRESS{$body},
+    #del=> _DEL{$body}, #crazy stuff?
+    #ins=> _INS{$body}, #
 
-    hr=> HR{},
+    hr=> _HR{},
 
-    ul=> UL{atts"ul", $body},
-    li=> LI{atts"li", $body},
-    ol=> OL{atts"ol", $body},
-    dl=> DL{atts"dl", $body},
-    menu=> MENU{atts"menu", $body}, #hm?
-    dir=> DIR{atts"dir", $body}, #?
+    ul=> _UL{atts"ul", $body},
+    li=> _LI{atts"li", $body},
+    ol=> _OL{atts"ol", $body},
+    dl=> _DL{atts"dl", $body},
+    menu=> _MENU{atts"menu", $body}, #hm?
+    dir=> _DIR{atts"dir", $body}, #?
 
-    table=> TABLE{
+    table=> _TABLE{
 	NOTE "relevant?: ".Chj::PXHTML::TABLE(\%att,$body)->fragment2string;
 	atts("table"), $body
     },
-    tr=> TR{atts("tr"),$body},
-    td=> TD{atts("td"),$body},
-    tbody=> TBODY{atts("tbody"),$body},
-    tfoot=> TFOOT{atts("tfoot"),$body},
-    thead=> THEAD{atts("thead"), $body},
-    caption=> CAPTION{atts("caption"), $body},
-    col=> COL{atts("col"), $body},
-    colgroup=> COLGROUP{atts("colgroup"), $body},
+    tr=> _TR{atts("tr"),$body},
+    td=> _TD{atts("td"),$body},
+    tbody=> _TBODY{atts("tbody"),$body},
+    tfoot=> _TFOOT{atts("tfoot"),$body},
+    thead=> _THEAD{atts("thead"), $body},
+    caption=> _CAPTION{atts("caption"), $body},
+    col=> _COL{atts("col"), $body},
+    colgroup=> _COLGROUP{atts("colgroup"), $body},
    };
 
 use HTML::Element;
