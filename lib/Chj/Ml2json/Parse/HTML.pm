@@ -205,6 +205,7 @@ our $map=
 
 use HTML::Element;
 use HTML::TreeBuilder;
+use Chj::NoteWarn;
 
 use Chj::Struct []; # no need for context, *yet*
 
@@ -225,8 +226,10 @@ sub map_body {
 	  [
 	   map {
 	       if (ref $_) {
+		   # another HTML::Element
 		   $s->map_body ($_)
 	       } else {
+		   # a string
 		   $maybe_body_mapper ? do {
 		       local $body= $_; &$maybe_body_mapper
 		   } : $_
@@ -236,7 +239,7 @@ sub map_body {
 
 	&$fn;
     } else {
-	# drop it
+	NOTE "dropping unknown HTML element '$name'";
 	undef
     }
 }
