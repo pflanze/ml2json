@@ -389,8 +389,10 @@ our $map=
 	undef
     },
     center=>_CENTER{$body},
-    img=> _IMG{atts"img",$body},
-
+    img=> sub{
+	my $atts= atts"img";
+	$$atts{src} and IMG($atts,$body)
+    },
     h1=> _H3{$body}, #ok?
     h2=> _H3{$body}, #ok?
     # see what the mail starts with? then add 3?
