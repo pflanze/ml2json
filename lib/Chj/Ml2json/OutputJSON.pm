@@ -283,11 +283,13 @@ sub html {
     my $s=shift;
     @_==1 or die;
     my ($m)=@_;
-    my ($pl,$rt,$ht)= $m->origplain_origrich_orightml;
-    my ($pl_,$rt_,$ht_)= $m->origplain_origrich_orightml_string;
-    ($ht_ ? $s->_cleanuphtml($ht_,$ht) :
-     $rt_ ? $s->_enriched2html($rt_,$rt) :
-     $pl_ ? $s->_plain2html($pl_,$pl) : die "message with no text part")
+    $$m{_OutputJSON_html} ||= do {
+	my ($pl,$rt,$ht)= $m->origplain_origrich_orightml;
+	my ($pl_,$rt_,$ht_)= $m->origplain_origrich_orightml_string;
+	($ht_ ? $s->_cleanuphtml($ht_,$ht) :
+	 $rt_ ? $s->_enriched2html($rt_,$rt) :
+	 $pl_ ? $s->_plain2html($pl_,$pl) : die "message with no text part")
+    }
 }
 
 sub json_html {

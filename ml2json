@@ -66,6 +66,10 @@ sub usage {
                 when an email was received, could also be when they
                 were copied around.
 
+    --html-to dir
+                create html files in the specified directory
+                (currently meant for debugging only)
+
     --deidentify string
                 print message identified by the given string, which is
                 output into the JSON by the json_identify method (as
@@ -94,6 +98,7 @@ our $opt_attachment_basedir;
 our $opt_max_date_deviation;
 our $opt_recurse;
 our $opt_repl;
+our $opt_html_to;
 GetOptions("verbose"=> \$verbose,
 	   "repl"=> \$opt_repl,
 	   "help"=> sub{usage},
@@ -106,6 +111,7 @@ GetOptions("verbose"=> \$verbose,
 	       $config= require $path
 	   },
 	   "max-date-deviation=n"=> \$opt_max_date_deviation,
+	   "html-to=s"=> \$opt_html_to,
 	   "deidentify=s"=> \$opt_deidentify,
 	   "show-mbox-path=s"=> \$opt_show_mbox_path,
 	   #"dry-run"=> \$opt_dry,
@@ -215,6 +221,9 @@ our $outputjson= Chj::Ml2json::OutputJSON->new
    $$config{jsonfields_top},
    $htmlmapper);
 
+use Chj::PXML::Serialize 'pxml_xhtml_print_fast';
+use Chj::PXHTML ':all';
+
 sub parse_and_convert {
     my ($sourcepath, $targetfile)=@ARGV;
 
@@ -230,6 +239,22 @@ sub parse_and_convert {
 	    my ($m)=@_;
 	    Try {
 		$json->message_print($m,$index);
+		if ($opt_html_to) {
+		    my $idn= $m->identify;
+		    my $p= $idn;
+		    $p=~ s|/|-|g;
+		    my $path= "$opt_html_to/$p.xhtml";
+		    # iceweasel ignores encoding in .html files, thus
+		    # needs to be .xhtml suffix
+		    my $out= xopen_write $path;
+		    binmode $out, ":utf8" or die;
+		    my $fragment= $outputjson->html($m);
+		    my $page=
+		      HTML (HEAD (TITLE ($idn)),
+			    BODY ($fragment));
+		    pxml_xhtml_print_fast($page, $out, "en");
+		    $out->xclose;
+		}
 	    } $m;
 	}, $index->messages_threadsorted;
 	$json->end;
