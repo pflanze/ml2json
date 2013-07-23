@@ -209,9 +209,9 @@ use Chj::NoteWarn;
 
 use Chj::Struct []; # no need for context, *yet*
 
-sub map_body {
+sub _map_body {
     my $s=shift;
-    my ($e)=@_;
+    my ($e,$unknown)=@_;
     my $name= lc($e->tag);
 
     if (my $fn= $$map{$name}) {
@@ -227,7 +227,7 @@ sub map_body {
 	   map {
 	       if (ref $_) {
 		   # another HTML::Element
-		   $s->map_body ($_)
+		   _map_body ($s,$_,$unknown)
 	       } else {
 		   # a string
 		   $maybe_body_mapper ? do {
@@ -239,11 +239,25 @@ sub map_body {
 
 	&$fn;
     } else {
-	NOTE "dropping unknown HTML element '$name'";
+	$$unknown{$name}++;
 	undef
     }
 }
 
+sub map_body {
+    my $s=shift;
+    my ($e)=@_;
+    my $unknown={};
+    my $res= $s->_map_body ($e,$unknown);
+    if (my @k= sort keys %$unknown) {
+	#local our $s=$s;local our $e=$e;use Chj::repl;repl;
+	NOTE("dropped unknown HTML element(s): "
+	     .join (", ",map{"'$_'"} @k)
+	     ." in: '".$e->as_XML."'"
+	    );
+    }
+    $res
+}
 
 sub parse_body {
     my $s=shift;
