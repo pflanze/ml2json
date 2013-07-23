@@ -138,7 +138,7 @@ use Chj::Struct ["jsonfields_orig_headers",
 sub _cleanuphtml {
     my $s=shift;
     my ($str,$ent)=@_;
-    $s->htmlmapper->parse_map_serialize_body($str)
+    $s->htmlmapper->parse_map_body($str)
 }
 
 sub _plain2html {
@@ -151,13 +151,13 @@ sub _plain2html {
 	     TT("$_\n")
 	 } split /\r?\n/, $str
 	)
-    )->fragment2string;
+    );
 }
 
 sub _enriched2html {
     my $s=shift;
     my ($str,$ent)=@_;
-    $s->htmlmapper->parse_map_serialize_body
+    $s->htmlmapper->parse_map_body
       (m2h_text_enriched ($str, MIME_Entity_maybe_content_type_lc ($ent)))
 }
 
@@ -279,15 +279,22 @@ sub json_orig_html_dangerous {
     ($m->origplain_origrich_orightml_string)[2]
 }
 
-sub json_html {
+sub html {
     my $s=shift;
-    @_==2 or die;
-    my ($m,$index)=@_;
+    @_==1 or die;
+    my ($m)=@_;
     my ($pl,$rt,$ht)= $m->origplain_origrich_orightml;
     my ($pl_,$rt_,$ht_)= $m->origplain_origrich_orightml_string;
     ($ht_ ? $s->_cleanuphtml($ht_,$ht) :
      $rt_ ? $s->_enriched2html($rt_,$rt) :
      $pl_ ? $s->_plain2html($pl_,$pl) : die "message with no text part")
+}
+
+sub json_html {
+    my $s=shift;
+    @_==2 or die;
+    my ($m,$index)=@_;
+    $s->html($m)->fragment2string
 }
 
 sub json_message_id {
