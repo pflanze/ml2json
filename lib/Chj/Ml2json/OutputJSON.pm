@@ -138,7 +138,7 @@ use Chj::Struct ["jsonfields_orig_headers",
 sub _cleanuphtml {
     my $s=shift;
     my ($str,$ent)=@_;
-    $s->htmlmapper->parse_map_body($str)
+    $s->htmlmapper->parse_map_serialize_body($str)
 }
 
 sub _plain2html {
@@ -157,7 +157,7 @@ sub _plain2html {
 sub _enriched2html {
     my $s=shift;
     my ($str,$ent)=@_;
-    $s->htmlmapper->parse_map_body
+    $s->htmlmapper->parse_map_serialize_body
       (m2h_text_enriched ($str, MIME_Entity_maybe_content_type_lc ($ent)))
 }
 

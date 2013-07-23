@@ -504,7 +504,15 @@ sub parse_body {
 sub parse_map_body {
     my $s=shift;
     my ($html)=@_;
-    $s->map_body ($s->parse_body ($html))->fragment2string
+    $s->map_body ($s->parse_body ($html))
 }
+
+
+sub parse_map_serialize_body {
+    my $s=shift;
+    my ($html)=@_;
+    $s->parse_map_body ($html)->fragment2string
+}
+
 
 _END__
