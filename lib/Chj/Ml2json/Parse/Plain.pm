@@ -28,7 +28,7 @@ sub _parsequote {
 	my ($rgroup, $l)=@_;
 	if ($l) {
 	    my $a= car $l;
-	    if ($a=~ m|^>(.*)|) {
+	    if ($a=~ m|^> ?(.*)|) {
 		@_=(cons ($1,$rgroup), cdr $l); redo LP;
 	    } else {
 		($rgroup, $l)
@@ -46,7 +46,7 @@ sub _parse_map {
     $l and do {
 	my $a= car $l;
 	my $r= cdr $l;
-	if ($a=~ m|^>(.*)|) {
+	if ($a=~ m|^> ?(.*)|) {
 	    my ($rgroup,$l2)= _parsequote (cons($1,undef), $r);
 	    cons (BLOCKQUOTE(_parse_map (list_reverse $rgroup)),
 		  _parse_map ($l2))
