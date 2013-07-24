@@ -286,10 +286,22 @@ sub html {
     $$m{_OutputJSON_html} ||= do {
 	my ($pl,$rt,$ht)= $m->origplain_origrich_orightml;
 	my ($pl_,$rt_,$ht_)= $m->origplain_origrich_orightml_string;
+	# keep this logic in sync with the html_choice method!
 	($ht_ ? $s->_cleanuphtml($ht_,$ht) :
 	 $rt_ ? $s->_enriched2html($rt_,$rt) :
 	 $pl_ ? $s->_plain2html($pl_,$pl) : die "message with no text part")
     }
+}
+
+sub html_choice {
+    my $s=shift;
+    @_==1 or die;
+    my ($m)=@_;
+    my ($pl_,$rt_,$ht_)= $m->origplain_origrich_orightml_string;
+    # keep this logic in sync with the html method!
+    ($ht_ ? "html" :
+     $rt_ ? "rich" :
+     $pl_ ? "plain" : undef)
 }
 
 sub json_html {
