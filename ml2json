@@ -223,6 +223,13 @@ our $outputjson= Chj::Ml2json::OutputJSON->new
 
 use Chj::PXML::Serialize 'pxml_xhtml_print_fast';
 use Chj::PXHTML ':all';
+sub with_wrap_if (&$$){
+    my ($fn,$val,$cond)=@_;
+    $cond ? do{ local $_= $val; &$fn($val)} : $val
+}
+use Scalar::Util 'weaken';
+use Chj::FP::ArrayUtil ':all';
+
 
 sub parse_and_convert {
     my ($sourcepath, $targetfile)=@ARGV;
@@ -240,6 +247,7 @@ sub parse_and_convert {
 	    Try {
 		$json->message_print($m,$index);
 		if ($opt_html_to) {
+		    my $id= $m->id;
 		    my $idn= $m->identify;
 		    my $p= $idn;
 		    $p=~ s|/|-|g;
@@ -249,9 +257,149 @@ sub parse_and_convert {
 		    my $out= xopen_write $path;
 		    binmode $out, ":utf8" or die;
 		    my $fragment= $outputjson->html($m);
+		    my $orig_headers= $outputjson->json_orig_headers ($m,$index);
+		    my $ctime_UTC= $outputjson->json_ctime_UTC($m,$index);
+		    my $inreplyto= $outputjson->json_in_reply_to ($m,$index);
+		    my $replies= $outputjson->json_replies($m,$index);
+		    my $threadleaders= $outputjson->json_threadleaders($m,$index);
+		    my $maybe_threadleader=
+		      (@$threadleaders == 1) ? $$threadleaders[0] : undef;
+		    my $id2maybe_mg= sub {
+			my ($id)=@_;
+			if (my $v= $index->ids->{$id}) {
+			    $$v[1]
+			} else {
+			    ()
+			}
+		    };
+		    my $msg_id2maybe_url= sub {
+			my ($id)=@_;
+			if (my $mg= &$id2maybe_mg ($id)) {
+			    my $m= $mg->resurrect; # necessary as $mg->identify is different
+			    my $idn= $m->identify;
+			    #COPYPASTE from above
+			    my $p= $idn;
+			    $p=~ s|/|-|g;
+			    "$p.xhtml"
+			} else {
+			    undef
+			}
+		    };
+		    my @choice= $m->origplain_origrich_orightml_string;
+		    my $choice= array_zip2 \@choice, [qw(plain rich html)];
+		    my $choosen= $outputjson->html_choice($m);
+		    #use Chj::repl;repl;
+
+
+		    ###my $_id2subthread= {}; # for sharing across multiple entry points through threadleaders
+		    #wohlsck
+
+# 		    my $threadleader_simplifiedsubject= do {
+# 			my $mg= &$id2maybe_mg ($_id);
+# 			my $m= $mg->resurrect;
+# 			my $orig_headers= $outputjson->json_orig_headers ($m,$index);
+# 			subject_simplify($$orig_headers{Subject})
+# 		    };
+
+		    my $showthread; $showthread= sub {
+			my ($_id)=@_;
+			if (my $mg= &$id2maybe_mg ($_id)) {
+			    my $m= $mg->resurrect;
+			    #hm again COPYPASTE; even again to avoid fetching $m again
+			    my $idn= $m->identify;
+			    my $p= $idn;
+			    $p=~ s|/|-|g;
+			    my $url= "$p.xhtml";
+			    #/CP
+			    my $replies= $outputjson->json_replies($m,$index);
+			    my $orig_headers= $outputjson->json_orig_headers ($m,$index);
+			    #my $subject= $$orig_headers{Subject};
+			    #my $subject_is_same=
+			    #  subject_simplify($subject) eq $threadleader_simplifiedsubject;
+			    # need to  keep seen ones  too   or only. (if threadleader then show!)
+			    #my $cnt= $subject_is_same ? 
+
+			    my $cnt= "$$orig_headers{Subject}, $$orig_headers{From}";
+			    my $possiblylinkedcnt=
+			      $_id eq $id ? $cnt : A({href=> $url}, $cnt);
+
+			    DIR(
+				LI($possiblylinkedcnt),
+				map {
+				    &$showthread ($_)
+				} @$replies
+			       )
+			} else {
+			    # the unknown id's  hm,
+			    WARN "shouldn't happen here?: id '$_id'";
+			    undef
+			}
+		    };
+		    my $_showthread= $showthread; weaken $showthread;
+
 		    my $page=
-		      HTML (HEAD (TITLE ($idn)),
-			    BODY ($fragment));
+		      HTML
+			(HEAD (TITLE ($idn)),
+			 BODY
+			 ({bgcolor=>"#964a2a"},
+			  TABLE ({border=>0,
+				  cellspacing=>3,
+				  cellpadding=>16,
+				  width=>"88%",
+				  align=>"center",
+				 },
+				 TR
+				 (TD
+				  ({bgcolor=> "#f0f8ff"},
+				   TABLE
+				   ({border=>0},
+				    (
+				     map {
+					 my ($key,$val)=@$_;
+					 TR ({valign=>"top"},
+					     TD ({align=>"right"},
+						 "$key:$nbsp"),
+					     TD ($val))
+				     }
+				     ["Subject",
+				      #with_wrap_if {
+				      #	  A({href=> &$msg_id2url ($maybe_threadleader)}, $_)
+				      #} B($$orig_headers{Subject}), $maybe_threadleader
+				      #sigh, more complicated (maybe monad?):
+				      do {
+					  my $V0= B($$orig_headers{Subject});
+					  if ($maybe_threadleader
+					      and $maybe_threadleader ne $id) {
+					      if (my $V2= &$msg_id2maybe_url ($maybe_threadleader)) {
+						  A({href=> $V2}, $V0)
+					      } else {
+						  $V0
+					      }
+					  } else {
+					      $V0
+					  }
+				      }
+				     ],
+				     ["From", $$orig_headers{From}],
+				     ["To", $$orig_headers{To},
+				      ($$orig_headers{Cc} and ", Cc: $$orig_headers{Cc}")],
+				     ["Date",
+				      [$$orig_headers{Date}, $nbsp, " (", $ctime_UTC, " UTC)"]]
+				     ),
+				    TR(TD(SMALL("Message-ID:")),
+				       TD(SMALL($id," ",$nbsp," ",
+						"  $nbsp Available:",
+						map {
+						    my ($used,$msg)=@$_;
+						    ($used
+						     ? [" ",
+							($choosen eq $msg ? B($msg) : $msg)]
+						     : undef)
+						} @$choice)))))),
+				 TR (TD ({bgcolor=> "#e0f0ff"}, $fragment)),
+				 TR (TD ({bgcolor=> "#f0f8ff"},
+					 ($maybe_threadleader and
+					  &$_showthread($maybe_threadleader)))))));
 		    pxml_xhtml_print_fast($page, $out, "en");
 		    $out->xclose;
 		}
