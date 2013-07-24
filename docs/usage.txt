@@ -1,5 +1,5 @@
 1. collect all mbox files your archive is comprised of into one
-directory.
+directory (or directory tree, if you use the --recurse option)
 
 2. decide upon a base directory where all the unpacked attachments (as
 well as serialized state--for details see phases.txt) should be
@@ -14,7 +14,9 @@ done. If you want to keep the generated attachments, specify the
 using a config file; see example_config.pl and ./mk2json --help.
 
 4. run './mk2json sourcedir targetfile', perhaps with the additional
-options of your choice.
+options of your choice (in particular you need to use the --mbox-glob
+option, if the files are not named according to the default mbox glob
+pattern, '*.mbox').
 
 5. the temp / attachments dir is structured as follows:
 
