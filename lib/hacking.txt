@@ -1,0 +1,38 @@
+A functional programming approach has been used where applicable. This
+means, less state, better composition and extensibility, properly
+expressed recursive approaches.
+
+Functional libraries are found in the Chj::FP::* and Chj::FP2::*
+namespaces (the "FP2" one is to avoid clashes with some earlier
+attempts at the same thing; I'll change the namespaces once I find the
+time to clean things up).
+
+There are some things one has to be careful in Perl when using
+closures and recursion, though (examples for these can be found in the
+source):
+
+ - self-recursive closures leak memory unless the binding that's
+ visible inside the closure is either made into a weak reference by
+ way of Scalar::Util's 'weaken', or undef'ed after the end of the
+ closure's intended lifetime.
+
+ - Perl, like most non-functional programming languages, does not have
+ automatic support for tail-call optimization; but it can be done by
+ way of 'goto $subref'. Arguments can be passed by setting @_
+ explicitely. This doesn't look particularly nice, but it
+ works. Nobody claims Perl's syntax looks nice.
+
+ - recursive calls in non-tail positions (i.e. real recursion, not
+ iteration) lead to Perl giving "deep recursion" warnings with deeply
+ nested structures like linked lists; those can be silenced with "no
+ warnings 'recursion';".
+
+ - self tail-calling can be expressed with a label like "LP: { ... }" 
+ and "redo LP;" instead of creating a $lp closure. This is faster than
+ the closure and saves one from going through the 'weaken' circus. (Of
+ course "while" or "do..while" can also be used, but labels are closer
+ to function calls: they have a name, and can be put before picking up
+ arguments from @_, which means, "@_=..; redo LP;" can be used which
+ is closer to "@_=..; goto $lp;" should code be changed to the
+ latter later on.)
+
