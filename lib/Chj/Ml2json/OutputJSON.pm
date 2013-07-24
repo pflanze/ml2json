@@ -132,7 +132,7 @@ sub Chj::PXML::fragment2string {
 
 
 use Chj::Ml2json::m2h_text_enriched;
-
+use Chj::Ml2json::Parse::Plain;
 
 use Chj::Struct ["jsonfields_orig_headers",
 		 "jsonfields_top",
@@ -145,17 +145,13 @@ sub _cleanuphtml {
     $s->htmlmapper->parse_map_body($str)
 }
 
+
+our $plain= Chj::Ml2json::Parse::Plain->new();
+
 sub _plain2html {
     my $s=shift;
     my ($str,$ent)=@_;
-    # XXX unfinished
-    (
-     SPAN(
-	 map {
-	     TT("$_\n")
-	 } split /\r?\n/, $str
-	)
-    );
+    $plain->parse_map($str)
 }
 
 sub _enriched2html {
