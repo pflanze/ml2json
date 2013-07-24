@@ -21,6 +21,7 @@
    ["message-id"=> "json_message_id",1],
    [replies=> "json_replies", 2],
    ["in-reply-to"=> "json_in_reply_to", 1],
+   [threadleader=> "json_threadleaders", 1],
    [unixtime=> "json_unixtime", 1],
    [ctime_UTC=> "json_ctime_UTC", 1],
    [orig_plain=> "json_orig_plain", 2],

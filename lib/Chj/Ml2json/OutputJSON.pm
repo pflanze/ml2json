@@ -62,6 +62,7 @@ our $default_jsonfields_top=
    ["message-id"=> "json_message_id",1],
    [replies=> "json_replies", 2],
    ["in-reply-to"=> "json_in_reply_to", 1],
+   [threadleader=> "json_threadleaders", 1],
    [unixtime=> "json_unixtime", 1],
    [ctime_UTC=> "json_ctime_UTC", 1],
    [orig_plain=> "json_orig_plain", 2],
@@ -104,14 +105,15 @@ use Chj::xperlfunc ':all'; # basename, xstat
 use Date::Format 'ctime';
 use Chj::Chomp;
 use URI::file;
+use Chj::FP2::List ':all';
+use Chj::FP::ArrayUtil ':all';
 
 
+#XX monkey patching.
 use Chj::PXHTML ":all";
 use Chj::PXML::Serialize 'pxml_print_fragment_fast';
 use Chj::tempdir;
 
-
-#XX monkey patching.
 sub Chj::PXML::fragment2string {
     my $s=shift;
     my $tmpdir= tempdir "/tmp/PXML_fragment2string";##XXX how to standardize that? configure once per app.
@@ -126,6 +128,8 @@ sub Chj::PXML::fragment2string {
     unlink $tmppath; rmdir $tmpdir;
     $str
 }
+#/ monkey patching.
+
 
 use Chj::Ml2json::m2h_text_enriched;
 
@@ -339,6 +343,30 @@ sub json_identify {
     @_==2 or die;
     my ($m,$index)=@_;
     $m->identify
+}
+
+
+sub json_threadleaders {
+    my $s=shift;
+    @_==2 or die;
+    my ($m,$index)=@_;
+    my $inreplytos= $index->inreplytos;
+
+    my $leaders; $leaders= sub {
+	my ($id,$tail)=@_;
+	my $ids= $$inreplytos{$id} || [];
+	if (@$ids) {
+	    list__array_fold_right
+	      ($leaders,
+	       $tail,
+	       $ids);
+	} else {
+	    cons $id,$tail
+	}
+    };
+    my $res= array_hashing_uniq list2array &$leaders ($m->id, undef);
+    undef $leaders;
+    $res
 }
 
 sub json {
