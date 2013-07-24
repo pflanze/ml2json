@@ -424,7 +424,7 @@ our $map=
     dir=> _DIR{atts"dir", $body}, #?
 
     table=> _TABLE{
-	NOTE "relevant?: ".Chj::PXHTML::TABLE(\%att,$body)->fragment2string;
+	#NOTE "relevant?: ".Chj::PXHTML::TABLE(\%att,$body)->fragment2string;
 	atts("table"), $body
     },
     tr=> _TR{atts("tr"),$body},
