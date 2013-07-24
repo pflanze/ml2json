@@ -331,7 +331,7 @@ sub parse_and_convert {
 			       )
 			} else {
 			    # the unknown id's  hm,
-			    WARN "shouldn't happen here?: id '$_id'";
+			    NOTE "shouldn't happen here?: id '$_id'";##odd, actually happens
 			    undef
 			}
 		    };
