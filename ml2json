@@ -238,6 +238,9 @@ sub with_wrap_if (&$$){
 }
 use Scalar::Util 'weaken';
 use Chj::FP::ArrayUtil ':all';
+sub nobr {
+    SPAN({style=> "white-space:nowrap;"}, @_)
+}
 
 sub parse_and_convert {
     my ($sourcepath, $targetfile)=@ARGV;
@@ -417,17 +420,20 @@ sub parse_and_convert {
 				     ["Date",
 				      [$$orig_headers{Date}, $nbsp, " (", $ctime_UTC, " UTC)"]]
 				     ),
-				    TR(TD(SMALL("Message-ID:")),
-				       TD(SMALL($id," ",$nbsp," ",
-						"  $nbsp Choice:",
-						(map {
+				    TR({valign=>"top"},
+				       TD(SMALL("Message-ID:")),
+				       TD(SMALL($id,
+						" $nbsp ",
+						nobr
+						("Choice:",
+						 (map {
 						     my ($used,$msg)=@$_;
 						     ($used
 						      ? [" ",
 							 ($choosen eq $msg ? B($msg) : $msg)]
 						      : undef)
 						 } @$choice),
-						$perhaps_source_link)))))),
+						 $perhaps_source_link))))))),
 				 TR (TD ({bgcolor=> "#e0f0ff"}, $fragment)),
 				 TR (TD ({bgcolor=> "#f0f8ff"},
 					 ($maybe_threadleader and
