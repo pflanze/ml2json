@@ -119,9 +119,11 @@ sub Chj::PXML::fragment2string {
     my $tmpdir= tempdir "/tmp/PXML_fragment2string";##XXX how to standardize that? configure once per app.
     my $tmppath= "$tmpdir/1";
     open my $o, ">", $tmppath or die "open '$tmppath': $!";
+    binmode $o, ":utf8" or die;
     pxml_print_fragment_fast($s, $o);
     close $o or die $!;
     open my $i, "<", $tmppath or die $!;
+    binmode $i, ":utf8" or die;
     local $/;
     my $str= <$i>;
     close $i or die $!;
