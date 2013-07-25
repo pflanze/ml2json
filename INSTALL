@@ -9,5 +9,5 @@ Debian-derived Linux system using:
 
  apt-get install libmime-tools-perl libmail-box-perl libemail-date-perl libhtml-tree-perl
 
-Or install MIME::Tools, Mail::Box, HTML::Element and Email::Date from CPAN.
+Or install MIME::Tools, Mail::Box, HTML::Tree and Email::Date from CPAN.
 
