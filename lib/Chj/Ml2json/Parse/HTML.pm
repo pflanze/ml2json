@@ -356,7 +356,7 @@ sub atts ($) {
 	  } keys %att
 	 }
     } else {
-	WARN "\$map_att does not contain entry for '$tagname'";
+	NOTE "\$map_att does not contain entry for '$tagname'";
 	undef
     }
 }
@@ -370,11 +370,11 @@ our $map=
     p=> _P{ $body },
     div=> _DIV{ $body },##P ?
     a=> _A{ {href=> check_href($att{href})}, $body },
-    i=> _I{ $body },
-    b=> _B{$body},
+    i=> _EM{ $body },
+    b=> _STRONG{$body},
     u=> _U{$body},
-    em=> _I{$body},
-    strong=> _B{$body},
+    em=> _EM{$body},
+    strong=> _STRONG{$body},
     br=> _BR{},
     blockquote=> _BLOCKQUOTE{$body},
     small=> _SMALL{$body},
@@ -420,6 +420,8 @@ our $map=
     li=> _LI{atts"li", $body},
     ol=> _OL{atts"ol", $body},
     dl=> _DL{atts"dl", $body},
+    dt=> _DT{atts"dt", $body},
+    dd=> _DD{atts"dd", $body},
     menu=> _MENU{atts"menu", $body}, #hm?
     dir=> _DIR{atts"dir", $body}, #?
 
