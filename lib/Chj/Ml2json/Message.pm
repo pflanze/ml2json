@@ -32,18 +32,6 @@ sub origplain_origrich_orightml {
 }
 
 
-sub MIME_Entity_body_as_string {
-    # i.e. *decoded* string, please.  $e->body_as_string re-encodes
-    # the body, but bodyhandle only is available for parts that were
-    # decoded; thus have to try both. Crazy?
-    my ($e)=@_;
-    if (my $bh= $e->bodyhandle) {
-	$bh->as_string
-    } else {
-	$e->body_as_string
-    }
-}
-
 sub origplain_origrich_orightml_string {
     my ($m)=@_;
     $$m{_origplain_origrich_orightml_string}||=

@@ -25,6 +25,8 @@ package Chj::Ml2json::MIMEExtract;
 	      MIME_Entity_maybe_content_type_lc_split
 	      MIME_Entity_maybe_content_type_lc
 	      MIME_Entity_path
+	      MIME_Entity_body_maybe_charset
+	      MIME_Entity_body_as_string
 	    );
 %EXPORT_TAGS=(all=>[@EXPORT,@EXPORT_OK]);
 
@@ -232,6 +234,50 @@ sub MIME_Entity_maybe_alternative_entity {
 	()
     }
 }
+
+# can't find any method that gives me the charset, sigh, thus:
+sub MIME_Entity_body_maybe_charset {
+    my ($s)=@_;
+    if (my ($ct_kind,$ct_subkind,$ct_rest)=
+	MIME_Entity_maybe_content_type_lc_split($s)) {
+	($ct_rest=~ /charset\s*=\s*"(.*?)"/i ? $1
+	 :
+	 $ct_rest=~ /charset\s*=\s*([^\"\s;:]+)/i ? $1
+	 : undef)
+    } else {
+	undef
+    }
+}
+
+
+sub MIME_Entity_body_as_string {
+    # i.e. *decoded* string, please.  $e->body_as_string re-encodes
+    # the body, but bodyhandle only is available for parts that were
+    # decoded; thus have to try both. Crazy?
+    my ($s)=@_;
+    if (my $bh= $s->bodyhandle) {
+	#$bh->as_string
+	# even more crazily, charset decoding is not done by the
+	# as_string method, thus:
+	my $in= $bh->open("r");
+	if (my $encoding = MIME_Entity_body_maybe_charset ($s)) {
+	    $encoding=~ /[()]/ and die "invalid encoding? '$encoding'";
+	    #NOTE "ENCODING: '$encoding'";
+	    binmode $in, ":encoding($encoding)"
+	      or WARN "could not set binmode to encoding '$encoding'";
+	} else {
+	    NOTE "no encoding";
+	}
+	local $/;
+	my $str= <$in>;
+	close $in or die $!;
+	$str
+    } else {
+	WARN "no bodyhandle, thus falling back to ->body_as_string";
+	$s->body_as_string
+    }
+}
+
 
 sub MIME_Entity_origplain_origrich_orightml {
     my $s=shift;
