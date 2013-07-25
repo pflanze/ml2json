@@ -86,8 +86,8 @@ sub usage {
                 be specified for --deidentify as well.
 
     --show-mbox-path md5hexstring[/number]
-                show path of original mbox file for a given mbox identifier
-                (as they are used in identify strings).
+                show path of original mbox file for a given mbox
+                identifier (as they are used in identify strings).
 
   (Christian Jaeger <$email>)
 ";
