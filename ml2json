@@ -70,6 +70,12 @@ sub usage {
                 create html files in the specified directory
                 (currently meant for debugging only)
 
+    --source-to dir
+                create files <dir>/<md5hash>/<number>.txt (where
+                <md5hash>/<number> is the same string that
+                --deidentify takes) and link them in the html files
+                produced with --html-to
+
     --deidentify string
                 print message identified by the given string, which is
                 output into the JSON by the json_identify method (as
@@ -99,6 +105,7 @@ our $opt_max_date_deviation;
 our $opt_recurse;
 our $opt_repl;
 our $opt_html_to;
+our $opt_source_to;
 GetOptions("verbose"=> \$verbose,
 	   "repl"=> \$opt_repl,
 	   "help"=> sub{usage},
@@ -112,6 +119,7 @@ GetOptions("verbose"=> \$verbose,
 	   },
 	   "max-date-deviation=n"=> \$opt_max_date_deviation,
 	   "html-to=s"=> \$opt_html_to,
+	   "source-to=s"=> \$opt_source_to,
 	   "deidentify=s"=> \$opt_deidentify,
 	   "show-mbox-path=s"=> \$opt_show_mbox_path,
 	   #"dry-run"=> \$opt_dry,
@@ -237,6 +245,9 @@ sub parse_and_convert {
     if ($opt_html_to and not -d $opt_html_to) {
 	xmkdir $opt_html_to
     }
+    if ($opt_source_to and not -d $opt_source_to) {
+	xmkdir $opt_source_to
+    }
 
     my $coll= $collectionparser->parse_tree($sourcepath, $tmp, $opt_max_date_deviation);
 
@@ -250,6 +261,17 @@ sub parse_and_convert {
 	    my ($m)=@_;
 	    Try {
 		$json->message_print($m,$index);
+
+		my $source_path;
+		if ($opt_source_to) {
+		    my $idn= $m->identify;
+		    my $path= "$opt_source_to/$idn.txt";
+		    mkdir dirname($path);
+		    my $out= xopen_write $path;
+		    $out->xprint($m->ent->as_string);
+		    $out->xclose;
+		    $source_path= $path;
+		}
 		if ($opt_html_to) {
 		    my $id= $m->id;
 		    my $idn= $m->identify;
@@ -341,6 +363,11 @@ sub parse_and_convert {
 		    };
 		    my $_showthread= $showthread; weaken $showthread;
 
+		    my $perhaps_source_link= $source_path && do {
+			my $rel= File::Spec->abs2rel($source_path, dirname($path));
+			["; ", A({href=> $rel}, "source")]
+		    };
+
 		    my $page=
 		      HTML
 			(HEAD (TITLE ($idn)),
@@ -392,14 +419,15 @@ sub parse_and_convert {
 				     ),
 				    TR(TD(SMALL("Message-ID:")),
 				       TD(SMALL($id," ",$nbsp," ",
-						"  $nbsp Available:",
-						map {
-						    my ($used,$msg)=@$_;
-						    ($used
-						     ? [" ",
-							($choosen eq $msg ? B($msg) : $msg)]
-						     : undef)
-						} @$choice)))))),
+						"  $nbsp Choice:",
+						(map {
+						     my ($used,$msg)=@$_;
+						     ($used
+						      ? [" ",
+							 ($choosen eq $msg ? B($msg) : $msg)]
+						      : undef)
+						 } @$choice),
+						$perhaps_source_link)))))),
 				 TR (TD ({bgcolor=> "#e0f0ff"}, $fragment)),
 				 TR (TD ({bgcolor=> "#f0f8ff"},
 					 ($maybe_threadleader and
