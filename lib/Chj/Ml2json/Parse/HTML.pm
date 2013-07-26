@@ -16,6 +16,9 @@ Chj::Ml2json::Parse::HTML
 
 =head1 DESCRIPTION
 
+NOTE: this html mapping is done when using text/html or text/enriched
+or text/richtext parts, but *not* when using text/plain (which is
+handled by Chj::Ml2json::Parse::Plain).
 
 =cut
 
@@ -380,7 +383,16 @@ our $map=
     em=> _EM{$body},
     strong=> _STRONG{$body},
     br=> _BR{},
-    blockquote=> _BLOCKQUOTE{$body},
+    blockquote=> _BLOCKQUOTE{
+	my $level= list_fold_right
+	  (sub {
+	       my ($name,$n)=@_;
+	       ($name eq "blockquote") ? $n+1 : $n
+	   },
+	   0,
+	   $parents);
+	{class=> "quotelevel_$level" },$body
+    },
     small=> _SMALL{$body},
     big=> _BIG{$body},
     font=> $keepbody, # XXX

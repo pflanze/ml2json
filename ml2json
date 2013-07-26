@@ -241,6 +241,9 @@ use Chj::FP::ArrayUtil ':all';
 sub nobr {
     SPAN({style=> "white-space:nowrap;"}, @_)
 }
+use Chj::Ml2json::Color;
+our $textbackgroundcol= Chj::Ml2json::Color->new_htmlstring("#e0f0ff");
+our $blockquoteendcol= Chj::Ml2json::Color->new_htmlstring("#ffffff");
 
 sub parse_and_convert {
     my ($sourcepath, $targetfile)=@ARGV;
@@ -383,7 +386,13 @@ sub parse_and_convert {
 
 		    my $page=
 		      HTML
-			(HEAD (TITLE ($idn)),
+			(HEAD (TITLE ($idn),
+			       STYLE ({type=>"text/css"},
+				      map {
+					  my $col= $textbackgroundcol->shade_exponentially_towards
+					      ($blockquoteendcol, 0.6, $_)->htmlstring;
+					  ".quotelevel_$_ { background-color:$col; }\n"
+				      } 1..15)),
 			 BODY
 			 ({bgcolor=>"#964a2a"},
 			  TABLE ({border=>0,
@@ -444,7 +453,7 @@ sub parse_and_convert {
 						      : undef)
 						 } @$choice),
 						 $perhaps_source_link))))))),
-				 TR (TD ({bgcolor=> "#e0f0ff"}, $fragment)),
+				 TR (TD ({bgcolor=> $textbackgroundcol->htmlstring}, $fragment)),
 				 TR (TD ({bgcolor=> "#f0f8ff"},
 					 ($maybe_threadleader and
 					  &$_showthread($maybe_threadleader)))))));

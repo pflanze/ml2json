@@ -87,17 +87,20 @@ sub plainchunk2html {
 
 
 sub _parse_map {
-    my ($l)=@_;
+    @_==2 or die;
+    my ($l,$quotelevel)=@_;
     no warnings 'recursion';
     $l and do {
 	my $a= car $l;
 	my $r= cdr $l;
 	if ($a=~ m|^> ?(.*)|) {
 	    my ($rgroup,$l2)= _parsequote (cons($1,undef), $r);
-	    cons (BLOCKQUOTE(_parse_map (list_reverse $rgroup)),
-		  _parse_map ($l2))
+	    cons (BLOCKQUOTE({class=> "quotelevel_$quotelevel"},
+			     _parse_map (list_reverse ($rgroup),
+					 $quotelevel+1)),
+		  _parse_map ($l2,$quotelevel))
 	} else {
-	    cons ([plainchunk2html($a), BR], _parse_map($r))
+	    cons ([plainchunk2html($a), BR], _parse_map($r,$quotelevel))
 	}
     }
 }
@@ -108,7 +111,7 @@ use Chj::Struct []; # no need for context, *yet*
 sub parse_map {
     my $s=shift;
     my ($str)=@_;
-    SPAN(_parse_map array2list [split /\r?\n/, $str])
+    SPAN(_parse_map (array2list([split /\r?\n/, $str]), 1))
 }
 
 
