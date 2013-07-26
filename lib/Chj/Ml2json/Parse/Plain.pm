@@ -22,6 +22,7 @@ use strict;
 
 use Chj::FP2::List ":all";
 use Chj::PXHTML ':all';
+use Chj::NoteWarn;
 
 sub _parsequote {
   LP: {
@@ -39,6 +40,36 @@ sub _parsequote {
     }
 }
 
+sub plainchunk2html {
+    my $str=shift;
+    # no need for escaping; but use Chj::PXHTML elements where needed
+    my @out;
+    while ($str=~ /(.*?)(\s+|\z)/sg) {
+	push @out, $1 if length $1;
+	my $ws= $2;
+	if (length $ws) {
+	    my $ws2=$ws;
+	    $ws2=~ s/ //g;
+	    if (length $ws2) {
+		WARN "non-space whitespace '$ws2', what to do?";
+	    }
+	    # turn into combination of space and nbsp; need to start
+	    # with a nbsp on the left; as a space directly after the
+	    # surrounding tag would be dropped.
+	    my $i= length $ws;
+	    my $nb= 1;
+	    while ($i) {
+		push @out, $nb ? $nbsp : " ";
+		$i--;
+		$nb= ! $nb;
+	    }
+	} else {
+	    return \@out
+	}
+    }
+    die "should never reach this"
+}
+
 
 sub _parse_map {
     my ($l)=@_;
@@ -51,7 +82,7 @@ sub _parse_map {
 	    cons (BLOCKQUOTE(_parse_map (list_reverse $rgroup)),
 		  _parse_map ($l2))
 	} else {
-	    cons ([$a, BR], _parse_map($r))
+	    cons ([plainchunk2html($a), BR], _parse_map($r))
 	}
     }
 }
