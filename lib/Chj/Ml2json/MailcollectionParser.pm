@@ -92,7 +92,7 @@ sub parse_mbox_ghost {
 	    my $msgghosts=
 	      stream_map sub {
 		  my ($i,$v)= @{$_[0]};
-		  my ($maybe_t,$lines)=@$v;
+		  my ($maybe_t,$lines,$cursor)=@$v;
 
 		  Try {
 		      my $targetdir= "$mboxtargetbase/$i";
@@ -176,7 +176,8 @@ sub parse_mbox_ghost {
 					     $h,
 					     $unixtime,
 					     $mboxpathhash,
-					     $i)
+					     $i,
+					     $cursor)
 			->ghost($targetdir);
 		  } "'$mboxpath', $mboxpathhash/$n"
 	      }, stream_zip2 stream_iota(), $msgs;

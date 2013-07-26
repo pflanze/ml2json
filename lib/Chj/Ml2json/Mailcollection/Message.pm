@@ -22,7 +22,9 @@ use strict;
 
 use Chj::NoteWarn;
 
-use Chj::Struct ["ent", "h", "unixtime", "mboxpathhash", "n"],
+use Chj::Struct ["ent", "h", "unixtime", "mboxpathhash", "n",
+		 "mboxslice"
+		],
   'Chj::Ml2json::Ghostable';
 # cache values: messageids
 
