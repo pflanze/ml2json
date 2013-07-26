@@ -340,6 +340,10 @@ our $tag_map_att=
 
 our $body;
 our %att;
+our $parents; # linked list holding the element names of the parents
+              # in the *source* html; direct parent is the head;
+              # 'html' is not recorded thus the 'body' mapper sees
+              # empty $parents
 
 sub atts ($) {
     my ($tagname)=@_;
@@ -457,6 +461,7 @@ sub _map_body {
 
 	my $maybe_body_mapper= $$map{$name."/"};
 
+	local $parents= cons ($name, $parents);
 	local $body=
 	  [
 	   map {
