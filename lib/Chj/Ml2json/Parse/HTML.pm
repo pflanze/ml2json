@@ -389,7 +389,7 @@ our $map=
 	       my ($name,$n)=@_;
 	       ($name eq "blockquote") ? $n+1 : $n
 	   },
-	   0,
+	   1,
 	   $parents);
 	{class=> "quotelevel_$level" },$body
     },
@@ -473,21 +473,22 @@ sub _map_body {
 
 	my $maybe_body_mapper= $$map{$name."/"};
 
-	local $parents= cons ($name, $parents);
-	local $body=
-	  [
-	   map {
-	       if (ref $_) {
-		   # another HTML::Element
-		   _map_body ($s,$_,$unknown)
-	       } else {
-		   # a string
-		   $maybe_body_mapper ? do {
-		       local $body= $_; &$maybe_body_mapper
-		   } : $_
-	       }
-	   } @{$e->content||[]}
-	  ];
+	local $body= do {
+	    local $parents= cons ($name, $parents);
+	    [
+	     map {
+		 if (ref $_) {
+		     # another HTML::Element
+		     _map_body ($s,$_,$unknown)
+		 } else {
+		     # a string
+		     $maybe_body_mapper ? do {
+			 local $body= $_; &$maybe_body_mapper
+		     } : $_
+		 }
+	     } @{$e->content||[]}
+	    ]
+	};
 	#use Chj::repl; repl;
 	&$fn;
     } else {
