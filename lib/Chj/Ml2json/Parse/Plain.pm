@@ -40,12 +40,27 @@ sub _parsequote {
     }
 }
 
+sub possibly_url2html {
+    my $str=shift;
+    # str does not contain whitespace already. But may contain other
+    # stuff at the end especially.
+    if (my ($prot,$main,$post)= $str=~ m/^(https?|ftp|mailto)(:.*?)([;.,!]?)\z/si) {
+	my $url= "$prot$main";
+	[A({href=> $url,
+	    rel=> "nofollow", # lowering the value for spammers
+	   }, $url),
+	 $post]
+    } else {
+	$str
+    }
+}
+
 sub plainchunk2html {
     my $str=shift;
     # no need for escaping; but use Chj::PXHTML elements where needed
     my @out;
     while ($str=~ /(.*?)(\s+|\z)/sg) {
-	push @out, $1 if length $1;
+	push @out, possibly_url2html($1) if length $1;
 	my $ws= $2;
 	if (length $ws) {
 	    my $ws2=$ws;
