@@ -271,7 +271,17 @@ sub parse_and_convert {
 		    my $path= "$opt_source_to/$idn.txt";
 		    mkdir dirname($path);
 		    my $out= xopen_write $path;
-		    $out->xprint($m->ent->as_string);
+		    # Choice of either deparsing the entity, which is
+		    # not the same as what was originally parsed (but
+		    # it would show what was lost in the MIME parser)
+		    if (0) {
+			$out->xprint($m->ent->as_string);
+		    } else {
+			# or re-read the slice of the original mbox
+			# file; XX assumes that the file is still
+			# unchanged!
+			$m->mboxslice->xsendfile_to($out);
+		    }
 		    $out->xclose;
 		    $source_path= $path;
 		}
