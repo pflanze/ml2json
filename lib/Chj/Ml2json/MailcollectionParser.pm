@@ -64,6 +64,31 @@ use Date::Parse 'str2time';
 use Email::Date 'find_date';
 use Mail::Message::Field::Date;
 
+sub fixup_msg {
+    my ($lines)=@_;
+    my @head;
+    for (my $i=0; $i< @$lines; $i++) {
+	my $line= $$lines[$i];
+	if ($line=~ /^[\r\n]*\z/s) {
+	    # end of head
+	    my @newhead= shift @head;
+	    local $_;
+	    while (@head) {
+		$_= shift @head;
+		s{^(\w+(?: +\w+)+:)}{
+                    my $str= $1;
+                    $str=~ s/ /-/g;
+                    $str
+                }e;
+		push @newhead, $_
+            }
+	    return [ @newhead, @$lines[$i..$#$lines] ]
+	} else {
+	    push @head, $line;
+	}
+    }
+    die "message with no head-body-separator";
+}
 
 use Chj::Struct "Chj::Ml2json::MailcollectionParser"=>
   ['messageclass', # class name
@@ -100,7 +125,8 @@ sub parse_mbox_ghost {
 
 		      my $parser = new MIME::Parser;
 		      $parser->output_dir($targetdir);
-		      my $ent= $parser->parse_data(join("",@$lines));
+		      my $ent= $parser->parse_data
+			(join("",@{fixup_msg $lines}));
 		      my $head=$ent->head;
 		      my $h_orig= $head->header_hashref;
 		      my $h= +{
