@@ -59,6 +59,10 @@ use strict;
 our $default_jsonfields_top=
   [
    ["orig_headers"=> "json_orig_headers", 2],
+   ["parsed_from"=> "json_parsed_from", 2],
+   ["parsed_to"=> "json_parsed_to", 2],
+   ["parsed_cc"=> "json_parsed_cc", 2],
+   ["decoded_subject"=> "json_decoded_subject", 1],
    ["message-id"=> "json_message_id",1],
    [replies=> "json_replies", 2],
    ["in-reply-to"=> "json_in_reply_to", 1],
@@ -135,6 +139,7 @@ sub Chj::PXML::fragment2string {
 
 use Chj::Ml2json::m2h_text_enriched;
 use Chj::Ml2json::Parse::Plain;
+use MIME::EncWords 'decode_mimewords';
 
 use Chj::Struct ["jsonfields_orig_headers",
 		 "jsonfields_top",
@@ -206,8 +211,7 @@ sub DeArrize ($) {
 sub json_orig_headers {
     my $s=shift;
     my ($m)=@_;
-    my $head= $m->ent->head;
-    my $h= $head->header_hashref;
+    my $h= $m->header_hashref_lc;
     my $jsonheaders_h= $s->jsonfields_orig_headers_h;
     my %res;
     for my $k (keys %$h) {
@@ -227,6 +231,75 @@ sub json_orig_headers {
     }
     \%res
 }
+
+
+sub _json_mailparsed_header {
+    my $s=shift;
+    @_==2 or die;
+    my ($m, $lcname)=@_;
+    my $h= $m->header_hashref_lc;
+    if (my $v= $$h{$lcname}) {
+	[
+	 map {
+	     map {
+		 +{
+		   phrase=> scalar decode_mimewords($_->phrase),
+		   address=> $_->address,
+		   comment=> scalar decode_mimewords($_->comment),
+		  }
+	     } Mail::Address->parse($_);
+	 } @$v
+	]
+    } else {
+	[]
+    }
+}
+
+sub _json_decoded_header {
+    my $s=shift;
+    @_==2 or die;
+    my ($m, $lcname)=@_;
+    my $h= $m->header_hashref_lc;
+    if (my $v= $$h{$lcname}) {
+	[
+	 map {
+	     scalar decode_mimewords($_)
+	 } @$v
+	]
+    } else {
+	[]
+    }
+}
+
+sub json_parsed_from {
+    my $s=shift;
+    @_==2 or die;
+    my ($m,$index)=@_;
+    $s->_json_mailparsed_header($m, "from");
+}
+
+sub json_parsed_to {
+    my $s=shift;
+    @_==2 or die;
+    my ($m,$index)=@_;
+    $s->_json_mailparsed_header($m, "to");
+}
+
+sub json_parsed_cc {
+    my $s=shift;
+    @_==2 or die;
+    my ($m,$index)=@_;
+    $s->_json_mailparsed_header($m, "cc");
+}
+
+
+sub json_decoded_subject {
+    my $s=shift;
+    @_==2 or die;
+    my ($m,$index)=@_;
+    $s->_json_decoded_header($m, "subject");
+}
+
 
 sub json_attachments {
     my $s=shift;

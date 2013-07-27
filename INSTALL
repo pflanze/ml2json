@@ -7,7 +7,7 @@ Github repositories).
 The other non-standard dependencies can be installed on a
 Debian-derived Linux system using:
 
- apt-get install libmime-tools-perl libemail-date-perl libhtml-tree-perl
+ apt-get install libmime-tools-perl libemail-date-perl libhtml-tree-perl libmime-encwords-perl
 
-Or install MIME::Tools, HTML::Tree and Email::Date from CPAN.
-
+Or install MIME::Tools, HTML::Tree, MIME::EncWords and Email::Date
+from CPAN.

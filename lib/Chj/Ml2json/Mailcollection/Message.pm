@@ -50,6 +50,12 @@ sub headers_string {
     join ("\n", @{ $$s{h}{lc $key} })
 }
 
+sub header_hashref_lc {
+    # same as 'h' method, mind you.
+    my $s=shift;
+    $$s{h}
+}
+
 sub if_header_anglebracketed {
     my $s=shift;
     @_==5 or die;
