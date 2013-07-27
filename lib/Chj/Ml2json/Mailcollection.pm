@@ -116,12 +116,17 @@ sub messages {
 sub index {
     my $s=shift;
     my $index = new Chj::Ml2json::MailcollectionIndex;
+    # build 'messageids' and 'ids'
     stream_for_each
 	(sub {
 	     my ($mg)=@_;
 	     Try {
 		 my $m= $mg->resurrect;
 		 my $id= $m->id;
+		 # process message regardless whether $id has appeared
+		 # already: will add real message-ids to the
+		 # messageids index; perhaps the second time it's
+		 # different? And still useful to lead to $id.
 		 my $t= $m->unixtime;
 		 for my $messageid (@{$m->messageids}) {
 		     if (my $former_id= $$index{messageids}{$messageid}) {
@@ -135,35 +140,43 @@ sub index {
 			 $$index{messageids}{$messageid}= $id;
 		     }
 		 }
-		 $$index{ids}{$id}= [$t, $mg];
+		 $$index{ids}{$id}= [$t, $mg]
+		   unless exists $$index{ids}{$id};
 	     } $mg
 	 },
 	 $s->messageghosts);
+    # build 'inreplytos' and 'replies' while mapping message-ids to
+    # ids. Be careful to process each id only once to prevent
+    # exponential blowup in replies (right?).
+    my $seen_ids={};
     stream_for_each
 	(sub {
 	     my ($mg)=@_;
 	     Try {
 		 my $m= $mg->resurrect;
 		 my $id= $m->id;
-		 my $t= $m->unixtime;
-		 my $inreplytos= $m->inreplytos;
-		 $$index{inreplytos}{$id}= $inreplytos;
-		 for my $inreplyto (@$inreplytos) {
-		     # (*should* be just 0 or one, but..)
-		     # Map inreplyto to normalized id:
-		     my $inreplyto_id= $$index{messageids}{$inreplyto}
-		       || do {
-			   NOTE("unknown message with messageid "
-				."'$inreplyto' given in in-reply-to "
-				."header of ".$m->identify);
-			   $inreplyto
-		       };
-		     push @{ $$index{replies}{$inreplyto_id} }, $id;
+		 unless ($$seen_ids{$id}) {
+		     $$seen_ids{$id}=1;
+		     my $t= $m->unixtime;
+		     my $inreplytos= $m->inreplytos;
+		     $$index{inreplytos}{$id}= $inreplytos;
+		     for my $inreplyto (@$inreplytos) {
+			 # (*should* be just 0 or one, but..)
+			 # Map inreplyto to normalized id:
+			 my $inreplyto_id= $$index{messageids}{$inreplyto}
+			   || do {
+			       NOTE("unknown message with messageid "
+				    ."'$inreplyto' given in in-reply-to "
+				    ."header of ".$m->identify);
+			       $inreplyto
+			   };
+			 push @{ $$index{replies}{$inreplyto_id} }, $id;
+		     }
+		     #for my $reference ($m->references) {
+		     #my $oldrefs = $$index{replies}{$reference}||[];
+		     #XX
+		     #}
 		 }
-		 #for my $reference ($m->references) {
-		 #my $oldrefs = $$index{replies}{$reference}||[];
-		 #XX
-		 #}
 	     } $mg;
 	 },
 	 $s->messageghosts);
