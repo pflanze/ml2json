@@ -281,9 +281,6 @@ sub MIME_Entity_body_as_string {
 
 sub MIME_Entity_origplain_origrich_orightml {
     my $s=shift;
-    my $wholemsg= sub {
-	($s, undef, undef)
-    };
     if (my $alt= MIME_Entity_maybe_alternative_entity ($s)) {
 	my @parts= $alt->parts;
 	my %parts_by_ct;
@@ -312,10 +309,25 @@ sub MIME_Entity_origplain_origrich_orightml {
 	     $parts_by_ct{"text/html"}->[0])
 	} else {
 	    WARN ("no textual part found in alt entity, BUG? (ERROR)");
-	    goto $wholemsg;
+	    ($s, undef, undef)
 	}
     } else {
-	goto $wholemsg
+	if (my $ct= MIME_Entity_maybe_content_type_lc ($s)) {
+	    if ($ct eq "text/html") {
+		(undef,undef,$s)
+	    } elsif ($ct eq "text/plain") {
+		($s,undef,undef)
+	    } elsif ($ct eq "text/enriched"
+		     or $ct eq "text/richtext") {
+		(undef,$s,undef)
+	    } else {
+		WARN ("no textual part found in the mail, toplevel content-type is '$ct'");
+		($s, undef, undef)
+	    }
+	} else {
+	    WARN("email does not have a content-type header");
+	    ($s, undef, undef)
+	}
     }
 }
 
