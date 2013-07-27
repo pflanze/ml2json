@@ -22,6 +22,8 @@ Chj::Ml2json::MailcollectionParser
  $collectionparser->parse_mbox_dir($dirpath, $tmp, $maybe_max_date_deviation)
  #or
  $collectionparser->parse_tree($path, $tmp, $maybe_max_date_deviation)
+ #or
+ $collectionparser->parse_trees(\@paths, $tmp, $maybe_max_date_deviation)
 
 =head1 DESCRIPTION
 
@@ -268,6 +270,16 @@ sub parse_tree {
 	WARN "ignoring item '$path' which is not a dir nor file";
 	$nothing
     }
+}
+
+sub parse_trees {
+    my $s=shift;
+    @_==3 or die;
+    my ($paths,$tmp,$maybe_max_date_deviation)=@_;
+    Chj::Ml2json::Mailcollection::Tree->new
+	([map {
+	    $s->parse_tree($_, $tmp, $maybe_max_date_deviation)
+	}@$paths]);
 }
 
 _END_

@@ -20,13 +20,11 @@ our $mbox_glob= '*.mbox';
 
 sub usage {
     print STDERR map{"$_\n"} @_ if @_;
-    print "$myname sourcedir-or-file targetfile
+    print "$myname sourcedir-or-file(s) [--json-to targetfile]
 
   sourcedir should be a directory with *.mbox files directly in it
   ($myname does not currently recurse into subdirectories).
   If a file is given instead, it is assumed to be an mbox file.
-
-  targetfile is where the JSON output should go (use '-' for stdout).
 
   Options:
     --verbose   show NOTEs in addition to WARNings on stderr
@@ -66,6 +64,9 @@ sub usage {
                 when an email was received, could also be when they
                 were copied around.
 
+    --json-to file
+                where the JSON output should go (use '-' for stdout).
+
     --html-to dir
                 create html files in the specified directory
                 (currently meant for debugging only)
@@ -89,6 +90,9 @@ sub usage {
                 show path of original mbox file for a given mbox
                 identifier (as they are used in identify strings).
 
+  (Option names can be shortened as long as they are unambiguous and
+  that you take the risk for future ambiguity.)
+
   (Christian Jaeger <$email>)
 ";
 exit (@_ ? 1 : 0);
@@ -104,6 +108,7 @@ our $opt_attachment_basedir;
 our $opt_max_date_deviation;
 our $opt_recurse;
 our $opt_repl;
+our $opt_json_to;
 our $opt_html_to;
 our $opt_source_to;
 GetOptions("verbose"=> \$verbose,
@@ -118,13 +123,16 @@ GetOptions("verbose"=> \$verbose,
 	       $config= require $path
 	   },
 	   "max-date-deviation=n"=> \$opt_max_date_deviation,
+	   "json-to=s"=> \$opt_json_to,
 	   "html-to=s"=> \$opt_html_to,
 	   "source-to=s"=> \$opt_source_to,
 	   "deidentify=s"=> \$opt_deidentify,
 	   "show-mbox-path=s"=> \$opt_show_mbox_path,
 	   #"dry-run"=> \$opt_dry,
 	   ) or exit 1;
-usage unless @ARGV==2 or $opt_deidentify or $opt_show_mbox_path or $opt_repl;
+usage unless
+  (@ARGV and ($opt_json_to or $opt_html_to or $opt_source_to))
+  or $opt_deidentify or $opt_show_mbox_path or $opt_repl;
 
 use Chj::NoteWarn;
 NoteWarn_attenuation_level($verbose ? 0 : 1);
@@ -255,7 +263,7 @@ sub phrase_dequote {
 }
 
 sub parse_and_convert {
-    my ($sourcepath, $targetfile)=@ARGV;
+    my @sourcepaths=@ARGV;
 
     if ($opt_html_to and not -d $opt_html_to) {
 	xmkdir $opt_html_to
@@ -264,18 +272,24 @@ sub parse_and_convert {
 	xmkdir $opt_source_to
     }
 
-    my $coll= $collectionparser->parse_tree($sourcepath, $tmp, $opt_max_date_deviation);
+    my $coll= $collectionparser->parse_trees(\@sourcepaths, $tmp, $opt_max_date_deviation);
 
     my $index= $coll->index;
 
     my $allout= sub {
-	my $o= xopen_write $targetfile;
-	binmode $o, ":utf8" or die;
+	my $o;
+	if ($opt_json_to) {
+	    $o= xopen_write $opt_json_to;
+	    binmode $o, ":utf8" or die;
+	}
 	my $json= Chj::Ml2json::OutputJSON::Continuous->new($o,$outputjson);
+	#^ XX HACK: $o may be undefined; really misusing that
+	# mechanism now.
 	stream_for_each sub {
 	    my ($m)=@_;
 	    Try {
-		$json->message_print($m,$index);
+		$json->message_print($m,$index)
+		  if $opt_json_to;
 
 		my $source_path;
 		if ($opt_source_to) {
@@ -495,8 +509,11 @@ sub parse_and_convert {
 		}
 	    } $m;
 	}, $index->messages_threadsorted;
-	$json->end;
-	$o->xclose;
+
+	if ($opt_json_to) {
+	    $json->end;
+	    $o->xclose;
+	}
     };
 
     &$allout;
