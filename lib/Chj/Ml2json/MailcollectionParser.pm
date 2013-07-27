@@ -93,6 +93,19 @@ sub fixup_msg {
     die "message with no head-body-separator";
 }
 
+sub unless_seen_path ($$$) {
+    my ($seen_abspaths,$path,$thunk)=@_;
+    my $ap= abs_path $path;
+    if ($$seen_abspaths{$ap}) {
+	WARN "already processed path '$ap'";
+	()
+    } else {
+	$$seen_abspaths{$ap}=1;
+	&$thunk
+    }
+}
+
+
 use Chj::Struct "Chj::Ml2json::MailcollectionParser"=>
   ['messageclass', # class name
    'mbox_glob', # filename-matching glob string
@@ -229,13 +242,16 @@ sub parse_mbox_ghost {
 
 sub parse_mbox_dir {
     my $s=shift;
-    @_==3 or die;
-    my ($dirpath,$tmp,$maybe_max_date_deviation)=@_;
+    @_==3 or @_==4 or die;
+    my ($dirpath,$tmp,$maybe_max_date_deviation,$maybe_seen_abspaths)=@_;
+    my $seen_abspaths= $maybe_seen_abspaths||{};
     # does not go into subdirectories of $dirpath
     Chj::Ml2json::Mailcollection::Tree
 	->new([
 	       map {
-		   $s->parse_mbox_ghost($_,$tmp,$maybe_max_date_deviation)
+		   unless_seen_path $seen_abspaths, $_, sub {
+		       $s->parse_mbox_ghost($_,$tmp,$maybe_max_date_deviation)
+		   }
 	       } glob quotemeta($dirpath)."/".$s->mbox_glob
 	      ]);
 }
@@ -249,18 +265,22 @@ our $nothing= Chj::Ml2json::Mailcollection::Tree->new([]);
 
 sub parse_tree {
     my $s=shift;
-    @_==3 or die;
-    my ($path,$tmp,$maybe_max_date_deviation)=@_;
+    @_==3 or @_==4 or die;
+    my ($path,$tmp,$maybe_max_date_deviation,$maybe_seen_abspaths)=@_;
+    my $seen_abspaths= $maybe_seen_abspaths||{};
     my $st= xstat $path;
     if ($st->is_file) {
-	$s->parse_mbox (@_)
+	$s->parse_mbox ($path,$tmp,$maybe_max_date_deviation)
     } elsif ($st->is_dir) {
-	my $mboxcoll= $s->parse_mbox_dir (@_);
+	my $mboxcoll= $s->parse_mbox_dir
+	  ($path,$tmp,$maybe_max_date_deviation,$maybe_seen_abspaths);
 	if ($s->recurse) {
 	    my $dircoll=
 	      [
 	       map {
-		   $s->parse_tree($_, $tmp,$maybe_max_date_deviation)
+		   unless_seen_path $seen_abspaths, $_, sub {
+		       $s->parse_tree($_, $tmp,$maybe_max_date_deviation)
+		   }
 	       } glob quotemeta($path)."/*/"
 	      ];
 	    Chj::Ml2json::Mailcollection::Tree->new([$mboxcoll, $dircoll])
@@ -275,20 +295,17 @@ sub parse_tree {
 
 sub parse_trees {
     my $s=shift;
-    @_==3 or die;
-    my ($paths,$tmp,$maybe_max_date_deviation)=@_;
-    my $abspaths=
-      +{
-	map {
-	    (abs_path ($_), $_)
-	} @$paths
-       };
+    @_==3 or @_==4 or die;
+    my ($paths,$tmp,$maybe_max_date_deviation,$maybe_seen_abspaths)=@_;
+    my $seen_abspaths= $maybe_seen_abspaths||{};
     Chj::Ml2json::Mailcollection::Tree->new
 	([
 	  map {
-	      $s->parse_tree($_, $tmp, $maybe_max_date_deviation)
+	      unless_seen_path $seen_abspaths, $_, sub {
+		  $s->parse_tree($_, $tmp, $maybe_max_date_deviation, $seen_abspaths)
+	      }
 	  }
-	  values %$abspaths
+	  @$paths
 	 ]);
 }
 
