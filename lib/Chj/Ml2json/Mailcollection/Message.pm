@@ -21,6 +21,7 @@ package Chj::Ml2json::Mailcollection::Message;
 use strict;
 
 use Chj::NoteWarn;
+use MIME::EncWords 'decode_mimewords';
 
 use Chj::Struct ["ent", "h", "unixtime", "mboxpathhash", "n",
 		 "mboxslice"
@@ -55,6 +56,23 @@ sub header_hashref_lc {
     my $s=shift;
     $$s{h}
 }
+
+sub decoded_headers {
+    my $s=shift;
+    @_==1 or die;
+    my ($lcname)=@_;
+    my $h= $s->header_hashref_lc;
+    if (my $v= $$h{$lcname}) {
+	[
+	 map {
+	     scalar decode_mimewords($_)
+	 } @$v
+	]
+    } else {
+	[]
+    }
+}
+
 
 sub if_header_anglebracketed {
     my $s=shift;

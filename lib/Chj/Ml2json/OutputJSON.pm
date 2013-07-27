@@ -255,22 +255,6 @@ sub _json_mailparsed_header {
     }
 }
 
-sub _json_decoded_header {
-    my $s=shift;
-    @_==2 or die;
-    my ($m, $lcname)=@_;
-    my $h= $m->header_hashref_lc;
-    if (my $v= $$h{$lcname}) {
-	[
-	 map {
-	     scalar decode_mimewords($_)
-	 } @$v
-	]
-    } else {
-	[]
-    }
-}
-
 sub json_parsed_from {
     my $s=shift;
     @_==2 or die;
@@ -297,7 +281,7 @@ sub json_decoded_subject {
     my $s=shift;
     @_==2 or die;
     my ($m,$index)=@_;
-    $s->_json_decoded_header($m, "subject");
+    $m->decoded_headers("subject")
 }
 
 
