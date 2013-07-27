@@ -55,6 +55,8 @@ sub possibly_url2html {
     }
 }
 
+our $tabdistance=8;
+
 sub plainchunk2html {
     my $str=shift;
     # no need for escaping; but use Chj::PXHTML elements where needed
@@ -63,20 +65,26 @@ sub plainchunk2html {
 	push @out, possibly_url2html($1) if length $1;
 	my $ws= $2;
 	if (length $ws) {
-	    my $ws2=$ws;
-	    $ws2=~ s/ //g;
-	    if (length $ws2) {
-		WARN "non-space whitespace '$ws2', what to do?";
-	    }
 	    # turn into combination of space and nbsp; need to start
 	    # with a nbsp on the left; as a space directly after the
 	    # surrounding tag would be dropped.
-	    my $i= length $ws;
+	    my $len= length $ws;
 	    my $nb= 1;
-	    while ($i) {
-		push @out, $nb ? $nbsp : " ";
-		$i--;
-		$nb= ! $nb;
+	    for (my $i=0; $i<$len; $i++) {
+		my $c= substr $ws, $i,1;
+		if ($c eq "\t") {
+		    # fill up to next tab stop
+		    my $need= $tabdistance - ($i % $tabdistance);
+		    push @out, $nbsp x $need;
+		    # XX care about $nb? even, do the switching here, too?
+		} elsif ($c eq $nbsp) {
+		    push @out, $c
+		} else {
+		    NOTE "unknown kind of whitespace: chr ".ord($c)
+		      unless $c eq " ";
+		    push @out, $nb ? $nbsp : " ";
+		    $nb= ! $nb;
+		}
 	    }
 	} else {
 	    return \@out
