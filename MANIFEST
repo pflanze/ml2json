@@ -10,6 +10,7 @@ lib/Chj/FP/ArrayUtil.pm
 lib/Chj/FP/Array_sort.pm
 lib/Chj/Format/JSON.pm
 lib/Chj/Ghostable.pm
+lib/Chj/Ml2json/Color.pm
 lib/Chj/Ml2json/Debug.pm
 lib/Chj/Ml2json/MIMEExtract.pm
 lib/Chj/Ml2json/Mailcollection.pm
@@ -25,6 +26,7 @@ lib/Chj/Ml2json/Parse/Plain.pm
 lib/Chj/Ml2json/m2h_text_enriched.pm
 lib/Chj/NoteWarn.pm
 lib/Chj/Parse/Mbox.pm
+lib/Chj/Parse/Mbox/Section.pm
 lib/Chj/Struct.pm
 lib/Chj/Try.pm
 lib/Chj/tempdir.pm
