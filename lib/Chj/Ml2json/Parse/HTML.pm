@@ -376,7 +376,10 @@ our $map=
     #"body/" => DIV { $body },
     p=> _P{ $body },
     div=> _DIV{ $body },##P ?
-    a=> _A{ {href=> check_href($att{href})}, $body },
+    a=> _A{+{href=> check_href($att{href}),
+	     rel=> "nofollow", # lowering the value for spammers; see also same in Plain.pm
+	    },
+	      $body },
     i=> _EM{ $body },
     b=> _STRONG{$body},
     u=> _U{$body},

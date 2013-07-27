@@ -59,7 +59,7 @@ sub possibly_url2html {
 	my $url= "$prot$main";
 	[$has_angle ? '<' : (),
 	 A({href=> $url,
-	    rel=> "nofollow", # lowering the value for spammers
+	    rel=> "nofollow", # lowering the value for spammers; see also same in HTML.pm
 	   }, $url),
 	 $has_angle ? '>' : (),
 	 $post]
