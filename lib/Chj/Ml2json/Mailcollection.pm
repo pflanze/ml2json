@@ -97,6 +97,7 @@ use Chj::Try;
 use Chj::NoteWarn;
 use Chj::Ml2json::MailcollectionIndex;
 use Chj::FP2::Stream ':all';
+use Chj::FP2::List;
 
 use Chj::Struct [], 'Chj::Ml2json::Ghostable';
 
