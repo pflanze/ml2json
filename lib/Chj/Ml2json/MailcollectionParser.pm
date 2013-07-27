@@ -56,6 +56,7 @@ use Chj::chompspace;
 use Chj::Parse::Mbox 'mbox_stream_open';
 use Chj::FP2::Stream ':all';
 use Chj::Ml2json::Mailcollection;
+use Cwd 'abs_path';
 
 # date parsing is complicated matters with there being software not
 # creating standard conform formats, especially if there are emails
@@ -276,10 +277,19 @@ sub parse_trees {
     my $s=shift;
     @_==3 or die;
     my ($paths,$tmp,$maybe_max_date_deviation)=@_;
+    my $abspaths=
+      +{
+	map {
+	    (abs_path ($_), $_)
+	} @$paths
+       };
     Chj::Ml2json::Mailcollection::Tree->new
-	([map {
-	    $s->parse_tree($_, $tmp, $maybe_max_date_deviation)
-	}@$paths]);
+	([
+	  map {
+	      $s->parse_tree($_, $tmp, $maybe_max_date_deviation)
+	  }
+	  values %$abspaths
+	 ]);
 }
 
 _END_
