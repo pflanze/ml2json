@@ -244,6 +244,15 @@ sub nobr {
 use Chj::Ml2json::Color;
 our $textbackgroundcol= Chj::Ml2json::Color->new_htmlstring("#e0f0ff");
 our $blockquoteendcol= Chj::Ml2json::Color->new_htmlstring("#ffffff");
+sub phrase_dequote {
+    my ($maybe_str)=@_;
+    $maybe_str and do {
+	my $str= $maybe_str;
+	$str=~ s/^\s*\"//s;
+ 	$str=~ s/\"\s*\z//s;
+	$str
+    }
+}
 
 sub parse_and_convert {
     my ($sourcepath, $targetfile)=@ARGV;
@@ -299,7 +308,7 @@ sub parse_and_convert {
 		    my $out= xopen_write $path;
 		    binmode $out, ":utf8" or die;
 		    my $fragment= $outputjson->html($m);
-		    my $orig_headers= $outputjson->json_orig_headers ($m,$index);
+		    my $header_hashref_lc= $m->header_hashref_lc;
 		    my $ctime_UTC= $outputjson->json_ctime_UTC($m,$index);
 		    my $inreplyto= $outputjson->json_in_reply_to ($m,$index);
 		    my $replies= $outputjson->json_replies($m,$index);
@@ -354,14 +363,17 @@ sub parse_and_convert {
 			    my $url= "$p.xhtml";
 			    #/CP
 			    my $replies= $outputjson->json_replies($m,$index);
-			    my $orig_headers= $outputjson->json_orig_headers ($m,$index);
+			    #my $orig_headers= $outputjson->json_orig_headers ($m,$index);
 			    #my $subject= $$orig_headers{Subject};
 			    #my $subject_is_same=
 			    #  subject_simplify($subject) eq $threadleader_simplifiedsubject;
 			    # need to  keep seen ones  too   or only. (if threadleader then show!)
 			    #my $cnt= $subject_is_same ? 
+			    my ($from)= @{$outputjson->json_parsed_from($m,undef)};
+			    my $fromstr= phrase_dequote($$from{phrase}) || $$from{address};
+			    my $subject= $outputjson->json_decoded_subject($m,undef);
 
-			    my $cnt= "$$orig_headers{Subject}, $$orig_headers{From}";
+			    my $cnt= [$subject, " ", I("(",$fromstr,")")];
 			    my $possiblylinkedcnt=
 			      $_id eq $id ? $cnt : A({href=> $url}, $cnt);
 
@@ -384,6 +396,24 @@ sub parse_and_convert {
 			["; ", A({href=> $rel}, "source")]
 		    };
 
+		    my %addrs=
+		      map {
+			  my $vs= $outputjson->_json_mailparsed_header($m,$_);
+			  ($_=> do {
+			      if (@$vs) {
+				  array_join
+				    ([
+				      map {
+					  [phrase_dequote($$_{phrase}),
+					   TT("<$$_{address}>"), $$_{comment}]
+				      } @$vs
+				     ],
+				     ", ")
+			      } else {
+				  undef
+			      }
+			  })
+		       } qw(from to cc);
 		    my $page=
 		      HTML
 			(HEAD (TITLE ($idn),
@@ -420,7 +450,7 @@ sub parse_and_convert {
 				      #} B($$orig_headers{Subject}), $maybe_threadleader
 				      #sigh, more complicated (maybe monad?):
 				      do {
-					  my $V0= B($$orig_headers{Subject});
+					  my $V0= B($$header_hashref_lc{subject});
 					  if ($maybe_threadleader
 					      and $maybe_threadleader ne $id) {
 					      if (my $V2= &$msg_id2maybe_url ($maybe_threadleader)) {
@@ -433,11 +463,14 @@ sub parse_and_convert {
 					  }
 				      }
 				     ],
-				     ["From", $$orig_headers{From}],
-				     ["To", $$orig_headers{To},
-				      ($$orig_headers{Cc} and ", Cc: $$orig_headers{Cc}")],
+				     ["From", #$$header_hashref_lc{from}
+				      $addrs{from}],
+				     ["To",# $$header_hashref_lc{to},
+				      $addrs{to},
+				      #$$orig_headers{Cc}..
+				      ($addrs{cc} and ", Cc: ", $addrs{cc})],
 				     ["Date",
-				      [$$orig_headers{Date}, $nbsp, " (", $ctime_UTC, " UTC)"]]
+				      [$$header_hashref_lc{date}, $nbsp, " (", $ctime_UTC, " UTC)"]]
 				     ),
 				    TR({valign=>"top"},
 				       TD(SMALL("Message-ID:")),
