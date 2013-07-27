@@ -44,24 +44,18 @@ sub possibly_url2html {
     my $str=shift;
     # str does not contain whitespace already. But may contain other
     # stuff at the end especially.
-    my ($prot,$main,$post);
-    my $has_angle;
+    my ($pre,$prot,$main,$post);
     if (
-	do {
-	    $has_angle=1;
-	    ($prot,$main,$post)= $str=~ m/^<(https?|ftp|mailto)(:.*?)>([;.,!]?)\z/si;
-	}
+	($pre,$prot,$main,$post)= $str=~ m/^(.*<)(https?|ftp|mailto)(:.*?)(>.*)/si
+	# XX well, ^ really would ask for /g but not feeling like bothering now.
 	or
-	do {
-	    $has_angle=0;
-	    ($prot,$main,$post)= $str=~ m/^(https?|ftp|mailto)(:.*?)([;.,!]?)\z/si
-	}) {
+	($prot,$main,$post)= $str=~ m/^(https?|ftp|mailto)(:.*?)([;.,!]?)\z/si
+       ) {
 	my $url= "$prot$main";
-	[$has_angle ? '<' : (),
+	[$pre,
 	 A({href=> $url,
 	    rel=> "nofollow", # lowering the value for spammers; see also same in HTML.pm
 	   }, $url),
-	 $has_angle ? '>' : (),
 	 $post]
     } else {
 	$str
