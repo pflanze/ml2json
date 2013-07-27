@@ -520,6 +520,11 @@ sub parse_and_convert {
 }
 
 use Chj::Backtrace;
+$SIG{INT}= sub {
+    use Carp 'cluck';
+    cluck "got SIGINT";
+    exit 1;
+};
 if ($opt_repl) {
     import Chj::Ml2json::MIMEExtract ':all';
     require Chj::Ml2json::Debug;
