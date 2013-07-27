@@ -61,15 +61,19 @@ sub plainchunk2html {
     my $str=shift;
     # no need for escaping; but use Chj::PXHTML elements where needed
     my @out;
+    my $first_iteration=1;
     while ($str=~ /(.*?)(\s+|\z)/sg) {
 	push @out, possibly_url2html($1) if length $1;
 	my $ws= $2;
 	if (length $ws) {
-	    # turn into combination of space and nbsp; need to start
-	    # with a nbsp on the left; as a space directly after the
-	    # surrounding tag would be dropped.
+	    # Turn into combination of space and nbsp.  If on the
+	    # first iteration with purely whitespace, need to start
+	    # with a nbsp on the left, as a space directly after the
+	    # surrounding tag would be dropped.  On subsequent
+	    # iterations, reverse the ordering.
+	    my $nb= $first_iteration && !length($1);
+	    $first_iteration=0;
 	    my $len= length $ws;
-	    my $nb= 1;
 	    for (my $i=0; $i<$len; $i++) {
 		my $c= substr $ws, $i,1;
 		if ($c eq "\t") {
