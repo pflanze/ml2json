@@ -115,6 +115,8 @@ sub messages {
 
 sub index {
     my $s=shift;
+    @_==1 or die;
+    my ($max_thread_duration)=@_;
     my $index = new Chj::Ml2json::MailcollectionIndex;
     # build 'messageids' and 'ids'
     stream_for_each
@@ -145,41 +147,82 @@ sub index {
 	     } $mg
 	 },
 	 $s->messageghosts);
+
     # build 'inreplytos' and 'replies' while mapping message-ids to
-    # ids. Be careful to process each id only once to prevent
-    # exponential blowup in replies (right?).
-    my $seen_ids={};
-    stream_for_each
-	(sub {
-	     my ($mg)=@_;
-	     Try {
-		 my $m= $mg->resurrect;
-		 my $id= $m->id;
-		 unless ($$seen_ids{$id}) {
-		     $$seen_ids{$id}=1;
-		     my $t= $m->unixtime;
-		     my $inreplytos= $m->inreplytos;
-		     $$index{inreplytos}{$id}= $inreplytos;
-		     for my $inreplyto (@$inreplytos) {
-			 # (*should* be just 0 or one, but..)
-			 # Map inreplyto to normalized id:
-			 my $inreplyto_id= $$index{messageids}{$inreplyto}
-			   || do {
-			       NOTE("unknown message with messageid "
-				    ."'$inreplyto' given in in-reply-to "
-				    ."header of ".$m->identify);
-			       $inreplyto
-			   };
-			 push @{ $$index{replies}{$inreplyto_id} }, $id;
+    # ids.
+    {
+	# Be careful to process each id only once to prevent
+	# exponential(?) blowup in replies.
+	my $seen_ids={};
+	stream_for_each
+	    (sub {
+		 my ($mg)=@_;
+		 Try {
+		     my $m= $mg->resurrect;
+		     my $id= $m->id;
+		     unless ($$seen_ids{$id}) {
+			 $$seen_ids{$id}=1;
+			 my $t= $m->unixtime;
+			 my $inreplytos= $m->inreplytos;
+			 $$index{inreplytos}{$id}= $inreplytos;
+			 for my $inreplyto (@$inreplytos) {
+			     # (*should* be just 0 or one, but..)
+			     # Map inreplyto to normalized id:
+			     my $inreplyto_id= $$index{messageids}{$inreplyto}
+			       || do {
+				   NOTE("unknown message with messageid "
+					."'$inreplyto' given in in-reply-to "
+					."header of ".$m->identify);
+				   $inreplyto
+			       };
+			     push @{ $$index{replies}{$inreplyto_id} }, $id;
+			 }
+			 #for my $reference ($m->references) {
+			 #my $oldrefs = $$index{replies}{$reference}||[];
+			 #XX
+			 #}
 		     }
-		     #for my $reference ($m->references) {
-		     #my $oldrefs = $$index{replies}{$reference}||[];
-		     #XX
-		     #}
-		 }
-	     } $mg;
-	 },
-	 $s->messageghosts);
+		 } $mg;
+	     },
+	     $s->messageghosts);
+    }
+
+    # build 'cookedsubjects'
+    if ($max_thread_duration) {
+	my $seen_ids={};
+	for (@{$index->all_t_sorted}) {
+	    my $t_mg= $_;
+	    my ($t,$mg)=@$t_mg;
+	    my $m= $mg->resurrect;
+	    my $id= $m->id;
+	    unless ($$seen_ids{$id}) {
+		$$seen_ids{$id}=1;
+		if (my $cs= $m->maybe_cooked_subject) {
+		    if (my $ss= $$index{cookedsubjects}{$cs}) {
+			my $lasts= $$ss[-1];
+			my ($last_t,$last_mg)=@$lasts;
+			my $last_m= $last_mg->resurrect;
+			my $last_id= $last_m->id;
+			my $diff= $t - $last_t; die "bug" if $diff < 0;
+			if ($diff > $max_thread_duration) {
+			    # treat as separate thread (its new leader)
+			    push @$ss, $t_mg;
+			} else {
+			    # treat it as 'possible reply' to the $last_mg thread
+			    push @{$$index{possiblereplies}{$last_id}}, $id;
+			    die "bug" if exists $$index{possibleinreplyto}{$id};
+			    $$index{possibleinreplyto}{$id}= $last_id;
+			}
+		    } else {
+			$$index{cookedsubjects}{$cs}= [$t_mg];
+		    }
+		} else {
+		    NOTE "message does not have a (cooked) subject"
+		}
+	    }
+	}
+    }
+
     $index
 }
 

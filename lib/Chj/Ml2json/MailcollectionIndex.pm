@@ -21,17 +21,25 @@ package Chj::Ml2json::MailcollectionIndex;
 use strict;
 
 
-use Chj::Struct ["replies",
-		 "ids",
-		 "inreplytos",
-		 "messageids"];
-# replies:    id -> [ id.. ], using normalized messageids.
-#                             Note: ordered by occurrence in input stream!
-# (see sorted_replies method for sorting by unixtime.)
-# ids:        id -> [t, mg],
-# inreplytos: id -> [ id..],  inverse function of replies,
-#                             *except* also contains unknown messageids!
-# messageids: messageid -> id,  one entry for every messageid of $mg.
+use Chj::Struct
+  ["replies",    # id -> [ id.. ], using normalized messageids.
+   #                               (ordered by occurrence in input stream!)
+   #                               (see sorted_replies method for sorting by unixtime.)
+   "ids",        # id -> [t, mg],
+   "inreplytos", # id -> [ id..],  inverse function of replies,
+   #                               *except* also contains unknown messageids!
+   "messageids", # messageid -> id,  one entry for every messageid of $mg.
+   # For thread grouping by subject lines:
+   "cookedsubjects", # cookedsubject -> [[t, threadleaderid]..]; entries sorted by t
+   "possiblereplies", # id -> [ id.. ]
+   "possibleinreplyto", # id -> threadleaderid
+  ];
+
+
+# NOTE: building an index and running its methods is intertwined!
+# i.e. this module and Mailcollection.pm (index method there) are
+# working together. e.g. all_t_sorted is run during the building of
+# the index.
 
 use Chj::FP::Array_sort;
 
@@ -102,5 +110,11 @@ sub messages_threadsorted {
 	$mg->resurrect
     }, Chj::FP2::Stream::array2stream ($s->all_threadsorted)
 }
+
+sub all_t_sorted { # -> [ [t,mg].. ]
+    my $s=shift;
+    Array_sort [ values %{$$s{ids}} ], On sub { $_[0][0] }, \&Number_cmp;
+}
+
 
 _END_

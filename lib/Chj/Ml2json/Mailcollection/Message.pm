@@ -22,6 +22,22 @@ use strict;
 
 use Chj::NoteWarn;
 use MIME::EncWords 'decode_mimewords';
+use Chj::FP::ArrayUtil 'array_hashing_uniq';
+
+sub cook_subject {
+    local ($_)=@_;
+    1 while (s/^\s+//
+	     or
+	     s/^(?::\s*)?(Re|Aw|Fwd?)\s*(?::\s*)?//si
+	     # ^ XX really strip Fw/Fwd ?
+	     or
+	     s/^\[[^\[\]]*\]\s*//s
+	     or
+	     s/\([^()]*\)//s
+	    );
+    s/\s+//sg;
+    lc $_
+}
 
 use Chj::Struct ["ent", "h", "unixtime", "mboxpathhash", "n",
 		 "mboxslice"
@@ -70,6 +86,23 @@ sub decoded_headers {
 	]
     } else {
 	[]
+    }
+}
+
+sub maybe_cooked_subject {
+    my $s=shift;
+    my $subj= $s->decoded_headers("subject");
+    if (@$subj) {
+	my @str= map {
+	    cook_subject $_
+	} @$subj;
+	if (@str>1) {
+	    my $u= array_hashing_uniq \@str;
+	    @$u == 1 or WARN "multiple different subjects: @$u";
+	}
+	$str[0]
+    } else {
+	undef
     }
 }
 
@@ -223,3 +256,8 @@ sub references {
 
 
 _END_
+
+# main> :d Chj::Ml2json::Mailcollection::Message::cook_subject "[bola] [balf] AW: weef"
+# $VAR1 = 'weef';
+# main> :d Chj::Ml2json::Mailcollection::Message::cook_subject "[bola] [balf] AW: weef (was: fluba) bah "
+# $VAR1 = 'weefbah';

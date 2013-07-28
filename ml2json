@@ -17,6 +17,7 @@ use lib "$mydir/lib";
 our $tmpbase="/tmp/$myname";
 our $tmplink= "$ENV{HOME}/.$myname-tmp"; ## ok to use that path?
 our $mbox_glob= '*.mbox';
+our $max_thread_duration= "1 month";
 
 sub usage {
     print STDERR map{"$_\n"} @_ if @_;
@@ -54,10 +55,18 @@ sub usage {
                 are used. See docs in lib/Chj/Ml2json/OutputJSON.pm
 
 
-    --max-date-deviation seconds
+    --max-thread-duration duration[*]
+                When encountering emails with no or no known
+                in-reply-to and references headers, group them into
+                the same thread according to their subject line as
+                long as the time span between the first mail of that
+                subject and the last one doesn't exceed the given
+                duration. Pass '0' to disable. Default: '$max_thread_duration'.
+
+    --max-date-deviation duration[*]
                 When mbox separators (lines starting with 'From ')
                 contain time stamps, and those deviate more than
-                <seconds> from the Date header contained in the mail
+                <duration> from the Date header contained in the mail
                 (of if there is no Date header in the mail), use the
                 mbox time stamp instead. Default: off.  Note: mbox
                 time stamps are not necessarily representing the time
@@ -90,6 +99,10 @@ sub usage {
                 show path of original mbox file for a given mbox
                 identifier (as they are used in identify strings).
 
+  [*] duration can be anything that Time::Duration::Parse supports,
+      like '1 day' or '1d and 5h'; bare numbers are interpreted as
+      seconds.
+
   (Option names can be shortened as long as they are unambiguous and
   that you take the risk for future ambiguity.)
 
@@ -97,6 +110,8 @@ sub usage {
 ";
 exit (@_ ? 1 : 0);
 }
+
+use Time::Duration::Parse;
 
 use Getopt::Long;
 our $verbose=0;
@@ -122,7 +137,10 @@ GetOptions("verbose"=> \$verbose,
 	       my ($_,$path)=@_;
 	       $config= require $path
 	   },
-	   "max-date-deviation=n"=> \$opt_max_date_deviation,
+	   "max-thread-duration=s"=> \$max_thread_duration,
+	   "max-date-deviation=s"=> sub {
+	       $opt_max_date_deviation= parse_duration $_[1]
+	   },
 	   "json-to=s"=> \$opt_json_to,
 	   "html-to=s"=> \$opt_html_to,
 	   "source-to=s"=> \$opt_source_to,
@@ -133,6 +151,9 @@ GetOptions("verbose"=> \$verbose,
 usage unless
   (@ARGV and ($opt_json_to or $opt_html_to or $opt_source_to))
   or $opt_deidentify or $opt_show_mbox_path or $opt_repl;
+
+
+$max_thread_duration= parse_duration $max_thread_duration;
 
 use Chj::NoteWarn;
 NoteWarn_attenuation_level($verbose ? 0 : 1);
@@ -277,7 +298,7 @@ sub parse_and_convert {
 
     my $coll= $collectionparser->parse_trees(\@sourcepaths, $tmp, $opt_max_date_deviation);
 
-    my $index= $coll->index;
+    my $index= $coll->index ($max_thread_duration);
 
     my $allout= sub {
 	my $o;
