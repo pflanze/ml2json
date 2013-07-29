@@ -143,7 +143,9 @@ use MIME::EncWords 'decode_mimewords';
 
 use Chj::Struct ["jsonfields_orig_headers",
 		 "jsonfields_top",
-		 "htmlmapper"];
+		 "htmlmapper",
+		 "enrichedmapper",
+		];
 
 
 sub _cleanuphtml {
@@ -164,7 +166,7 @@ sub _plain2html {
 sub _enriched2html {
     my $s=shift;
     my ($str,$ent)=@_;
-    $s->htmlmapper->parse_map_body
+    $s->enrichedmapper->parse_map_body
       (m2h_text_enriched ($str, MIME_Entity_maybe_content_type_lc ($ent)))
 }
 

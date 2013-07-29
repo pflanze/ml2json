@@ -130,7 +130,8 @@ use Chj::Struct []; # no need for context, *yet*
 sub parse_map {
     my $s=shift;
     my ($str)=@_;
-    SPAN(_parse_map (array2list([split /\r?\n/, $str]), 1))
+    SPAN({class=> "plain"},
+	 _parse_map (array2list([split /\r?\n/, $str]), 1))
 }
 
 

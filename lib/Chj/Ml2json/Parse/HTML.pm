@@ -348,6 +348,9 @@ our $parents; # linked list holding the element names of the parents
               # 'html' is not recorded thus the 'body' mapper sees
               # empty $parents
 
+our $content_subtype; # "html" or "enriched" (for "plain" see ::Plain
+                      # module)
+
 sub atts ($) {
     my ($tagname)=@_;
     if (my $map_att= $$tag_map_att{$tagname}) {
@@ -372,7 +375,7 @@ our $keepbody= sub{$body};
 
 our $map=
   +{
-    body=> _SPAN{ paragraphy($body) },
+    body=> _SPAN{{class=> $content_subtype}, paragraphy($body) },
     #"body/" => DIV { $body },
     p=> _P{ $body },
     div=> _DIV{ $body },##P ?
@@ -461,7 +464,7 @@ our $map=
 use HTML::Element;
 use HTML::TreeBuilder;
 
-use Chj::Struct []; # no need for context, *yet*
+use Chj::Struct ["content_subtype"];
 
 sub _map_body {
     my $s=shift;
@@ -473,6 +476,7 @@ sub _map_body {
 	for ($e->all_external_attr_names) {
 	    $att{lc $_}= $e->attr($_);
 	}
+	local $content_subtype= $$s{content_subtype};
 
 	my $maybe_body_mapper= $$map{$name."/"};
 

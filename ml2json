@@ -231,12 +231,15 @@ our $collectionparser= Chj::Ml2json::MailcollectionParser->new
    $mbox_glob,
    $opt_recurse);
 
-our $htmlmapper= Chj::Ml2json::Parse::HTML->new; ## config file input ?
+## config file input ?
+our $htmlmapper= Chj::Ml2json::Parse::HTML->new ("html");
+our $enrichedmapper= Chj::Ml2json::Parse::HTML->new ("enriched");
 
 our $outputjson= Chj::Ml2json::OutputJSON->new
   ($$config{jsonfields_orig_headers},
    $$config{jsonfields_top},
-   $htmlmapper);
+   $htmlmapper,
+   $enrichedmapper);
 
 use Chj::PXML::Serialize 'pxml_xhtml_print_fast';
 use Chj::PXHTML ':all';
