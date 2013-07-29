@@ -32,7 +32,7 @@ use Chj::FP2::List ":all";
 # convert "foo<br/><br/>bar" into "<p>foo</p><p>bar</p>"
 
 our $paragraph_interrupting=
-  +{
+  +{# 2 means, treat its contents, too
           'a'=>0,
           'abbr'=>0, #?
           'acronym'=>0, #?
@@ -44,7 +44,7 @@ our $paragraph_interrupting=
           'basefont'=>undef,
           'bdo'=>undef,
           'big'=>0,
-          'blockquote'=>1,#?
+          'blockquote'=>2,
           'body'=>undef,
           'br'=>0,
           'button'=>0,#?
@@ -145,9 +145,12 @@ sub paragraphy_ {
 		    $result= cons (P(rlist2array($before)),
 				   $result);
 		    $before= undef;
-		} elsif ($$paragraph_interrupting{$name}) {
+		} elsif (my $int= $$paragraph_interrupting{$name}) {
 		    #warn "interupting";
-		    $result= cons ($a, list_append($before,$result));
+		    $result= cons (($int == 2
+				    ? $a->set_body(paragraphy($a->body))
+				    : $a),
+				   list_append($before,$result));
 		    $before= undef;
 		} else {
 		    #warn "collecting";
@@ -185,5 +188,10 @@ sub paragraphy {
 # #hmm
 # main> :d BODY(paragraphy([P("Hello"),BR(),"yes",BR(),BR(),P("World"),BR(),"Postfix"]))->fragment2string
 # $VAR1 = '<body><p>Hello</p><p><br></br>yes</p><p>World</p><br></br>Postfix</body>';
+
+# calc> :l BODY(paragraphy(["Hello",BR,BR,"yes",BR,BR,"World",BR,"Postfix"]))->fragment2string
+# <body><p>Hello</p><p>yes</p>World<br/>Postfix</body>
+# calc> :l BODY(paragraphy(["Hello",BR,BR, BLOCKQUOTE("yes",BR,BR,"World"),"Hm",BR,BR,"Postfix"]))->fragment2string
+# <body><p>Hello</p><blockquote><p>yes</p>World</blockquote><p>Hm</p>Postfix</body>
 
 1
