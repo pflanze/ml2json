@@ -250,7 +250,7 @@ our $map=
     #blink
     sub=> _SUB{$body},
     sup=> _SUP{$body},
-    span=> _SPAN{$body},
+    span=> $keepbody,
     style=> sub {
 	#NOTE "relevant?: ".Chj::PXHTML::STYLE(\%att,$body)->fragment2string;
 	undef
