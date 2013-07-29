@@ -442,8 +442,15 @@ sub parse_and_convert {
 				  array_join
 				    ([
 				      map {
-					  [phrase_dequote($$_{phrase}),
-					   TT("<$$_{address}>"), $$_{comment}]
+					  [defined $$_{phrase}
+					   ? phrase_dequote($$_{phrase})." "
+					   : undef,
+					   TT("<", A({href=> "mailto:$$_{address}"},
+						     $$_{address}),
+					      ">"),
+					   defined $$_{comment}
+					   ? $$_{comment}." "
+					   : undef]
 				      } @$vs
 				     ],
 				     ", ")
