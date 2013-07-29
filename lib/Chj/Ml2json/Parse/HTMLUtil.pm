@@ -126,6 +126,11 @@ our $paragraph_interrupting=
 
 sub paragraphy_ {
     my ($l,$before,$result)=@_;
+    my $wrapup= sub {
+	(defined($before)
+	 ? cons(P(rlist2array $before),$result)
+	 : $result)
+    };
   LP: {
 	if ($l) {
 	    my $a= car $l;
@@ -142,15 +147,14 @@ sub paragraphy_ {
 		    (car $l2)->name eq "br") {
 		    #warn "two br in a row";
 		    $l= $l2;
-		    $result= cons (P(rlist2array($before)),
-				   $result);
+		    $result= &$wrapup;
 		    $before= undef;
 		} elsif (my $int= $$paragraph_interrupting{$name}) {
 		    #warn "interupting";
 		    $result= cons (($int == 2
 				    ? $a->set_body(paragraphy($a->body))
 				    : $a),
-				   list_append($before,$result));
+				   &$wrapup);
 		    $before= undef;
 		} else {
 		    #warn "collecting";
@@ -163,7 +167,7 @@ sub paragraphy_ {
 	    $l= cdr $l;
 	    redo LP;
 	} else {
-	    list_append($before,$result)
+	    &$wrapup
 	}
     }
 }
@@ -193,5 +197,12 @@ sub paragraphy {
 # <body><p>Hello</p><p>yes</p>World<br/>Postfix</body>
 # calc> :l BODY(paragraphy(["Hello",BR,BR, BLOCKQUOTE("yes",BR,BR,"World"),"Hm",BR,BR,"Postfix"]))->fragment2string
 # <body><p>Hello</p><blockquote><p>yes</p>World</blockquote><p>Hm</p>Postfix</body>
+
+# calc> :l BODY(paragraphy(["Hello",BR,BR,"bar", BR,BR,BLOCKQUOTE ("baz",BR,BR),"baba"]))->fragment2string
+# <body><p>Hello</p><p>bar</p><blockquote><p>baz</p></blockquote><p>baba</p></body>
+
+# calc> :l BODY(paragraphy(["Hello",BR,BR,"bar", BR,"baz",BR,BLOCKQUOTE ("baz",BR,BR),"baba"]))->fragment2string
+# <body><p>Hello</p><p>bar<br/>baz<br/></p><blockquote><p>baz</p></blockquote><p>baba</p></body>
+# ouch, remove br after first baz  *sigh*
 
 1
