@@ -178,33 +178,38 @@ sub paragraphy {
     rlist2array(paragraphy_(mixed_flatten ($a)));
 }
 
-TEST{ BODY(paragraphy([P("Hello"),P("World")]))->fragment2string }
+sub T (&$) {
+    my ($gen,$res)=@_;
+    @_=(sub { BODY(paragraphy([&$gen]))->fragment2string },
+	$res);
+    goto \&Chj::TEST::TEST;
+}
+
+T{ P("Hello"),P("World") }
   '<body><p>Hello</p><p>World</p></body>';
-TEST{ BODY(paragraphy([P("Hello"),BR(),BR(),P("World")]))->fragment2string }
-  '<body><p>Hello</p><p></p><p>World</p></body>'
-TEST{ BODY(paragraphy([P("Hello"),BR(),P("World")]))->fragment2string }
+T{ P("Hello"),BR(),BR(),P("World") }
+  '<body><p>Hello</p><p></p><p>World</p></body>';
+T{ P("Hello"),BR(),P("World") }
   '<body><p>Hello</p><br></br><p>World</p></body>';
-TEST{ BODY(paragraphy([P("Hello"),BR(),"yes",P("World")]))->fragment2string }
+T{ P("Hello"),BR(),"yes",P("World") }
   '<body><p>Hello</p><br></br>yes<p>World</p></body>';
-TEST{ BODY(paragraphy([P("Hello"),BR(),"yes",BR(),P("World")]))->fragment2string }
+T{ P("Hello"),BR(),"yes",BR(),P("World") }
   '<body><p>Hello</p><br></br>yes<br></br><p>World</p></body>';
-TEST{ BODY(paragraphy([P("Hello"),BR(),"yes",BR(),BR(),P("World")]))
-	->fragment2string }
+T{ P("Hello"),BR(),"yes",BR(),BR(),P("World") }
   '<body><p>Hello</p><p><br></br>yes</p><p>World</p></body>';
 # #hmm
-TEST{ BODY(paragraphy([P("Hello"),BR(),"yes",BR(),BR(),P("World"),BR(),"Postfix"]))
-	->fragment2string }
+T{ P("Hello"),BR(),"yes",BR(),BR(),P("World"),BR(),"Postfix" }
   '<body><p>Hello</p><p><br></br>yes</p><p>World</p><br></br>Postfix</body>';
 
-TEST{ BODY(paragraphy(["Hello",BR,BR,"yes",BR,BR,"World",BR,"Postfix"]))->fragment2string }
+T{ "Hello",BR,BR,"yes",BR,BR,"World",BR,"Postfix" }
   '<body><p>Hello</p><p>yes</p>World<br/>Postfix</body>';
-TEST{ BODY(paragraphy(["Hello",BR,BR, BLOCKQUOTE("yes",BR,BR,"World"),"Hm",BR,BR,"Postfix"]))->fragment2string }
+T{ "Hello",BR,BR, BLOCKQUOTE("yes",BR,BR,"World"),"Hm",BR,BR,"Postfix" }
   '<body><p>Hello</p><blockquote><p>yes</p>World</blockquote><p>Hm</p>Postfix</body>';
 
-TEST{ BODY(paragraphy(["Hello",BR,BR,"bar", BR,BR,BLOCKQUOTE ("baz",BR,BR),"baba"]))->fragment2string }
+T{ "Hello",BR,BR,"bar", BR,BR,BLOCKQUOTE ("baz",BR,BR),"baba" }
   '<body><p>Hello</p><p>bar</p><blockquote><p>baz</p></blockquote><p>baba</p></body>';
 
-TEST{ BODY(paragraphy(["Hello",BR,BR,"bar", BR,"baz",BR,BLOCKQUOTE ("baz",BR,BR),"baba"]))->fragment2string }
+T{ "Hello",BR,BR,"bar", BR,"baz",BR,BLOCKQUOTE ("baz",BR,BR),"baba" }
   '<body><p>Hello</p><p>bar<br/>baz<br/></p><blockquote><p>baz</p></blockquote><p>baba</p></body>';
 # ouch, remove br after first baz  *sigh*
 
