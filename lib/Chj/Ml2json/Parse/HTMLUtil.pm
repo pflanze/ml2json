@@ -170,20 +170,20 @@ sub paragraphy {
     rlist2array(paragraphy_(mixed_flatten ($a)));
 }
 
-# main> :d use Chj::PXHTML ':all'; BODY(Chj::Ml2json::Parse::HTML::paragraphy([P("Hello"),P("World")]))->fragment2string
+# main> :d BODY(paragraphy([P("Hello"),P("World")]))->fragment2string
 # $VAR1 = '<body><p>Hello</p><p>World</p></body>';
-#main> :d use Chj::PXHTML ':all'; BODY(Chj::Ml2json::Parse::HTML::paragraphy([P("Hello"),BR(),BR(),P("World")]))->fragment2string
+#main> :d BODY(paragraphy([P("Hello"),BR(),BR(),P("World")]))->fragment2string
 #$VAR1 = '<body><p>Hello</p><p></p><p>World</p></body>';
-# main> :d use Chj::PXHTML ':all'; BODY(Chj::Ml2json::Parse::HTML::paragraphy([P("Hello"),BR(),P("World")]))->fragment2string
+# main> :d BODY(paragraphy([P("Hello"),BR(),P("World")]))->fragment2string
 # $VAR1 = '<body><p>Hello</p><br></br><p>World</p></body>';
-# main> :d use Chj::PXHTML ':all'; BODY(Chj::Ml2json::Parse::HTML::paragraphy([P("Hello"),BR(),"yes",P("World")]))->fragment2string
+# main> :d BODY(paragraphy([P("Hello"),BR(),"yes",P("World")]))->fragment2string
 # $VAR1 = '<body><p>Hello</p><br></br>yes<p>World</p></body>';
-# main> :d use Chj::PXHTML ':all'; BODY(Chj::Ml2json::Parse::HTML::paragraphy([P("Hello"),BR(),"yes",BR(),P("World")]))->fragment2string
+# main> :d BODY(paragraphy([P("Hello"),BR(),"yes",BR(),P("World")]))->fragment2string
 # $VAR1 = '<body><p>Hello</p><br></br>yes<br></br><p>World</p></body>';
-# main> :d use Chj::PXHTML ':all'; BODY(Chj::Ml2json::Parse::HTML::paragraphy([P("Hello"),BR(),"yes",BR(),BR(),P("World")]))->fragment2string
+# main> :d BODY(paragraphy([P("Hello"),BR(),"yes",BR(),BR(),P("World")]))->fragment2string
 # $VAR1 = '<body><p>Hello</p><p><br></br>yes</p><p>World</p></body>';
 # #hmm
-# main> :d use Chj::PXHTML ':all'; BODY(Chj::Ml2json::Parse::HTML::paragraphy([P("Hello"),BR(),"yes",BR(),BR(),P("World"),BR(),"Postfix"]))->fragment2string
+# main> :d BODY(paragraphy([P("Hello"),BR(),"yes",BR(),BR(),P("World"),BR(),"Postfix"]))->fragment2string
 # $VAR1 = '<body><p>Hello</p><p><br></br>yes</p><p>World</p><br></br>Postfix</body>';
 
 1
