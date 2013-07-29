@@ -28,6 +28,7 @@ use Chj::NoteWarn;
 use Chj::PXHTML ":all";
 use Scalar::Util 'weaken';
 use Chj::FP2::List ":all";
+use Chj::TEST;
 
 # convert "foo<br/><br/>bar" into "<p>foo</p><p>bar</p>"
 
@@ -177,32 +178,34 @@ sub paragraphy {
     rlist2array(paragraphy_(mixed_flatten ($a)));
 }
 
-# main> :d BODY(paragraphy([P("Hello"),P("World")]))->fragment2string
-# $VAR1 = '<body><p>Hello</p><p>World</p></body>';
-#main> :d BODY(paragraphy([P("Hello"),BR(),BR(),P("World")]))->fragment2string
-#$VAR1 = '<body><p>Hello</p><p></p><p>World</p></body>';
-# main> :d BODY(paragraphy([P("Hello"),BR(),P("World")]))->fragment2string
-# $VAR1 = '<body><p>Hello</p><br></br><p>World</p></body>';
-# main> :d BODY(paragraphy([P("Hello"),BR(),"yes",P("World")]))->fragment2string
-# $VAR1 = '<body><p>Hello</p><br></br>yes<p>World</p></body>';
-# main> :d BODY(paragraphy([P("Hello"),BR(),"yes",BR(),P("World")]))->fragment2string
-# $VAR1 = '<body><p>Hello</p><br></br>yes<br></br><p>World</p></body>';
-# main> :d BODY(paragraphy([P("Hello"),BR(),"yes",BR(),BR(),P("World")]))->fragment2string
-# $VAR1 = '<body><p>Hello</p><p><br></br>yes</p><p>World</p></body>';
+TEST{ BODY(paragraphy([P("Hello"),P("World")]))->fragment2string }
+  '<body><p>Hello</p><p>World</p></body>';
+TEST{ BODY(paragraphy([P("Hello"),BR(),BR(),P("World")]))->fragment2string }
+  '<body><p>Hello</p><p></p><p>World</p></body>'
+TEST{ BODY(paragraphy([P("Hello"),BR(),P("World")]))->fragment2string }
+  '<body><p>Hello</p><br></br><p>World</p></body>';
+TEST{ BODY(paragraphy([P("Hello"),BR(),"yes",P("World")]))->fragment2string }
+  '<body><p>Hello</p><br></br>yes<p>World</p></body>';
+TEST{ BODY(paragraphy([P("Hello"),BR(),"yes",BR(),P("World")]))->fragment2string }
+  '<body><p>Hello</p><br></br>yes<br></br><p>World</p></body>';
+TEST{ BODY(paragraphy([P("Hello"),BR(),"yes",BR(),BR(),P("World")]))
+	->fragment2string }
+  '<body><p>Hello</p><p><br></br>yes</p><p>World</p></body>';
 # #hmm
-# main> :d BODY(paragraphy([P("Hello"),BR(),"yes",BR(),BR(),P("World"),BR(),"Postfix"]))->fragment2string
-# $VAR1 = '<body><p>Hello</p><p><br></br>yes</p><p>World</p><br></br>Postfix</body>';
+TEST{ BODY(paragraphy([P("Hello"),BR(),"yes",BR(),BR(),P("World"),BR(),"Postfix"]))
+	->fragment2string }
+  '<body><p>Hello</p><p><br></br>yes</p><p>World</p><br></br>Postfix</body>';
 
-# calc> :l BODY(paragraphy(["Hello",BR,BR,"yes",BR,BR,"World",BR,"Postfix"]))->fragment2string
-# <body><p>Hello</p><p>yes</p>World<br/>Postfix</body>
-# calc> :l BODY(paragraphy(["Hello",BR,BR, BLOCKQUOTE("yes",BR,BR,"World"),"Hm",BR,BR,"Postfix"]))->fragment2string
-# <body><p>Hello</p><blockquote><p>yes</p>World</blockquote><p>Hm</p>Postfix</body>
+TEST{ BODY(paragraphy(["Hello",BR,BR,"yes",BR,BR,"World",BR,"Postfix"]))->fragment2string }
+  '<body><p>Hello</p><p>yes</p>World<br/>Postfix</body>';
+TEST{ BODY(paragraphy(["Hello",BR,BR, BLOCKQUOTE("yes",BR,BR,"World"),"Hm",BR,BR,"Postfix"]))->fragment2string }
+  '<body><p>Hello</p><blockquote><p>yes</p>World</blockquote><p>Hm</p>Postfix</body>';
 
-# calc> :l BODY(paragraphy(["Hello",BR,BR,"bar", BR,BR,BLOCKQUOTE ("baz",BR,BR),"baba"]))->fragment2string
-# <body><p>Hello</p><p>bar</p><blockquote><p>baz</p></blockquote><p>baba</p></body>
+TEST{ BODY(paragraphy(["Hello",BR,BR,"bar", BR,BR,BLOCKQUOTE ("baz",BR,BR),"baba"]))->fragment2string }
+  '<body><p>Hello</p><p>bar</p><blockquote><p>baz</p></blockquote><p>baba</p></body>';
 
-# calc> :l BODY(paragraphy(["Hello",BR,BR,"bar", BR,"baz",BR,BLOCKQUOTE ("baz",BR,BR),"baba"]))->fragment2string
-# <body><p>Hello</p><p>bar<br/>baz<br/></p><blockquote><p>baz</p></blockquote><p>baba</p></body>
+TEST{ BODY(paragraphy(["Hello",BR,BR,"bar", BR,"baz",BR,BLOCKQUOTE ("baz",BR,BR),"baba"]))->fragment2string }
+  '<body><p>Hello</p><p>bar<br/>baz<br/></p><blockquote><p>baz</p></blockquote><p>baba</p></body>';
 # ouch, remove br after first baz  *sigh*
 
 1
