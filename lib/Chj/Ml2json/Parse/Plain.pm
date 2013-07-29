@@ -131,7 +131,8 @@ sub parse_map {
     my $s=shift;
     my ($str)=@_;
     SPAN({class=> "plain"},
-	 _parse_map (array2list([split /\r?\n/, $str]), 1))
+	 Chj::Ml2json::Parse::HTML::paragraphy(
+	 _parse_map (array2list([split /\r?\n/, $str]), 1)))
 }
 
 
