@@ -20,9 +20,11 @@ package Chj::Ml2json::Mailcollection::Message;
 
 use strict;
 
+use Chj::Ml2json::Mailcollection; # 'Chj::Ml2json::Ghostable';
 use Chj::NoteWarn;
 use MIME::EncWords 'decode_mimewords';
 use Chj::FP::ArrayUtil 'array_hashing_uniq';
+use Chj::TEST;
 
 sub cook_subject {
     local ($_)=@_;
@@ -38,6 +40,12 @@ sub cook_subject {
     s/\s+//sg;
     lc $_
 }
+
+TEST{ cook_subject "[bola] [balf] AW: weef" } 'weef';
+TEST{ cook_subject "RE: [bola] Re [balf] Re: weef" } 'weef';
+TEST{ cook_subject "[bola] [balf] AW: weef [bar]" } 'weef[bar]';
+TEST{ cook_subject "[bola] [balf] AW: weef (was: fluba) bah " } 'weefbah';
+
 
 use Chj::Struct ["ent", "h", "unixtime", "mboxpathhash", "n",
 		 "mboxslice"
@@ -256,8 +264,3 @@ sub references {
 
 
 _END_
-
-# main> :d Chj::Ml2json::Mailcollection::Message::cook_subject "[bola] [balf] AW: weef"
-# $VAR1 = 'weef';
-# main> :d Chj::Ml2json::Mailcollection::Message::cook_subject "[bola] [balf] AW: weef (was: fluba) bah "
-# $VAR1 = 'weefbah';
