@@ -2,6 +2,7 @@ COPYING
 INSTALL
 MANIFEST
 README
+docs/hacking.txt
 docs/mbox.txt
 docs/phases.txt
 docs/usage.txt
@@ -22,6 +23,7 @@ lib/Chj/Ml2json/OutputJSON.pm
 lib/Chj/Ml2json/OutputJSON/Continuous.pm
 lib/Chj/Ml2json/Parse.pm
 lib/Chj/Ml2json/Parse/HTML.pm
+lib/Chj/Ml2json/Parse/HTMLUtil.pm
 lib/Chj/Ml2json/Parse/Plain.pm
 lib/Chj/Ml2json/m2h_text_enriched.pm
 lib/Chj/NoteWarn.pm
@@ -30,5 +32,4 @@ lib/Chj/Parse/Mbox/Section.pm
 lib/Chj/Struct.pm
 lib/Chj/Try.pm
 lib/Chj/tempdir.pm
-lib/hacking.txt
 ml2json
