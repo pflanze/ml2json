@@ -23,6 +23,7 @@ use strict;
 use Chj::FP2::List ":all";
 use Chj::PXHTML ':all';
 use Chj::NoteWarn;
+use Chj::TEST;
 
 sub _parsequote {
   LP: {
@@ -49,7 +50,8 @@ sub possibly_url2html {
 	($pre,$prot,$main,$post)= $str=~ m/^(.*<)(https?|ftp|mailto)(:.*?)(>.*)/si
 	# XX well, ^ really would ask for /g but not feeling like bothering now.
 	or
-	($prot,$main,$post)= $str=~ m/^(https?|ftp|mailto)(:.*?)([;.,!]?)\z/si
+	($pre,$prot,$main,$post)= $str=~ m/^([;.,!()]*)(https?|ftp|mailto)(:.*?)([;.,!()]*)\z/si
+	# no need to change . to \S etc., since whitespace cannot be contained here
        ) {
 	my $url= "$prot$main";
 	[$pre,
@@ -61,6 +63,30 @@ sub possibly_url2html {
 	$str
     }
 }
+
+sub _T_ {
+    my ($src)=@_;
+    P(possibly_url2html($src))->fragment2string
+}
+sub _T ($$) {
+    my ($src,$res)=@_;
+    @_=(sub {
+	    _T_($src)
+	},
+	$res);
+    goto \&Chj::TEST::TEST
+}
+_T "http://www.foo.com/;",
+  '<p><a href="http://www.foo.com/" rel="nofollow">http://www.foo.com/</a>;</p>';
+_T "http://www.foo.com/foo?bar=%20baz.",
+  '<p><a href="http://www.foo.com/foo?bar=%20baz" rel="nofollow">http://www.foo.com/foo?bar=%20baz</a>.</p>';
+_T "(HTTPS://www.com/foo?bar=%20baz).",
+  '<p>(<a href="HTTPS://www.com/foo?bar=%20baz" rel="nofollow">HTTPS://www.com/foo?bar=%20baz</a>).</p>';
+_T "<https://www.com/foo?bar=%20baz>.",
+  '<p>&lt;<a href="https://www.com/foo?bar=%20baz" rel="nofollow">https://www.com/foo?bar=%20baz</a>&gt;.</p>';
+_T "see<https://www.com/foo?bar=%20baz>.",
+  '<p>see&lt;<a href="https://www.com/foo?bar=%20baz" rel="nofollow">https://www.com/foo?bar=%20baz</a>&gt;.</p>';
+
 
 our $tabdistance=8;
 
