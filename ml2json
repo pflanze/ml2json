@@ -564,7 +564,7 @@ sub parse_and_convert {
 
 	$par1->stream_for_each(PClosure(*do_output_message),
 			       $index->messages_threadsorted,
-			       5);
+			       20);
 
 	if ($opt_json_to) {
 	    $json->end;
