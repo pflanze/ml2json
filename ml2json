@@ -246,6 +246,11 @@ use Chj::Try;
 use Chj::xopen ':all';
 use Chj::Ml2json::Parse::HTML;
 use Chj::xperlfunc ':all';
+use Chj::Parallel;
+use Chj::PClosure;
+use Chj::Linux::numcpus; ###
+our $parallel= Chj::Parallel->new(numcpus);###
+
 
 our $collectionparser= Chj::Ml2json::MailcollectionParser->new
   ('Chj::Ml2json::Message',
@@ -286,6 +291,240 @@ sub phrase_dequote {
     }
 }
 
+our ($json, $index);
+sub do_output_message {
+    my ($m)=@_;
+    Try {
+	$json->message_print($m,$index)
+	  if $opt_json_to;
+	
+	my $source_path;
+	if ($opt_source_to) {
+	    my $idn= $m->identify;
+	    my $path= "$opt_source_to/$idn.txt";
+	    mkdir dirname($path);
+	    my $out= xopen_write $path;
+	    # Choice of either deparsing the entity, which is
+	    # not the same as what was originally parsed (but
+	    # it would show what was lost in the MIME parser)
+	    if (0) {
+		$out->xprint($m->ent->as_string);
+	    } else {
+		# or re-read the slice of the original mbox
+		# file; XX assumes that the file is still
+		# unchanged!
+		$m->mboxslice->xsendfile_to($out);
+	    }
+	    $out->xclose;
+	    $source_path= $path;
+	}
+	if ($opt_html_to) {
+	    my $id= $m->id;
+	    my $idn= $m->identify;
+	    my $p= $idn;
+	    $p=~ s|/|-|g;
+	    my $path= "$opt_html_to/$p.xhtml";
+	    # iceweasel ignores encoding in .html files, thus
+	    # needs to be .xhtml suffix
+	    my $out= xopen_write $path;
+	    binmode $out, ":utf8" or die;
+	    my $fragment= $outputjson->html($m);
+	    my $header_hashref_lc= $m->header_hashref_lc;
+	    my $ctime_UTC= $outputjson->json_ctime_UTC($m,$index);
+	    my $inreplyto= $outputjson->json_in_reply_to ($m,$index);
+	    my $replies= $outputjson->json_replies($m,$index);
+	    my $threadleaders= $outputjson->json_threadleaders($m,$index);
+	    my $maybe_threadleader=
+	      (@$threadleaders == 1) ? $$threadleaders[0] : undef;
+	    my $id2maybe_mg= sub {
+		my ($id)=@_;
+		if (my $v= $index->ids->{$id}) {
+		    $$v[1]
+		} else {
+		    ()
+		}
+	    };
+	    my $msg_id2maybe_url= sub {
+		my ($id)=@_;
+		if (my $mg= &$id2maybe_mg ($id)) {
+		    my $m= $mg->resurrect; # necessary as $mg->identify is different
+		    my $idn= $m->identify;
+		    #COPYPASTE from above
+		    my $p= $idn;
+		    $p=~ s|/|-|g;
+		    "$p.xhtml"
+		} else {
+		    undef
+		}
+	    };
+	    my @choice= $m->origplain_origrich_orightml_string;
+	    my $choice= array_zip2 \@choice, [qw(plain rich html)];
+	    my $choosen= $outputjson->html_choice($m);
+	    #use Chj::repl;repl;
+
+
+	    ###my $_id2subthread= {}; # for sharing across multiple entry points through threadleaders
+	    #wohlsck
+
+# 		    my $threadleader_simplifiedsubject= do {
+# 			my $mg= &$id2maybe_mg ($_id);
+# 			my $m= $mg->resurrect;
+# 			my $orig_headers= $outputjson->json_orig_headers ($m,$index);
+# 			subject_simplify($$orig_headers{Subject})
+# 		    };
+
+	    my $showthread; $showthread= sub {
+		my ($_id)=@_;
+		if (my $mg= &$id2maybe_mg ($_id)) {
+		    my $m= $mg->resurrect;
+		    #hm again COPYPASTE; even again to avoid fetching $m again
+		    my $idn= $m->identify;
+		    my $p= $idn;
+		    $p=~ s|/|-|g;
+		    my $url= "$p.xhtml";
+		    #/CP
+		    my $replies= $outputjson->json_replies($m,$index);
+		    #my $orig_headers= $outputjson->json_orig_headers ($m,$index);
+		    #my $subject= $$orig_headers{Subject};
+		    #my $subject_is_same=
+		    #  subject_simplify($subject) eq $threadleader_simplifiedsubject;
+		    # need to  keep seen ones  too   or only. (if threadleader then show!)
+		    #my $cnt= $subject_is_same ? 
+		    my ($from)= @{$outputjson->json_parsed_from($m,undef)};
+		    my $fromstr= phrase_dequote($$from{phrase}) || $$from{address};
+		    my $subject= $outputjson->json_decoded_subject($m,undef);
+
+		    my $cnt= [$subject, " ", I("(",$fromstr,")")];
+		    my $possiblylinkedcnt=
+		      $_id eq $id ? $cnt : A({href=> $url}, $cnt);
+
+		    DIR(
+			LI($possiblylinkedcnt),
+			map {
+			    &$showthread ($_)
+			} @$replies
+		       )
+		} else {
+		    # the unknown id's  hm,
+		    NOTE "shouldn't happen here?: id '$_id'";##odd, actually happens
+		    undef
+		}
+	    };
+	    my $_showthread= $showthread; weaken $showthread;
+
+	    my $perhaps_source_link= $source_path && do {
+		my $rel= File::Spec->abs2rel($source_path, dirname($path));
+		["; ", A({href=> $rel}, "source")]
+	    };
+
+	    my %addrs=
+	      map {
+		  my $vs= $outputjson->_json_mailparsed_header($m,$_);
+		  ($_=> do {
+		      if (@$vs) {
+			  array_join
+			    ([
+			      map {
+				  [defined $$_{phrase}
+				   ? phrase_dequote($$_{phrase})." "
+				   : undef,
+				   TT("<", A({href=> "mailto:$$_{address}"},
+					     $$_{address}),
+				      ">"),
+				   defined $$_{comment}
+				   ? $$_{comment}." "
+				   : undef]
+			      } @$vs
+			     ],
+			     ", ")
+		      } else {
+			  undef
+		      }
+		  })
+	       } qw(from to cc);
+	    my $page=
+	      HTML
+		(HEAD (TITLE ($idn),
+		       STYLE ({type=>"text/css"},
+			      map {
+				  my $col= $textbackgroundcol->shade_exponentially_towards
+				      ($blockquoteendcol, 0.6, $_)->htmlstring;
+				  ".quotelevel_$_ { background-color:$col; }\n"
+			      } 1..15)),
+		 BODY
+		 ({bgcolor=>"#964a2a"},
+		  TABLE ({border=>0,
+			  cellspacing=>3,
+			  cellpadding=>16,
+			  width=>"88%",
+			  align=>"center",
+			 },
+			 TR
+			 (TD
+			  ({bgcolor=> "#f0f8ff"},
+			   TABLE
+			   ({border=>0},
+			    (
+			     map {
+				 my ($key,$val)=@$_;
+				 TR ({valign=>"top"},
+				     TD ({align=>"right"},
+					 "$key:$nbsp"),
+				     TD ($val))
+			     }
+			     ["Subject",
+			      #with_wrap_if {
+			      #	  A({href=> &$msg_id2url ($maybe_threadleader)}, $_)
+			      #} B($$orig_headers{Subject}), $maybe_threadleader
+			      #sigh, more complicated (maybe monad?):
+			      do {
+				  my $V0= B($$header_hashref_lc{subject});
+				  if ($maybe_threadleader
+				      and $maybe_threadleader ne $id) {
+				      if (my $V2= &$msg_id2maybe_url ($maybe_threadleader)) {
+					  A({href=> $V2}, $V0)
+				      } else {
+					  $V0
+				      }
+				  } else {
+				      $V0
+				  }
+			      }
+			     ],
+			     ["From", #$$header_hashref_lc{from}
+			      $addrs{from}],
+			     ["To",# $$header_hashref_lc{to},
+			      $addrs{to},
+			      #$$orig_headers{Cc}..
+			      ($addrs{cc} and ", Cc: ", $addrs{cc})],
+			     ["Date",
+			      [$$header_hashref_lc{date}, $nbsp, " (", $ctime_UTC, " UTC)"]]
+			     ),
+			    TR({valign=>"top"},
+			       TD(SMALL("Message-ID:")),
+			       TD(SMALL($id,
+					" $nbsp ",
+					nobr
+					("Choice:",
+					 (map {
+					     my ($used,$msg)=@$_;
+					     ($used
+					      ? [" ",
+						 ($choosen eq $msg ? B($msg) : $msg)]
+					      : undef)
+					 } @$choice),
+					 $perhaps_source_link))))))),
+			 TR (TD ({bgcolor=> $textbackgroundcol->htmlstring}, $fragment)),
+			 TR (TD ({bgcolor=> "#f0f8ff"},
+				 ($maybe_threadleader and
+				  &$_showthread($maybe_threadleader)))))));
+	    pxml_xhtml_print_fast($page, $out, "en");
+	    $out->xclose;
+	}
+    } $m;
+}
+
+
 sub parse_and_convert {
     my @sourcepaths=@ARGV;
 
@@ -298,7 +537,7 @@ sub parse_and_convert {
 
     my $coll= $collectionparser->parse_trees(\@sourcepaths, $tmp, $opt_max_date_deviation);
 
-    my $index= $coll->index ($max_thread_duration);
+    local $index= $coll->index ($max_thread_duration);
 
     my $allout= sub {
 	my $o;
@@ -306,240 +545,19 @@ sub parse_and_convert {
 	    $o= xopen_write $opt_json_to;
 	    binmode $o, ":utf8" or die;
 	}
-	my $json= Chj::Ml2json::OutputJSON::Continuous->new($o,$outputjson);
+	local $json= Chj::Ml2json::OutputJSON::Continuous->new($o,$outputjson);
 	#^ XX HACK: $o may be undefined; really misusing that
 	# mechanism now.
-	stream_for_each sub {
-	    my ($m)=@_;
-	    Try {
-		$json->message_print($m,$index)
-		  if $opt_json_to;
 
-		my $source_path;
-		if ($opt_source_to) {
-		    my $idn= $m->identify;
-		    my $path= "$opt_source_to/$idn.txt";
-		    mkdir dirname($path);
-		    my $out= xopen_write $path;
-		    # Choice of either deparsing the entity, which is
-		    # not the same as what was originally parsed (but
-		    # it would show what was lost in the MIME parser)
-		    if (0) {
-			$out->xprint($m->ent->as_string);
-		    } else {
-			# or re-read the slice of the original mbox
-			# file; XX assumes that the file is still
-			# unchanged!
-			$m->mboxslice->xsendfile_to($out);
-		    }
-		    $out->xclose;
-		    $source_path= $path;
-		}
-		if ($opt_html_to) {
-		    my $id= $m->id;
-		    my $idn= $m->identify;
-		    my $p= $idn;
-		    $p=~ s|/|-|g;
-		    my $path= "$opt_html_to/$p.xhtml";
-		    # iceweasel ignores encoding in .html files, thus
-		    # needs to be .xhtml suffix
-		    my $out= xopen_write $path;
-		    binmode $out, ":utf8" or die;
-		    my $fragment= $outputjson->html($m);
-		    my $header_hashref_lc= $m->header_hashref_lc;
-		    my $ctime_UTC= $outputjson->json_ctime_UTC($m,$index);
-		    my $inreplyto= $outputjson->json_in_reply_to ($m,$index);
-		    my $replies= $outputjson->json_replies($m,$index);
-		    my $threadleaders= $outputjson->json_threadleaders($m,$index);
-		    my $maybe_threadleader=
-		      (@$threadleaders == 1) ? $$threadleaders[0] : undef;
-		    my $id2maybe_mg= sub {
-			my ($id)=@_;
-			if (my $v= $index->ids->{$id}) {
-			    $$v[1]
-			} else {
-			    ()
-			}
-		    };
-		    my $msg_id2maybe_url= sub {
-			my ($id)=@_;
-			if (my $mg= &$id2maybe_mg ($id)) {
-			    my $m= $mg->resurrect; # necessary as $mg->identify is different
-			    my $idn= $m->identify;
-			    #COPYPASTE from above
-			    my $p= $idn;
-			    $p=~ s|/|-|g;
-			    "$p.xhtml"
-			} else {
-			    undef
-			}
-		    };
-		    my @choice= $m->origplain_origrich_orightml_string;
-		    my $choice= array_zip2 \@choice, [qw(plain rich html)];
-		    my $choosen= $outputjson->html_choice($m);
-		    #use Chj::repl;repl;
+	my $par1_tmpdir= tempdir "/tmp/$myname-par1";##blex
+	# Instead of passing context through the PClosure, instantiate
+	# after having put the nonserializable/big parts into dynamic
+	# variables ($json, $index).
+	my $par1= $parallel->instantiate ($par1_tmpdir);
 
-
-		    ###my $_id2subthread= {}; # for sharing across multiple entry points through threadleaders
-		    #wohlsck
-
-# 		    my $threadleader_simplifiedsubject= do {
-# 			my $mg= &$id2maybe_mg ($_id);
-# 			my $m= $mg->resurrect;
-# 			my $orig_headers= $outputjson->json_orig_headers ($m,$index);
-# 			subject_simplify($$orig_headers{Subject})
-# 		    };
-
-		    my $showthread; $showthread= sub {
-			my ($_id)=@_;
-			if (my $mg= &$id2maybe_mg ($_id)) {
-			    my $m= $mg->resurrect;
-			    #hm again COPYPASTE; even again to avoid fetching $m again
-			    my $idn= $m->identify;
-			    my $p= $idn;
-			    $p=~ s|/|-|g;
-			    my $url= "$p.xhtml";
-			    #/CP
-			    my $replies= $outputjson->json_replies($m,$index);
-			    #my $orig_headers= $outputjson->json_orig_headers ($m,$index);
-			    #my $subject= $$orig_headers{Subject};
-			    #my $subject_is_same=
-			    #  subject_simplify($subject) eq $threadleader_simplifiedsubject;
-			    # need to  keep seen ones  too   or only. (if threadleader then show!)
-			    #my $cnt= $subject_is_same ? 
-			    my ($from)= @{$outputjson->json_parsed_from($m,undef)};
-			    my $fromstr= phrase_dequote($$from{phrase}) || $$from{address};
-			    my $subject= $outputjson->json_decoded_subject($m,undef);
-
-			    my $cnt= [$subject, " ", I("(",$fromstr,")")];
-			    my $possiblylinkedcnt=
-			      $_id eq $id ? $cnt : A({href=> $url}, $cnt);
-
-			    DIR(
-				LI($possiblylinkedcnt),
-				map {
-				    &$showthread ($_)
-				} @$replies
-			       )
-			} else {
-			    # the unknown id's  hm,
-			    NOTE "shouldn't happen here?: id '$_id'";##odd, actually happens
-			    undef
-			}
-		    };
-		    my $_showthread= $showthread; weaken $showthread;
-
-		    my $perhaps_source_link= $source_path && do {
-			my $rel= File::Spec->abs2rel($source_path, dirname($path));
-			["; ", A({href=> $rel}, "source")]
-		    };
-
-		    my %addrs=
-		      map {
-			  my $vs= $outputjson->_json_mailparsed_header($m,$_);
-			  ($_=> do {
-			      if (@$vs) {
-				  array_join
-				    ([
-				      map {
-					  [defined $$_{phrase}
-					   ? phrase_dequote($$_{phrase})." "
-					   : undef,
-					   TT("<", A({href=> "mailto:$$_{address}"},
-						     $$_{address}),
-					      ">"),
-					   defined $$_{comment}
-					   ? $$_{comment}." "
-					   : undef]
-				      } @$vs
-				     ],
-				     ", ")
-			      } else {
-				  undef
-			      }
-			  })
-		       } qw(from to cc);
-		    my $page=
-		      HTML
-			(HEAD (TITLE ($idn),
-			       STYLE ({type=>"text/css"},
-				      map {
-					  my $col= $textbackgroundcol->shade_exponentially_towards
-					      ($blockquoteendcol, 0.6, $_)->htmlstring;
-					  ".quotelevel_$_ { background-color:$col; }\n"
-				      } 1..15)),
-			 BODY
-			 ({bgcolor=>"#964a2a"},
-			  TABLE ({border=>0,
-				  cellspacing=>3,
-				  cellpadding=>16,
-				  width=>"88%",
-				  align=>"center",
-				 },
-				 TR
-				 (TD
-				  ({bgcolor=> "#f0f8ff"},
-				   TABLE
-				   ({border=>0},
-				    (
-				     map {
-					 my ($key,$val)=@$_;
-					 TR ({valign=>"top"},
-					     TD ({align=>"right"},
-						 "$key:$nbsp"),
-					     TD ($val))
-				     }
-				     ["Subject",
-				      #with_wrap_if {
-				      #	  A({href=> &$msg_id2url ($maybe_threadleader)}, $_)
-				      #} B($$orig_headers{Subject}), $maybe_threadleader
-				      #sigh, more complicated (maybe monad?):
-				      do {
-					  my $V0= B($$header_hashref_lc{subject});
-					  if ($maybe_threadleader
-					      and $maybe_threadleader ne $id) {
-					      if (my $V2= &$msg_id2maybe_url ($maybe_threadleader)) {
-						  A({href=> $V2}, $V0)
-					      } else {
-						  $V0
-					      }
-					  } else {
-					      $V0
-					  }
-				      }
-				     ],
-				     ["From", #$$header_hashref_lc{from}
-				      $addrs{from}],
-				     ["To",# $$header_hashref_lc{to},
-				      $addrs{to},
-				      #$$orig_headers{Cc}..
-				      ($addrs{cc} and ", Cc: ", $addrs{cc})],
-				     ["Date",
-				      [$$header_hashref_lc{date}, $nbsp, " (", $ctime_UTC, " UTC)"]]
-				     ),
-				    TR({valign=>"top"},
-				       TD(SMALL("Message-ID:")),
-				       TD(SMALL($id,
-						" $nbsp ",
-						nobr
-						("Choice:",
-						 (map {
-						     my ($used,$msg)=@$_;
-						     ($used
-						      ? [" ",
-							 ($choosen eq $msg ? B($msg) : $msg)]
-						      : undef)
-						 } @$choice),
-						 $perhaps_source_link))))))),
-				 TR (TD ({bgcolor=> $textbackgroundcol->htmlstring}, $fragment)),
-				 TR (TD ({bgcolor=> "#f0f8ff"},
-					 ($maybe_threadleader and
-					  &$_showthread($maybe_threadleader)))))));
-		    pxml_xhtml_print_fast($page, $out, "en");
-		    $out->xclose;
-		}
-	    } $m;
-	}, $index->messages_threadsorted;
+	$par1->stream_for_each(PClosure(*do_output_message),
+			       $index->messages_threadsorted,
+			       5);
 
 	if ($opt_json_to) {
 	    $json->end;
