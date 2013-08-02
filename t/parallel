@@ -59,17 +59,17 @@ if (0) {
     sub work {
 	my ($v)=@_;
 	my $z=0;
-	die "halleluja $$" if (rand () < 0.1);
-	my $end= rand 3e6;
-	for (my $i=0; $i< $end; $i++) {
-	    $z++
-	}
+	#die "halleluja $$" if (rand () < 0.1);
+	my $end= rand 10000; #3e6;
+	#for (my $i=0; $i< $end; $i++) {
+	#    $z++
+	#}
 	print "v=$v, pid=$$, end=$end\n";
     }
 
     {
 	local our $parinst= $parallel->instantiate ($tmpdir);
-	$$parinst{suppress_exceptions}=1; # XX better api; bad anyway
+	#$$parinst{suppress_exceptions}=1; # XX better api; bad anyway
 
 	if (0) {
 	    $SIG{INT}= sub {
@@ -80,8 +80,9 @@ if (0) {
 	}
 
 	$parinst->stream_for_each(PClosure(*work),
-				  stream_iota(30),
-				  4);
+				  stream_iota(3000),
+				  #4
+				 );
 
     }
 
