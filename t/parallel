@@ -1,0 +1,91 @@
+#!/usr/bin/perl -w
+
+# Fri Aug  2 00:14:08 BST 2013
+(my $email='ch%christianjaeger,ch')=~ tr/%,/@./;
+
+use strict;
+
+my ($mydir, $myname);
+BEGIN {
+    $0=~ /(.*?)([^\/]+)\z/s or die "?";
+    ($mydir, $myname)=($1,$2);
+}
+use lib "$mydir/../perllib";
+use lib "$mydir/../ftemplate/lib";
+use lib "$mydir/../lib";
+
+our $tmpbase="/tmp/$myname";
+
+use Chj::Backtrace;
+use Chj::tempdir;
+use Chj::FP2::Stream;
+use Chj::Parallel;
+use Chj::PClosure;
+
+use Chj::Backtrace;
+
+if (0) {
+    use Chj::xpipe; use Chj::xperlfunc;
+    use Chj::Transmittable;
+
+    my ($r,$w)= xpipe;
+    if (xfork) {
+	$w->xclose;
+	while( my $msg= xreceive($r)) {
+	    use Data::Dumper;
+	    print "got ".Dumper($msg);
+	}
+    } else {
+	$r->xclose;
+	for (1..10) {
+	    if (xfork) {
+		#
+	    } else {
+		for (1..10){
+		    xlocktransmit [$$,$_], $w
+		}
+		exit;
+	    }
+	}
+	exit
+    }
+
+} else {
+
+    our $tmpdir= tempdir $tmpbase;
+
+    our $parallel= Chj::Parallel->new(3);
+
+    sub work {
+	my ($v)=@_;
+	my $z=0;
+	die "halleluja $$" if (rand () < 0.1);
+	my $end= rand 3e6;
+	for (my $i=0; $i< $end; $i++) {
+	    $z++
+	}
+	print "v=$v, pid=$$, end=$end\n";
+    }
+
+    {
+	local our $parinst= $parallel->instantiate ($tmpdir);
+	$$parinst{suppress_exceptions}=1; # XX better api; bad anyway
+
+	if (0) {
+	    $SIG{INT}= sub {
+		use Carp 'cluck';
+		cluck "got SIGINT";
+		exit 1;
+	    };
+	}
+
+	$parinst->stream_for_each(PClosure(*work),
+				  stream_iota(30),
+				  4);
+
+    }
+
+    use Chj::repl;repl;
+
+}
+
