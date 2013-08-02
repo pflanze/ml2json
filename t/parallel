@@ -68,7 +68,7 @@ if (0) {
     }
 
     {
-	local our $parinst= $parallel->instantiate ($tmpdir);
+	local our $parinst= $parallel->instantiate ($tmpdir,[]);
 	#$$parinst{suppress_exceptions}=1; # XX better api; bad anyway
 
 	if (0) {

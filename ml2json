@@ -560,7 +560,7 @@ sub parse_and_convert {
 	# Instead of passing context through the PClosure, instantiate
 	# after having put the nonserializable/big parts into dynamic
 	# variables ($json, $index).
-	my $par1= $parallel->instantiate ($par1_tmpdir);
+	my $par1= $parallel->instantiate ($par1_tmpdir, [$o]);
 
 	$par1->stream_for_each(PClosure(*do_output_message),
 			       $index->messages_threadsorted,
