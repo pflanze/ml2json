@@ -22,6 +22,7 @@
    ["parsed_to"=> "json_parsed_to", 2],
    ["parsed_cc"=> "json_parsed_cc", 2],
    ["decoded_subject"=> "json_decoded_subject", 1],
+   ["cooked_subject"=> "json_cooked_subject", 1],
    ["message-id"=> "json_message_id",1],
    [replies=> "json_replies", 2],
    ["in-reply-to"=> "json_in_reply_to", 1],

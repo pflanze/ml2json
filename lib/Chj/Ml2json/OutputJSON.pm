@@ -63,6 +63,7 @@ our $default_jsonfields_top=
    ["parsed_to"=> "json_parsed_to", 2],
    ["parsed_cc"=> "json_parsed_cc", 2],
    ["decoded_subject"=> "json_decoded_subject", 1],
+   ["cooked_subject"=> "json_cooked_subject", 1],
    ["message-id"=> "json_message_id",1],
    [replies=> "json_replies", 2],
    ["in-reply-to"=> "json_in_reply_to", 1],
@@ -284,6 +285,14 @@ sub json_decoded_subject {
     @_==2 or die;
     my ($m,$index)=@_;
     $m->decoded_headers("subject")
+}
+
+
+sub json_cooked_subject {
+    my $s=shift;
+    @_==2 or die;
+    my ($m,$index)=@_;
+    $m->maybe_cooked_subject
 }
 
 
