@@ -300,10 +300,12 @@ sub phrase_dequote {
 
 our ($json, $index);
 sub do_output_message {
-    my ($m)=@_;
+    my ($m,$pos)=@_;
     Try {
-	$json->message_print($m,$index)
-	  if $opt_json_to;
+	if ($opt_json_to) {
+	    $json->set_not_first($pos);
+	    $json->message_print($m,$index);
+	}
 	
 	my $source_path;
 	if ($opt_source_to) {
@@ -555,6 +557,9 @@ sub parse_and_convert {
 	local $json= Chj::Ml2json::OutputJSON::Continuous->new($o,$outputjson);
 	#^ XX HACK: $o may be undefined; really misusing that
 	# mechanism now.
+	if ($opt_json_to) {
+	    $json->print_opening;
+	}
 
 	my $par1_tmpdir= tempdir "/tmp/$myname-par1";##blex
 	# Instead of passing context through the PClosure, instantiate
@@ -562,11 +567,13 @@ sub parse_and_convert {
 	# variables ($json, $index).
 	my $par1= $parallel->instantiate ($par1_tmpdir, [$o ? $o : ()]);
 
-	$par1->stream_for_each(PClosure(*do_output_message),
-			       $index->messages_threadsorted,
-			       20);
+	my $len= $par1->stream_for_each
+	  (PClosure(*do_output_message),
+	   $index->messages_threadsorted,
+	   20);
 
 	if ($opt_json_to) {
+	    #$json->set_not_first($len);
 	    $json->end;
 	    $o->xclose;
 	}
