@@ -19,8 +19,8 @@ our $tmplink= "$ENV{HOME}/.$myname-tmp"; ## ok to use that path?
 our $mbox_glob= '*.mbox';
 our $max_thread_duration= "1 month";
 
-use Chj::Linux::numcpus;####
-our $numjobs= numcpus;
+use Chj::numcores;
+our $numjobs= numcores;
 
 sub usage {
     print STDERR map{"$_\n"} @_ if @_;
