@@ -20,6 +20,8 @@ package Chj::Ml2json::MailcollectionIndex;
 
 use strict;
 
+use Scalar::Util 'weaken';
+
 
 use Chj::Struct
   ["replies",    # id -> [ id.. ], using normalized messageids.
@@ -95,6 +97,7 @@ sub all_threadsorted {
 	     &$expandthread($_)
 	 } @{$s->sorted_replies ($id)})
     };
+    my $_expandthread= $expandthread; weaken $expandthread;
     [
      map {
 	 &$expandthread ($_)
