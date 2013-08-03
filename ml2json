@@ -303,7 +303,8 @@ sub do_output_message {
     my ($m,$pos)=@_;
     Try {
 	if ($opt_json_to) {
-	    $json->set_not_first($pos);
+	    $json->set_not_first(1)
+	      if ($numjobs > 1 and $pos > 0);
 	    $json->message_print($m,$index);
 	}
 	
