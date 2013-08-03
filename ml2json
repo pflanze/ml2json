@@ -549,6 +549,11 @@ sub parse_and_convert {
 
     local $index= $coll->index ($max_thread_duration);
 
+    if ($opt_repl) {
+	Chj::repl::repl();
+	exit;
+    }
+
     my $allout= sub {
 	my $o;
 	if ($opt_json_to) {
@@ -589,11 +594,15 @@ $SIG{INT}= sub {
     cluck "got SIGINT";
     exit 1;
 };
+
+
 if ($opt_repl) {
     import Chj::Ml2json::MIMEExtract ':all';
     require Chj::Ml2json::Debug;
     import Chj::Ml2json::Debug;
-    require Chj::repl; Chj::repl::repl();
-} else {
-    parse_and_convert if @ARGV;
+    require Chj::repl;
+    Chj::repl::repl() unless @ARGV;
 }
+
+parse_and_convert if @ARGV;
+
