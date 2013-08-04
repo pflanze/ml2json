@@ -103,3 +103,13 @@ source):
  probably because something doesn't work right with intermediate
  values on the stack. Binding intermediate values to named variables
  seems to work reliably.
+
+----------------------------------------------------------------------
+
+When debugging, you may want to run ml2json with the --jobs 1 option
+so as to force it to run everything in the same process.
+
+To use the --repl option, get Chj::repl from
+https://github.com/pflanze/chj-perllib (ask me for a primer in how to
+use it or to finally fix it when not using :l or :d).
+
