@@ -105,7 +105,7 @@ sub all_threadsorted {
     ]
 }
 
-sub messages_threadsorted {
+sub all_messages_threadsorted {
     my $s=shift;
     Chj::FP2::Stream::stream_map sub {
 	my ($id)=@_;

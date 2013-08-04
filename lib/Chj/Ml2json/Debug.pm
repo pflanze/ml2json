@@ -38,7 +38,7 @@ sub test_output {
     stream_for_each sub {
 	my ($m)=@_;
 	$fh->xprint( $m->id,"\n")
-    }, $index->messages_threadsorted
+    }, $index->all_messages_threadsorted
 }
 
 sub test_origoutput {
