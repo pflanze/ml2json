@@ -57,6 +57,31 @@ sub sorted_replies {
 		}, \&Number_cmp );
 }
 
+sub threadleaders_precise {
+    my $index=shift;
+    @_==1 or die;
+    my ($id)=@_;
+
+    my $inreplytos= $index->inreplytos;
+
+    my $leaders; $leaders= sub {
+	my ($id,$tail)=@_;
+	my $ids= $$inreplytos{$id} || [];
+	if (@$ids) {
+	    list__array_fold_right
+	      ($leaders,
+	       $tail,
+	       $ids);
+	} else {
+	    cons $id,$tail
+	}
+    };
+    my $res= array_hashing_uniq list2array &$leaders ($id, undef);
+    undef $leaders;
+    $res
+}
+
+
 sub all_threadleaders_sorted {
     my $s=shift;
     # hashmap of id -> t, where only ids are recorded that are at
