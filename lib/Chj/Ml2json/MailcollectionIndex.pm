@@ -57,7 +57,7 @@ sub sorted_replies {
 		}, \&Number_cmp );
 }
 
-sub threadleaders_sorted {
+sub all_threadleaders_sorted {
     my $s=shift;
     # hashmap of id -> t, where only ids are recorded that are at
     # the top of a thread, and t is the newest t in all of the
@@ -101,7 +101,7 @@ sub all_threadsorted {
     [
      map {
 	 &$expandthread ($_)
-     } @{$s->threadleaders_sorted}
+     } @{$s->all_threadleaders_sorted}
     ]
 }
 
