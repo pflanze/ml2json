@@ -175,7 +175,12 @@ sub index {
 					."header of ".$m->identify);
 				   $inreplyto
 			       };
-			     push @{ $$index{replies}{$inreplyto_id} }, $id;
+			     if ($inreplyto_id eq $id) {
+				 WARN("email claims to be a reply to itself, "
+				      ."ignoring id '$inreplyto_id'");
+			     } else {
+				 push @{ $$index{replies}{$inreplyto_id} }, $id;
+			     }
 			 }
 			 #for my $reference ($m->references) {
 			 #my $oldrefs = $$index{replies}{$reference}||[];
@@ -189,16 +194,24 @@ sub index {
 
     # build 'cookedsubjects'
     if ($max_thread_duration) {
-	my $seen_ids={};
-	for (@{$index->all_t_sorted}) {
-	    my $t_mg= $_;
+	my $seen_ids={};##
+	for my $t_mg (@{$index->all_t_sorted}) {
 	    my ($t,$mg)=@$t_mg;
 	    my $m= $mg->resurrect;
 	    my $id= $m->id;
-	    unless ($$seen_ids{$id}) {
-		$$seen_ids{$id}=1;
-		if (my $cs= $m->maybe_cooked_subject) {
-		    if (my $ss= $$index{cookedsubjects}{$cs}) {
+	    ##----
+	    if ($$seen_ids{$id}) {
+		WARN "BUG";
+	    }
+	    $$seen_ids{$id}=1;
+	    ##----
+
+	    if (my $cs= $m->maybe_cooked_subject) {
+		if (my $ss= $$index{cookedsubjects}{$cs}) {
+		    my $leaders= $index->threadleaders_precise($id,1);
+		    if (@$leaders) {
+			# no need to add to subject index: never needed
+		    } else {
 			my $lasts= $$ss[-1];
 			my ($last_t,$last_mg)=@$lasts;
 			my $last_m= $last_mg->resurrect;
@@ -213,12 +226,12 @@ sub index {
 			    die "bug" if exists $$index{possibleinreplyto}{$id};
 			    $$index{possibleinreplyto}{$id}= $last_id;
 			}
-		    } else {
-			$$index{cookedsubjects}{$cs}= [$t_mg];
 		    }
 		} else {
-		    NOTE "message does not have a (cooked) subject"
+		    $$index{cookedsubjects}{$cs}= [$t_mg];
 		}
+	    } else {
+		NOTE "message does not have a (cooked) subject"
 	    }
 	}
     }

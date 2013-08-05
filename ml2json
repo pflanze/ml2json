@@ -370,21 +370,10 @@ sub do_output_message {
 	    my @choice= $m->origplain_origrich_orightml_string;
 	    my $choice= array_zip2 \@choice, [qw(plain rich html)];
 	    my $choosen= $outputjson->html_choice($m);
-	    #use Chj::repl;repl;
-
-
-	    ###my $_id2subthread= {}; # for sharing across multiple entry points through threadleaders
-	    #wohlsck
-
-# 		    my $threadleader_simplifiedsubject= do {
-# 			my $mg= &$id2maybe_mg ($_id);
-# 			my $m= $mg->resurrect;
-# 			my $orig_headers= $outputjson->json_orig_headers ($m,$index);
-# 			subject_simplify($$orig_headers{Subject})
-# 		    };
 
 	    my $showthread; $showthread= sub {
-		my ($_id)=@_;
+		my ($subthread)=@_;
+		my $_id= $$subthread{id};
 		if (my $mg= &$id2maybe_mg ($_id)) {
 		    my $m= $mg->resurrect;
 		    #hm again COPYPASTE; even again to avoid fetching $m again
@@ -393,13 +382,7 @@ sub do_output_message {
 		    $p=~ s|/|-|g;
 		    my $url= "$p.xhtml";
 		    #/CP
-		    my $replies= $outputjson->json_replies($m,$index);
-		    #my $orig_headers= $outputjson->json_orig_headers ($m,$index);
-		    #my $subject= $$orig_headers{Subject};
-		    #my $subject_is_same=
-		    #  subject_simplify($subject) eq $threadleader_simplifiedsubject;
-		    # need to  keep seen ones  too   or only. (if threadleader then show!)
-		    #my $cnt= $subject_is_same ? 
+
 		    my ($from)= @{$outputjson->json_parsed_from($m,undef)};
 		    my $fromstr= phrase_dequote($$from{phrase}) || $$from{address};
 		    my $subject= $outputjson->json_decoded_subject($m,undef);
@@ -408,15 +391,15 @@ sub do_output_message {
 		    my $possiblylinkedcnt=
 		      $_id eq $id ? $cnt : A({href=> $url}, $cnt);
 
-		    DIR(
-			LI($possiblylinkedcnt),
+		    DIR({compact=>1},
+			LI({class=> "ref_".$$subthread{ref}},
+			   $possiblylinkedcnt),
 			map {
 			    &$showthread ($_)
-			} @$replies
+			} @{ $$subthread{replies} }
 		       )
 		} else {
-		    # the unknown id's  hm,
-		    NOTE "shouldn't happen here?: id '$_id'";##odd, actually happens
+		    WARN "shouldn't happen here?: id '$_id'";
 		    undef
 		}
 	    };
@@ -456,11 +439,14 @@ sub do_output_message {
 	      HTML
 		(HEAD (TITLE ($idn),
 		       STYLE ({type=>"text/css"},
-			      map {
+			      (map {
 				  my $col= $textbackgroundcol->shade_exponentially_towards
 				      ($blockquoteendcol, 0.6, $_)->htmlstring;
 				  ".quotelevel_$_ { background-color:$col; }\n"
-			      } 1..15)),
+			      } 1..15),
+			      ".ref_precise {list-style: disc; }\n",
+			      ".ref_subject {list-style: square; }\n",
+			     )),
 		 BODY
 		 ({bgcolor=>"#964a2a"},
 		  TABLE ({border=>0,
@@ -527,7 +513,7 @@ sub do_output_message {
 			 TR (TD ({bgcolor=> $textbackgroundcol->htmlstring}, $fragment)),
 			 TR (TD ({bgcolor=> "#f0f8ff"},
 				 ($maybe_threadleader and
-				  &$_showthread($maybe_threadleader)))))));
+				  &$showthread($index->thread($maybe_threadleader))))))));
 	    pxml_xhtml_print_fast($page, $out, "en");
 	    $out->xclose;
 	}
@@ -567,7 +553,7 @@ sub parse_and_convert {
 	    $json->print_opening;
 	}
 
-	my $par1_tmpdir= tempdir "/tmp/$myname-par1";##blex
+	my $par1_tmpdir= tempdir "/tmp/$myname-par1";##XXX
 	# Instead of passing context through the PClosure, instantiate
 	# after having put the nonserializable/big parts into dynamic
 	# variables ($json, $index).

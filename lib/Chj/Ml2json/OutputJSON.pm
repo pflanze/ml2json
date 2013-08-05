@@ -428,7 +428,7 @@ sub json_threadleaders {
     my $s=shift;
     @_==2 or die;
     my ($m,$index)=@_;
-    $index->threadleaders_precise($m->id)
+    $index->threadleaders($m->id)
 }
 
 sub json {

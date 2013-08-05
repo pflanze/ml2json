@@ -21,6 +21,18 @@ package Chj::Ml2json::MailcollectionIndex;
 use strict;
 
 use Scalar::Util 'weaken';
+use Chj::FP::Array_sort;
+use Chj::FP::ArrayUtil ":all";
+use Chj::FP2::List ":all";
+use Chj::NoteWarn;
+
+sub array2hash ($) {
+    +{
+      map {
+	  $_=> $_
+      } @{$_[0]}
+     }
+}
 
 
 use Chj::Struct
@@ -35,97 +47,253 @@ use Chj::Struct
    "cookedsubjects", # cookedsubject -> [[t, threadleaderid]..]; entries sorted by t
    "possiblereplies", # id -> [ id.. ]
    "possibleinreplyto", # id -> threadleaderid
+
+   # calculation caches:
+   "_threadleaders_precise", # id -> [id..]  according to inreplytos
   ];
 
 
-# NOTE: building an index and running its methods is intertwined!
-# i.e. this module and Mailcollection.pm (index method there) are
-# working together. e.g. all_t_sorted is run during the building of
-# the index.
+# Building an index and running its methods is intertwined!  i.e. this
+# module and Mailcollection.pm (index method there) are working
+# together: all_t_sorted is run during the building of the index.
 
-use Chj::FP::Array_sort;
+#XXX dependent on correct times! should probably also check precise
+#threading already. And/or ordering in mboxes.hm.
+
+sub all_t_sorted { # -> [ [t,mg].. ]
+    my $s=shift;
+    Array_sort [ values %{$$s{ids}} ], On sub { $_[0][0] }, \&Number_cmp;
+}
+
+
 
 sub sorted_replies {
+    # array of +{ id=>$id, ref=> 'precise'|'subject' } sorted by unixtime
     my $s=shift;
     @_==1 or die;
     my ($id)=@_;
-    Array_sort( ($$s{replies}{$id}||[]),
+
+    my $replies=
+      [
+       (
+	map {
+	    +{ id=> $_, ref=> "precise" }
+	} @{($$s{replies}{$id}||[])}
+       ),
+       (
+	map {
+	    (exists array2hash($s->threadleaders_precise($_))->{$id}
+	     ? ()
+	     : +{ id=> $_, ref=> "subject" })
+	} @{($$s{possiblereplies}{$id}||[])}
+       ),
+      ];
+
+    Array_sort( $replies,
 		On sub {
-		    my ($id)=@_;
-		    my ($t,$mg)= @{$$s{ids}{$id}};
+		    my ($v)=@_;
+		    my ($t,$mg)= @{$$s{ids}{$v->{id}}};
 		    $t
 		}, \&Number_cmp );
 }
 
+
+# meant for debugging only
+sub thread_separate {
+    my $s=shift;
+    my ($id)= @_;
+    +{id=> $id,
+      precise=>
+      array_map
+      (sub {
+	   my ($id)=@_;
+	   $s->thread_separate($id)
+       },
+       $$s{replies}{$id}||[]),
+      subject=>
+      array_map
+      (sub {
+	   my ($id)=@_;
+	   $s->thread_separate($id)
+       },
+       $$s{possiblereplies}{$id}||[])
+     }
+}
+
+sub thread {
+    my $s=shift;
+    my ($id,$maybe_ref,$maybe_seen)= @_;
+    my $seen= $maybe_seen||{};
+    +{
+      id=> $id,
+      ref=> $maybe_ref||"top",
+      replies=>
+      array_map sub {
+	  my ($th)=@_; # $th for thread or thing
+	  my $id=$th->{id};
+	  if ($$seen{$id}++) {
+	      NOTE("cycle (probably already reported) [or just duplicate?] '$id' seen $$seen{$id} times");
+	      +{id=> $id,
+		ref=> $th->{ref},
+		replies=> [],
+		error=> "cycle"
+	       }
+	  } else {
+	      $s->thread ($th->{id}, $th->{ref}, $seen)
+	  }
+      }, $s->sorted_replies ($id)
+     }
+}
+
+sub threadB {
+    # returning the (unblessed) {id.. ref..} thingies from sorted_replies
+    my $s=shift;
+    my ($id)= @_;
+    array_map sub {
+	my ($th)=@_; # $th for thread or thing
+	+{post=> $th,
+	  replies=> $s->threadB ($th->{id}) }
+    }, $s->sorted_replies ($id)
+}
+
+
 sub threadleaders_precise {
-    my $index=shift;
+    # returns array of ids, contains $id if threadleader itself unless
+    # $suppress_self is true; suppresses unknown message-ids
+    my $s=shift;
+    (@_ and @_<3) or die;
+    my ($id,$suppress_self)=@_;
+
+    my $res=
+      $$s{_threadleaders_precise}{$id} ||= do {
+	  my $inreplytos= $s->inreplytos;
+	  my %seen;
+	  my $leaders; $leaders= sub {
+	      my ($id,$tail,$suppress_self)=@_;
+	      if ($seen{$id}++) {
+		  WARN("reference cycle between emails (or one with itself), "
+		       ."ignoring occurrence no. $seen{$id} of id '$id'");
+		  $tail
+	      } else {
+		  my @ids= grep {
+		      exists $$s{ids}{$_}
+		  } @{ $$inreplytos{$id} || [] };
+		  if (@ids) {
+		      list__array_fold_right
+			($leaders, # dropping $suppress_self
+			 $tail,
+			 \@ids);
+		  } else {
+		      $suppress_self ? $tail : cons $id,$tail
+		  }
+	      }
+	  };
+	  my $res= array_hashing_uniq list2array
+	    &$leaders($id, undef, 1); # always suppress_self for the
+                                      # version that goes into the
+                                      # cache
+	  undef $leaders;
+	  $res
+      };
+
+    if (!$suppress_self and !@$res) {
+	[$id]
+	# (XX is that really always the same as passing $suppress_self
+	# to &$leaders? Yes unless there's a cycle back to $id?)
+    } else {
+	$res
+    }
+}
+
+sub threadleader_subject {
+    # returning undef if $id itself is the subject leader
+    my $s=shift;
+    @_==1 or die;
+    my ($id)=@_;
+    $$s{possibleinreplyto}{$id}
+}
+
+sub threadleaders {
+    # returns array of ids, contains $id if threadleader itself
+    my $s=shift;
     @_==1 or die;
     my ($id)=@_;
 
-    my $inreplytos= $index->inreplytos;
-
-    my $leaders; $leaders= sub {
+    my %seen;
+    my $up; $up= sub {
 	my ($id,$tail)=@_;
-	my $ids= $$inreplytos{$id} || [];
-	if (@$ids) {
-	    list__array_fold_right
-	      ($leaders,
-	       $tail,
-	       $ids);
+
+	if ($seen{$id}++) {# COPYPASTE of the code in threadleaders_precise
+	    WARN("reference cycle between emails (or one with itself), "
+		 ."ignoring occurrence no. $seen{$id} of id '$id'");
+	    $tail
 	} else {
-	    cons $id,$tail
+
+	    # go up precisely as far as possible; this might just be $id
+	    # itself
+	    my $tp= array2list $s->threadleaders_precise($id);
+
+	    # then from those try to follow subject further up
+	    list_fold_right
+	      (sub {
+		   my ($id,$tail)= @_;
+		   if (defined (my $id2= $s->threadleader_subject($id))) {
+		       # recurse
+		       &$up($id2,$tail)
+		   } else {
+		       cons $id,$tail
+		   }
+	       },
+	       $tail,
+	       $tp);
+
+	    # (Note that we do *not* follow subject from original $id if
+	    # that one has a precise parent. Only the end points of
+	    # precise followups are being subject-resolved.)
+
 	}
     };
-    my $res= array_hashing_uniq list2array &$leaders ($id, undef);
-    undef $leaders;
-    $res
+
+    my $res= array_hashing_uniq list2array &$up($id,undef);
+    undef $up;
+    $res;
 }
 
 
 sub all_threadleaders_sorted {
     my $s=shift;
+
     # hashmap of id -> t, where only ids are recorded that are at
-    # the top of a thread, and t is the newest t in all of the
-    # replies and replies of replies..
+    # the top of a thread, and t is the newest t in the whole thread:
     my %threads;
     for my $id (keys %{$$s{ids}}) {
 	my ($t,$mg)= @{$$s{ids}{$id}};
-	my $top= sub {
-	    my $prevt= $threads{$id}||0;
-	    $threads{$id}= $t
+
+	for my $leaderid (@{ $s->threadleaders($id) }) {
+	    next unless exists $$s{ids}{$leaderid};
+	    my $prevt= $threads{$leaderid}||0;
+	    $threads{$leaderid}= $t
 	      if $t > $prevt;
-	};
-	if (my $inreplytos= $$s{inreplytos}{$id}) {
-	    my @exist= grep {
-		$$s{ids}{$_}
-	    } @$inreplytos;
-	    # XXX hacky?: check existence; still don't know how to
-	    # clean that up, should happen beforehand
-	    if (@exist) {
-		# not at the top, ignore
-	    } else {
-		&$top
-	    }
-	} else {
-	    &$top
 	}
     }
     Array_sort [keys %threads], On sub { $threads{$_[0]} }, \&Number_cmp;
 }
 
+
+sub expandthread {
+    my $s=shift;
+    my ($id)= @_;
+    ($id,
+     map {
+	 $s->expandthread($_->{id})
+     } @{$s->sorted_replies ($id)})
+}
+
 sub all_threadsorted {
     my $s=shift;
-    my $expandthread; $expandthread= sub {
-	my ($id)= @_;
-	($id,
-	 map {
-	     &$expandthread($_)
-	 } @{$s->sorted_replies ($id)})
-    };
-    my $_expandthread= $expandthread; weaken $expandthread;
     [
      map {
-	 &$expandthread ($_)
+	 $s->expandthread ($_)
      } @{$s->all_threadleaders_sorted}
     ]
 }
@@ -137,11 +305,6 @@ sub all_messages_threadsorted {
 	my ($t,$mg)= @{$$s{ids}{$id}};
 	$mg->resurrect
     }, Chj::FP2::Stream::array2stream ($s->all_threadsorted)
-}
-
-sub all_t_sorted { # -> [ [t,mg].. ]
-    my $s=shift;
-    Array_sort [ values %{$$s{ids}} ], On sub { $_[0][0] }, \&Number_cmp;
 }
 
 
