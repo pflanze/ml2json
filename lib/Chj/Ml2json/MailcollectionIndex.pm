@@ -145,17 +145,6 @@ sub thread {
      }
 }
 
-sub threadB {
-    # returning the (unblessed) {id.. ref..} thingies from sorted_replies
-    my $s=shift;
-    my ($id)= @_;
-    array_map sub {
-	my ($th)=@_; # $th for thread or thing
-	+{post=> $th,
-	  replies=> $s->threadB ($th->{id}) }
-    }, $s->sorted_replies ($id)
-}
-
 
 sub threadleaders_precise {
     # returns array of ids, contains $id if threadleader itself unless
