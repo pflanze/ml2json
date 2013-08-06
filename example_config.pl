@@ -56,9 +56,9 @@
    # and offered as a JSON structure here. Example:
    #     "parsed_from": [
    #         {
-   #             "address": "k_turner@tiscali.co.uk",
+   #             "address": "foo@bar.com",
    #             "comment": "",
-   #             "phrase": "\"Kevin Turner\""
+   #             "phrase": "\"Ken Baz\""
    #         }
    #     ],
 
