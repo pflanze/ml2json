@@ -425,7 +425,7 @@ sub do_output_message {
 					     $$_{address}),
 				      ">"),
 				   defined $$_{comment}
-				   ? $$_{comment}." "
+				   ? " ".phrase_dequote($$_{comment})." "
 				   : undef]
 			      } @$vs
 			     ],
