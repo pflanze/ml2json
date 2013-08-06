@@ -1,0 +1,20 @@
+Possible future work:
+
+Give a way to make IMG src values reference the right image attachment
+
+Look at 'references' headers (more precise than threading according to
+subject in the case where in-reply-to can not be found).
+
+A better way to handle dates in mbox separators (--max-date-deviation
+option): only use those after a confirmation pass that suggests that
+they are usefully tied to the arrival date of the mails.
+
+Look at dates in 'Received' headers, too? But how to decide which ones
+are trustworthy?
+
+Worrying a bit about people having "sun style" mbox files, which the
+current mbox parser will not handle well (see docs/mbox.txt). Offer to
+use one of the other mbox parsers by way of a config option, or
+improve lib/Chj/Ml2json/Mbox.pm? The author has never seen one of
+those, would need your support to test for the latter.
+

@@ -11,4 +11,9 @@ Debian-derived Linux system using:
    libhtml-tree-perl libmime-encwords-perl libtime-duration-parse-perl
 
 Or install MIME::Tools, HTML::Tree, MIME::EncWords, Email::Date and
-Time::Duration::Parse from CPAN.
+Time::Duration::Parse from CPAN (run 'cpan' or 'perl -MCPAN -e shell'
+then 'install MIME::Tools' etc.)
+
+
+For usage information, run "./ml2json --help", and read the files in
+the "docs" folder.

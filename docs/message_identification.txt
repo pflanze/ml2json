@@ -1,0 +1,16 @@
+Messages are identified in two ways:
+
+ * "id", their message ID, in the source code called just 'id' (as
+   opposed to message_id), which is the message's "Message-ID" field
+   value if usable (i.e. there is exactly one such header, and it has
+   some non-empty content), or a newly created ID to take its
+   place. Meant to identify a particular post
+
+ * "identify" string: identification of the mbox and the index of the
+   message therein. Can be used to find the original message
+   unambiguously, see ml2json --deidentify option. In cases where the
+   same post appears multiple times in the same or different mbox
+   files, there will be multiple "identify" values, but only one and
+   the same "id" value; a WARN will be issued if that happens and all
+   except one instance of the post will be ignored.
+
