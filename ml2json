@@ -350,6 +350,7 @@ sub do_output_message {
 	    my $fragment= $outputjson->html($m);
 	    my $header_hashref_lc= $m->header_hashref_lc;
 	    my $ctime_UTC= $outputjson->json_ctime_UTC($m,$index);
+	    my $attachments= $outputjson->json_attachments($m,$index);
 	    my $inreplyto= $outputjson->json_in_reply_to ($m,$index);
 	    my $replies= $outputjson->json_replies($m,$index);
 	    my $threadleaders= $outputjson->json_threadleaders($m,$index);
@@ -468,7 +469,8 @@ sub do_output_message {
 			 },
 			 TR
 			 (TD
-			  ({bgcolor=> "#f0f8ff"},
+			  ({colspan=>2,
+			    bgcolor=> "#f0f8ff"},
 			   TABLE
 			   ({border=>0},
 			    (
@@ -521,8 +523,43 @@ sub do_output_message {
 					      : undef)
 					 } @$choice),
 					 $perhaps_source_link))))))),
-			 TR (TD ({bgcolor=> $textbackgroundcol->htmlstring}, $fragment)),
-			 TR (TD ({bgcolor=> "#f0f8ff"},
+			 TR (TD ({colspan=>2,
+				  bgcolor=> $textbackgroundcol->htmlstring},
+				 $fragment)),
+			 (@$attachments
+			  ? (map {
+			      my $att=$_;
+			      my $attpath= $$att{path};
+			      my $loc=
+				File::Spec->abs2rel($attpath, dirname($path));
+			      my $name= basename($attpath);
+			      my $formatleft=
+				+{ bgcolor=> $textbackgroundcol->htmlstring,
+				   valign=>"top",
+				   align=> "right"};
+			      my $formatright=
+				+{ bgcolor=> $textbackgroundcol->htmlstring,
+				   valign=>"top",
+				   align=> "left"};
+			      if ($$att{disposition} eq "inline"
+				  and
+				  $$att{content_type} =~ /^image/) {
+				  TR(TD($formatleft,
+					"Image ($$att{content_type}): ", BR,
+					$name),
+				     TD($formatright,
+					IMG ({src=> $loc,
+					      title=> $name})))
+			      } else {
+				  TR(TD($formatleft,
+					"Attachment ($$att{content_type}): "),
+				     TD($formatright,
+					A ({href=> $loc}, $name)))
+			      }
+			  } @$attachments)
+			  :()),
+			 TR (TD ({colspan=>2,
+				  bgcolor=> "#f0f8ff"},
 				 ($maybe_threadleader and
 				  &$showthread($index->thread($maybe_threadleader))))))));
 	    pxml_xhtml_print_fast($page, $out, "en");
