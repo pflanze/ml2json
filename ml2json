@@ -297,6 +297,15 @@ sub phrase_dequote {
 	$str
     }
 }
+sub phrase_deparentisize {
+    my ($maybe_str)=@_;
+    $maybe_str and do {
+	my $str= $maybe_str;
+	$str=~ s/^\s*\(//s;
+ 	$str=~ s/\)\s*\z//s;
+	$str
+    }
+}
 
 our ($json, $index);
 sub do_output_message {
@@ -384,7 +393,9 @@ sub do_output_message {
 		    #/CP
 
 		    my ($from)= @{$outputjson->json_parsed_from($m,undef)};
-		    my $fromstr= phrase_dequote($$from{phrase}) || $$from{address};
+		    my $fromstr= (phrase_dequote($$from{phrase})
+				  || phrase_deparentisize($$from{comment})
+				  || $$from{address});
 		    my $subject= $outputjson->json_decoded_subject($m,undef);
 
 		    my $cnt= [$subject, " ", I("(",$fromstr,")")];
@@ -425,7 +436,7 @@ sub do_output_message {
 					     $$_{address}),
 				      ">"),
 				   defined $$_{comment}
-				   ? " ".phrase_dequote($$_{comment})." "
+				   ? " ".phrase_deparentisize($$_{comment})." "
 				   : undef]
 			      } @$vs
 			     ],
