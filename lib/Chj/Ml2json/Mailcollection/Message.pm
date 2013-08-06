@@ -30,7 +30,9 @@ sub cook_subject {
     local ($_)=@_;
     1 while (s/^\s+//
 	     or
-	     s/^(?::\s*)?(Re|Aw|Fwd?)\s*(?::\s*)?//si
+	     s/^(?:Re|Aw|Fwd?)\b//si
+	     or
+	     s/^://
 	     # ^ XX really strip Fw/Fwd ?
 	     or
 	     s/^\[[^\[\]]*\]\s*//s
@@ -45,6 +47,10 @@ TEST{ cook_subject "[bola] [balf] AW: weef" } 'weef';
 TEST{ cook_subject "RE: [bola] Re [balf] Re: weef" } 'weef';
 TEST{ cook_subject "[bola] [balf] AW: weef [bar]" } 'weef[bar]';
 TEST{ cook_subject "[bola] [balf] AW: weef (was: fluba) bah " } 'weefbah';
+TEST{ cook_subject "Re: Re[2]: >Habermas is Habermas, 'nough said." }
+  ">habermasishabermas,'noughsaid.";
+TEST{ cook_subject "re revolution" }
+  "revolution";
 
 
 {
