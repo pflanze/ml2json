@@ -117,7 +117,9 @@ sub MIME_Entity_alternative_entity_list {
 		    WARN "multipart/alternative with non-text parts";
 		    $tail
 		}
-	    } elsif ($ct_subkind eq "mixed") {
+	    } elsif ($ct_subkind eq "mixed"
+		     or
+		     $ct_subkind eq "related") {
 		if (array_every sub {
 			my ($ct)=@_;
 			$$ct[0] eq "text"
@@ -139,7 +141,7 @@ sub MIME_Entity_alternative_entity_list {
 		    &$tmp(array2list(\@parts));
 		}
 	    } else {
-		WARN "unknown subkind '$ct_subkind' in content-type";
+		WARN "unknown multipart subkind '$ct_subkind' in content-type";
 		$tail
 	    }
 	} else {
