@@ -47,11 +47,51 @@ TEST{ cook_subject "[bola] [balf] AW: weef [bar]" } 'weef[bar]';
 TEST{ cook_subject "[bola] [balf] AW: weef (was: fluba) bah " } 'weefbah';
 
 
+{
+    package Chj::Ml2json::Mailcollection::Message_ghost;
+    our @ISA= "Chj::Ghostable::Ghost";
+    # Chj::Ml2json::Ghost would make it go through its new method
+    # appending __meta to path one time too many.
+
+    # read cache, only filled on reading
+    our $cachesize= 20;
+    our @objects;
+    our @paths;
+    our %path2i;
+
+    our $next_i= 0;
+
+    sub resurrect {
+	my $s=shift;
+	my $p= $$s{path};
+	if (defined (my $i= $path2i{$p})) {
+	    $objects[$i]
+	} else {
+	    $i= $next_i++;
+	    if ($next_i >= $cachesize) {
+		$next_i=0
+	    }
+	    if (defined (my $oldpath= $paths[$i])) {
+		delete $path2i{$oldpath};
+	    }
+	    my $m=$s->SUPER::resurrect;
+	    $objects[$i]= $m;
+	    $paths[$i]=$p;
+	    $path2i{$p}=$i;
+	    $m
+	}
+    }
+}
+
 use Chj::Struct ["ent", "h", "unixtime", "mboxpathhash", "n",
 		 "mboxslice"
 		],
   'Chj::Ml2json::Ghostable';
 # cache values: messageids
+
+sub Ghostable_ghost_class {
+    "Chj::Ml2json::Mailcollection::Message_ghost"
+}
 
 use Chj::chompspace ();
 
