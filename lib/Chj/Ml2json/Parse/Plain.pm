@@ -24,6 +24,7 @@ use Chj::FP2::List ":all";
 use Chj::PXHTML ':all';
 use Chj::NoteWarn;
 use Chj::TEST;
+use Chj::Ml2json::Parse::HTMLUtil 'paragraphy';
 
 sub _parsequote {
   LP: {
@@ -157,8 +158,7 @@ sub parse_map {
     my $s=shift;
     my ($str)=@_;
     SPAN({class=> "plain"},
-	 Chj::Ml2json::Parse::HTML::paragraphy(
-	 _parse_map (array2list([split /\r?\n/, $str]), 1)))
+	 paragraphy(_parse_map (array2list([split /\r?\n/, $str]), 1)))
 }
 
 

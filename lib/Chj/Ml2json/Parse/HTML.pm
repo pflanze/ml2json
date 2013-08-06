@@ -30,7 +30,7 @@ use strict;
 use Chj::NoteWarn;
 
 use Chj::PXHTML ":all";
-use Chj::Ml2json::Parse::HTMLUtil;
+use Chj::Ml2json::Parse::HTMLUtil 'paragraphy';
 
 BEGIN {
     for (@$Chj::PXHTML::tags) {
