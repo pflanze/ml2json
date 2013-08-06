@@ -120,12 +120,35 @@ sub MIME_Entity_alternative_entity_list {
 	    } elsif ($ct_subkind eq "mixed"
 		     or
 		     $ct_subkind eq "related") {
-		if (array_every sub {
+		if
+		  (array_every sub {
+		       my ($ct)=@_;
+		       $$ct[0] eq "text"
+		   },
+		   \@ct) {
+		    NOTE "multipart/mixed with only text parts";
+		    cons(Found($s),$tail)
+		} elsif
+		  (array_every
+		   (sub {
+			my ($ct)=@_;
+			($$ct[0] eq "text"
+			 or
+			 ($$ct[0] eq "application"
+			  and
+			  $$ct[1] eq "ms-tnef"))
+		    },
+		    \@ct)
+		   and
+		   array_any
+		   (sub {
 			my ($ct)=@_;
 			$$ct[0] eq "text"
 		    },
-		    \@ct) {
-		    NOTE "multipart/mixed with only text parts";
+		    \@ct)
+		  ) {
+		    NOTE "multipart/mixed with only text and ms-tnef parts";
+		    # drop ms-tnef parts? -- not bothering, ignored later on
 		    cons(Found($s),$tail)
 		} else {
 		    # recurse
