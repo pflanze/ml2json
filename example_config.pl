@@ -34,11 +34,12 @@
   # List of which fields to output to JSON, at the top level of every
   # message. The first entry is the name of the field in the JSON
   # output, the second is the name of the Chj::Ml2json::OutputJSON
-  # method to be called to generate it, the third can be either 0, 1 or
-  # 2: 0 means, don't output this field at all (same as if the entry is
-  # not present), 1 means, if there is exactly 1 value returned by the
-  # method, don't wrap it in an array; 2 means, always wrap in an array
-  # (or really, directly output what the method returned).
+  # method to be called to generate it, the third can be either 0, 1
+  # or 2: 0 means, don't output this field at all (same as if the
+  # entry is not present), 1 means, if there is exactly 1 value
+  # returned by the method, don't wrap it in an array, and if there is
+  # none, give null instead of the empty array; 2 means, always give
+  # array (or really, directly output what the method returned).
   jsonfields_top=>
   [
    ["orig_headers"=> "json_orig_headers", 2],
