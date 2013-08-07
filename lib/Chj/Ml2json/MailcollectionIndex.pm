@@ -153,8 +153,10 @@ sub threadparents {
     my $precisereplies= $$s{inreplytos}{$id};
     if ($precisereplies and @$precisereplies) {
 	$precisereplies
+    } elsif (defined (my $pir= $$s{possibleinreplyto}{$id})) {
+	[$pir]
     } else {
-	$$s{possibleinreplyto}{$id}
+	[]
     }
 }
 
