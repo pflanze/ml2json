@@ -250,7 +250,7 @@ sub _json_mailparsed_header {
 	       comment=> scalar decode_mimewords($_->comment),
 	      }
 	 } Mail::Address->parse($_);
-     } @{ $m->unwrapped_headers($key,"") }
+     } @{ $m->unwrapped_headers($key," ") }
     ]
 }
 
