@@ -68,9 +68,9 @@
    ["cooked_subject"=> "json_cooked_subject", 1],
    # the trimmed-down and lowercased version of the decoded subject
    # that is being used by ml2json to merge threads with broken
-   # in-reply-to (messages must also satisfy --max-thread-duration, on
-   # top of this and not having a valid in-reply-to header, to be
-   # grouped in the same thread).
+   # in-reply-to (apart from matching cooked_subject and having a
+   # missing or broken in-reply-to header, messages must also satisfy
+   # --max-thread-duration to be grouped in the same thread).
 
    ["message-id"=> "json_message_id",1],
    # String used to identify messages in fields from the
