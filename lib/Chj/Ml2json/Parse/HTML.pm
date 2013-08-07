@@ -163,6 +163,7 @@ our $tag_map_att=
      align=> map_either_ci2lc(qw(LEFT RIGHT CENTER)),
      valign=> map_either_ci2lc(qw(TOP MIDDLE BOTTOM)),
     },
+    tbody=> {},
 
     ul=> $uloldlmenudir_compact,
     dl=> $uloldlmenudir_compact,
@@ -179,6 +180,7 @@ our $tag_map_att=
      type=> map_either(qw(A a I i 1)),
      #value XX ?
     },
+    dd=> {},
 
     q=>
     {
