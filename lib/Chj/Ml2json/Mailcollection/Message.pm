@@ -135,7 +135,11 @@ sub decoded_headers {
     if (my $v= $$h{$lcname}) {
 	[
 	 map {
-	     scalar decode_mimewords($_)
+	     my $str= $_;
+	     # remove line wrapping; no *idea* why MIME::Parser
+	     # doesn't do that already?
+	     $str=~ s/\n[ \t]+//g;
+	     scalar decode_mimewords($str)
 	 } @$v
 	]
     } else {
