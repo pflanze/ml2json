@@ -18,7 +18,7 @@ Chj::Ml2json::MIMEExtract
 
 package Chj::Ml2json::MIMEExtract;
 @ISA="Exporter"; require Exporter;
-@EXPORT=qw(MIME_Entity_maybe_alternative_entity
+@EXPORT=qw(MIME_Entity_maybe_alternative_or_singletext_valuedentity
 	   MIME_Entity_origplain_origrich_orightml);
 @EXPORT_OK=qw(MIME_Entity_attachment_list
 	      MIME_Entity_attachments
@@ -76,12 +76,21 @@ use Chj::FP2::List ':all';
 use Scalar::Util 'weaken';
 
 {
-    package Chj::Ml2json::MIMEExtract::Alternative;
+    package Chj::Ml2json::MIMEExtract::ValuedEntity;
     use Chj::Struct ["x","ent"];
-    # indicates the value of an alternative; i.e. how much it is an
-    # multipart/alternative entitiy.
-    # x==2: fully
-    # x==1: perhaps
+    _END_
+}
+{
+    package Chj::Ml2json::MIMEExtract::Alternative;
+    use Chj::Struct [], "Chj::Ml2json::MIMEExtract::ValuedEntity";
+    sub is_alternative { 1 }
+    _END_
+}
+{
+    package Chj::Ml2json::MIMEExtract::SingleText;
+    # a single text entity, not alternative.
+    use Chj::Struct [], "Chj::Ml2json::MIMEExtract::ValuedEntity";
+    sub is_alternative { 0 }
     _END_
 }
 sub Found ($) {
@@ -90,15 +99,21 @@ sub Found ($) {
 sub Perhaps ($) {
     Chj::Ml2json::MIMEExtract::Alternative->new(1,$_[0])
 }
+sub SingleText ($$) {
+    Chj::Ml2json::MIMEExtract::SingleText->new(@_)
+}
 
 use Chj::FP::ArrayUtil ':all';
 
 # linked list of all Found or Perhaps multipart/alternative entities;
-sub MIME_Entity_alternative_entity_list {
+# actually also collects single text/* entities as SingleText, since
+# there's no other logic that searches for them.
+sub MIME_Entity_alternative_or_singletext_valuedentity_list {
     my $s=shift;
     my ($tail)=@_;
     if (my ($ct_kind,$ct_subkind,$ct_rest)=
 	MIME_Entity_maybe_content_type_lc_split($s)) {
+
 	if ($ct_kind eq "multipart") {
 	    defined $ct_subkind or die "missing subkind in content-type";
 	    # ^ XX better fallback?
@@ -106,6 +121,7 @@ sub MIME_Entity_alternative_entity_list {
 	    my @ct= sort map {
 		[MIME_Entity_maybe_content_type_lc_split($_)]
 	    } @parts;
+
 	    if ($ct_subkind eq "alternative") {
 		if (array_every sub {
 			my ($ct)=@_;
@@ -117,9 +133,10 @@ sub MIME_Entity_alternative_entity_list {
 		    WARN "multipart/alternative with non-text parts";
 		    $tail
 		}
-	    } elsif ($ct_subkind eq "mixed"
-		     or
-		     $ct_subkind eq "related") {
+	    }
+	    elsif ($ct_subkind eq "mixed"
+		   or
+		   $ct_subkind eq "related") {
 		if
 		  (array_every sub {
 		       my ($ct)=@_;
@@ -155,7 +172,8 @@ sub MIME_Entity_alternative_entity_list {
 		    my $rec; $rec= sub {
 			my ($l)=@_;
 			if ($l) {
-			    MIME_Entity_alternative_entity_list(car($l), &$rec(cdr $l))
+			    MIME_Entity_alternative_or_singletext_valuedentity_list
+			      (car($l), &$rec(cdr $l))
 			} else {
 			    $tail
 			}
@@ -167,7 +185,18 @@ sub MIME_Entity_alternative_entity_list {
 		WARN "unknown multipart subkind '$ct_subkind' in content-type";
 		$tail
 	    }
-	} else {
+	}
+	elsif ($ct_kind eq "text") {
+	    my $value=
+	      +{
+		html=> 0.7,
+		enriched=> 0.6,
+		richtext=> 0.5,
+		plain=> 0.3,
+	       }->{$ct_subkind} || 0;
+	    cons SingleText($value, $s),$tail
+	}
+	else {
 	    $tail
 	}
     } else {
@@ -198,7 +227,7 @@ sub Inline ($ ) {
     Chj::Ml2json::MIMEExtract::Attachkind->new("inline", @_);
 }
 
-# partly COPYPASTE of MIME_Entity_alternative_entity_list
+# partly COPYPASTE of MIME_Entity_alternative_or_singletext_valuedentity_list
 sub MIME_Entity_attachment_list {
     my $s=shift;
     my ($tail)=@_;
@@ -247,14 +276,14 @@ sub MIME_Entity_attachments {
 
 use Chj::FP::Array_sort;
 
-sub MIME_Entity_maybe_alternative_entity {
+sub MIME_Entity_maybe_alternative_or_singletext_valuedentity {
     my $s=shift;
-    if (my $l= MIME_Entity_alternative_entity_list($s)) {
+    if (my $l= MIME_Entity_alternative_or_singletext_valuedentity_list($s)) {
 	my $a= list2array ($l);
 	local our $a2= Array_sort $a,
-	  On(\&Chj::Ml2json::MIMEExtract::Alternative::x, Complement(\&Number_cmp));
+	  On(\&Chj::Ml2json::MIMEExtract::ValuedEntity::x, Complement(\&Number_cmp));
 	#use Chj::repl;repl if @$a2 > 1;##  hm don't have a message to test
-	$$a2[0]->ent
+	$$a2[0] #->ent no, need to see outside what it was
     } else {
 	()
     }
@@ -306,37 +335,65 @@ sub MIME_Entity_body_as_string {
 
 sub MIME_Entity_origplain_origrich_orightml {
     my $s=shift;
-    if (my $alt= MIME_Entity_maybe_alternative_entity ($s)) {
-	my @parts= $alt->parts;
-	my %parts_by_ct;
-	for my $part (@parts) {
-	    my $ct= MIME_Entity_maybe_content_type_lc ($part);
-	    push @{$parts_by_ct{$ct}}, $part;
-	}
-	if ($parts_by_ct{"text/html"}
-	    or $parts_by_ct{"text/enriched"} or $parts_by_ct{"text/richtext"}
-	    or $parts_by_ct{"text/plain"}) {
-	    my $enriched =
-	      [ @{$parts_by_ct{"text/enriched"}||[]},
-		@{$parts_by_ct{"text/richtext"}||[]} ];
-	    if (@{$parts_by_ct{"text/plain"}||[]} > 1) {
-		WARN("multiple text/plain parts, choosing first one");
+    if (my $alt_or_single=
+	MIME_Entity_maybe_alternative_or_singletext_valuedentity ($s)) {
+	if ($alt_or_single->is_alternative) {
+	    my $alt= $alt_or_single->ent;
+	    my @parts= $alt->parts;
+	    my %parts_by_ct;
+	    for my $part (@parts) {
+		my $ct= MIME_Entity_maybe_content_type_lc ($part);
+		push @{$parts_by_ct{$ct}}, $part;
 	    }
-	    if (@$enriched > 1) {
-		WARN("multiple text/enriched or text/richtext parts, "
-		     ."choosing first one");
+	    if ($parts_by_ct{"text/html"}
+		or $parts_by_ct{"text/enriched"} or $parts_by_ct{"text/richtext"}
+		or $parts_by_ct{"text/plain"}) {
+		my $enriched =
+		  [ @{$parts_by_ct{"text/enriched"}||[]},
+		    @{$parts_by_ct{"text/richtext"}||[]} ];
+		if (@{$parts_by_ct{"text/plain"}||[]} > 1) {
+		    WARN("multiple text/plain parts, choosing first one");
+		}
+		if (@$enriched > 1) {
+		    WARN("multiple text/enriched or text/richtext parts, "
+			 ."choosing first one");
+		}
+		if (@{$parts_by_ct{"text/html"}||[]} > 1) {
+		    WARN("multiple text/html parts, choosing first one");
+		}
+		($parts_by_ct{"text/plain"}->[0],
+		 $$enriched[0],
+		 $parts_by_ct{"text/html"}->[0])
+	    } else {
+		WARN ("no textual part found in alt entity, BUG? (ERROR)");
+		($s, undef, undef)
 	    }
-	    if (@{$parts_by_ct{"text/html"}||[]} > 1) {
-		WARN("multiple text/html parts, choosing first one");
-	    }
-	    ($parts_by_ct{"text/plain"}->[0],
-	     $$enriched[0],
-	     $parts_by_ct{"text/html"}->[0])
 	} else {
-	    WARN ("no textual part found in alt entity, BUG? (ERROR)");
-	    ($s, undef, undef)
+	    # SingleText (there might be several text/* kind of
+	    # entities in the mail; but, only offering the most
+	    # valuable one; the rest might be useless stuff like virus
+	    # scanner messages)
+	    my $single= $alt_or_single->ent;
+	    my $ct= MIME_Entity_maybe_content_type_lc ($single);
+	    my $pos=
+	      +{
+		"text/plain"=> 0,
+		"text/enriched"=>1,
+		"text/richtext"=>1,
+		"text/html"=> 2,
+	       }->{$ct};
+	    if (defined $pos) {
+		my @res= (undef,undef,undef);
+		$res[$pos]= $single;
+		@res
+	    } else {
+		WARN ("BUG? unknown content-type here: '$ct'");
+		($s, undef, undef)
+	    }
 	}
     } else {
+	# (ever getting here now that the above is getting single text
+	# entities as well? In fact still used, yes.)
 	if (my $ct= MIME_Entity_maybe_content_type_lc ($s)) {
 	    if ($ct eq "text/html") {
 		(undef,undef,$s)
