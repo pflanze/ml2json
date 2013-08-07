@@ -146,6 +146,18 @@ sub thread {
 }
 
 
+sub threadparents {
+    my $s=shift;
+    @_==1 or die;
+    my ($id)=@_;
+    my $precisereplies= $$s{inreplytos}{$id};
+    if ($precisereplies and @$precisereplies) {
+	$precisereplies
+    } else {
+	$$s{possibleinreplyto}{$id}
+    }
+}
+
 sub threadleaders_precise {
     # returns array of ids, contains $id if threadleader itself unless
     # $suppress_self is true; suppresses unknown message-ids

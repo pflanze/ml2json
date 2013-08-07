@@ -67,6 +67,7 @@ our $default_jsonfields_top=
    ["message-id"=> "json_message_id",1],
    [replies=> "json_replies", 2],
    ["in-reply-to"=> "json_in_reply_to", 1],
+   ["threadparent"=> "json_threadparents", 1],
    [threadleader=> "json_threadleaders", 1],
    [unixtime=> "json_unixtime", 1],
    [ctime_UTC=> "json_ctime_UTC", 1],
@@ -400,6 +401,13 @@ sub json_in_reply_to {
     @_==2 or die;
     my ($m,$index)=@_;
     $index->inreplytos->{$m->id}
+}
+
+sub json_threadparents {
+    my $s=shift;
+    @_==2 or die;
+    my ($m,$index)=@_;
+    $index->threadparents($m->id)
 }
 
 sub json_unixtime {

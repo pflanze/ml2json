@@ -96,10 +96,18 @@
    # subthread.)
 
    ["in-reply-to"=> "json_in_reply_to", 1],
+   # In-reply-to header value(s) mapped to fixed up message "id"
+   # values (see docs/message_identification.txt). Does not show
+   # subject based parent relations and hence is not the reverse of
+   # 'replies'.  See 'threadparent' for a variant that is.
+
+   ["threadparent"=> "json_threadparents", 1],
    # Taken from in-reply-to (or, not yet implemented, references)
-   # header, XXX: or, if not workable, instead the mail that
-   # introduces the thread with the subject (respecting
-   # --max-thread-duration value).
+   # header, or, if not workable, instead the mail that introduces the
+   # thread with the subject (respecting --max-thread-duration
+   # value). In all cases, the given message ids are fixed-up "id"
+   # values (see docs/message_identification.txt).  Could be multiple
+   # values if a mail has multiple in-reply-to headers!
 
    [threadleader=> "json_threadleaders", 1],
    # Message ID representing the mail that started the thread that
