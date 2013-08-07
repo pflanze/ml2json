@@ -356,6 +356,9 @@ sub do_output_message {
 	    my $threadleaders= $outputjson->json_threadleaders($m,$index);
 	    my $maybe_threadleader=
 	      (@$threadleaders == 1) ? $$threadleaders[0] : undef;
+	    my $threadparents= $outputjson->json_threadparents($m,$index);
+	    my $maybe_threadparent=
+	      (@$threadparents == 1) ? $$threadparents[0] : undef;
 	    my $id2maybe_mg= sub {
 		my ($id)=@_;
 		if (my $v= $index->ids->{$id}) {
@@ -488,9 +491,8 @@ sub do_output_message {
 			      #sigh, more complicated (maybe monad?):
 			      do {
 				  my $V0= B($$header_hashref_lc{subject});
-				  if ($maybe_threadleader
-				      and $maybe_threadleader ne $id) {
-				      if (my $V2= &$msg_id2maybe_url ($maybe_threadleader)) {
+				  if ($maybe_threadparent) {
+				      if (my $V2= &$msg_id2maybe_url ($maybe_threadparent)) {
 					  A({href=> $V2}, $V0)
 				      } else {
 					  $V0
