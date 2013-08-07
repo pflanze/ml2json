@@ -183,10 +183,11 @@ sub if_header_anglebracketed {
     # be parsed. In that case, $foundangle and $noangle can both
     # be called multiple times; they receive an accumulator as a
     # second argument.
-    if (my $h= $$s{h}{lc $key}) {
+    my $vs= $s->unwrapped_headers($key, "");
+    if (@$vs) {
 	my $parseallheaders= sub {
 	    my $res;
-	    for my $val (@$h) {
+	    for my $val (@$vs) {
 		if (my @deangled= $val=~ /<([^<>]{1,})>/g) {
 		    $res= &$foundangle(\@deangled, $res)
 		} else {
@@ -195,8 +196,8 @@ sub if_header_anglebracketed {
 	    }
 	    $res
 	};
-	if (@$h > 1) {
-	    @_=($h,$parseallheaders); goto $multipleheaders;
+	if (@$vs > 1) {
+	    @_=($vs,$parseallheaders); goto $multipleheaders;
 	} else {
 	    goto $parseallheaders
 	}
