@@ -152,7 +152,7 @@ sub decoded_headers {
      map {
 	 my $str= $_;
 	 scalar decode_mimewords($str)
-     } @{ $s->headers($key) }
+     } @{ $s->unwrapped_headers($key," ") }
     ]
 }
 
