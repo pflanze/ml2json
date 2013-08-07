@@ -61,6 +61,9 @@
    #             "phrase": "\"Ken Baz\""
    #         }
    #     ],
+   # 'comment' is the part before the address, 'phrase' the part
+   # after. Angle brackets around the address and space between
+   # address and comment/phrase are/is dropped.
 
    ["decoded_subject"=> "json_decoded_subject", 1],
    # mime-word decoded subject header
@@ -88,7 +91,9 @@
    # similar to the one of the current email and the current email is
    # the one that introduces the thread with that subject (respecting
    # --max-thread-duration value).
-   #XXX: sorting according to t directly not newest-of-subthread,right?
+   # (Note: sorting occurs according to the time of the direct
+   # replies, not the newest contribution of the corresponding
+   # subthread.)
 
    ["in-reply-to"=> "json_in_reply_to", 1],
    # Taken from in-reply-to (or, not yet implemented, references)
@@ -99,12 +104,13 @@
    [threadleader=> "json_threadleaders", 1],
    # Message ID representing the mail that started the thread that
    # this mail is considered to be part of (i.e. following 'replies'
-   # from that mail recursively will lead to the current mail).
+   # from that mail recursively will lead to the current mail). Can be
+   # more than one if a mail has multiple in-reply-to headers.
 
    [unixtime=> "json_unixtime", 1],
    # Unix or POSIX time (seconds since 00:00:00 Coordinated Universal
    # Time (UTC), Thursday, 1 January 1970), parsed from the email
-   # "date" header, or several attempted alternatives including the
+   # "date" header, or several attempted alternatives, including the
    # mbox separator line if the --max-date-deviation option is given.
    [ctime_UTC=> "json_ctime_UTC", 1],
    # 'unixtime' value formatted using the standard 'ctime' function,
@@ -131,9 +137,20 @@
 
    [attachments=> "json_attachments", 2],
    # has a "path" field with the path to the unpacked attachment in
-   # the tmp directory XXX. "disposition" probably doesn't make a
-   # whole lot of sense: it's currently simply "inline" if the
-   # attachment is an image, "attachment" otherwise.
+   # the temp/attachment output directory (see --attachment-basedir).
+   #     "attachments": [
+   #         {
+   #             "content_type": "image/jpeg",
+   #             "disposition": "inline",
+   #             "file_name": "foo.jpg",
+   #             "path": "/run/shm/me/591785b794601e212b260e25925636fd/99/foo.jpg",
+   #             "size": "3973",
+   #             "url": "file:///run/shm/me/591785b794601e212b260e25925636fd/99/foo.jpg"
+   #         }
+   #     ],
+   # "disposition" probably doesn't make a whole lot of sense: it's
+   # currently simply "inline" if the attachment is an image,
+   # "attachment" otherwise.
 
    [identify=> "json_identify",1],
    # see docs/message_identification.txt
