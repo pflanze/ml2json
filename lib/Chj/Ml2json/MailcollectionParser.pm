@@ -276,13 +276,14 @@ sub parse_tree {
 	  ($path,$tmp,$maybe_max_date_deviation,$maybe_seen_abspaths);
 	if ($s->recurse) {
 	    my $dircoll=
-	      [
-	       map {
-		   unless_seen_path $seen_abspaths, $_, sub {
-		       $s->parse_tree($_, $tmp,$maybe_max_date_deviation)
-		   }
-	       } glob quotemeta($path)."/*/"
-	      ];
+	      Chj::Ml2json::Mailcollection::Tree->new
+		  ([
+		    map {
+			unless_seen_path $seen_abspaths, $_, sub {
+			    $s->parse_tree($_, $tmp,$maybe_max_date_deviation)
+			}
+		    } glob quotemeta($path)."/*/"
+		   ]);
 	    Chj::Ml2json::Mailcollection::Tree->new([$mboxcoll, $dircoll])
 	} else {
 	    $mboxcoll
