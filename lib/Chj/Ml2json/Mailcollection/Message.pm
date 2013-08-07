@@ -127,6 +127,23 @@ sub header_hashref_lc {
     $$s{h}
 }
 
+sub unwrapped_headers {
+    # does *not* decode_mimewords! Which is as must be for address
+    # or id headers, correct?
+    my $s=shift;
+    @_==2 or die;
+    my ($key,$replacement)=@_;
+    # Why does MIME::Parser not do the unwrapping? because it's
+    # undefined and each header type needs its own replacement?
+    [
+     map {
+	 my $str= $_;
+	 $str=~ s/\n[ \t]+/$replacement/g;
+	 $str
+     } @{ $s->headers($key) }
+    ]
+}
+
 sub decoded_headers {
     my $s=shift;
     @_==1 or die;
@@ -136,9 +153,6 @@ sub decoded_headers {
 	[
 	 map {
 	     my $str= $_;
-	     # remove line wrapping; no *idea* why MIME::Parser
-	     # doesn't do that already?
-	     $str=~ s/\n[ \t]+//g;
 	     scalar decode_mimewords($str)
 	 } @$v
 	]
