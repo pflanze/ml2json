@@ -41,6 +41,11 @@ Shorten down / escape mbox paths to generate identify strings instead
 of taking md5, so that they still tell the source without needing
 --show-mbox?
 
+When generating an "id" because of missing/duplicate message-id
+header, hash selected message headers and entities instead of using
+"identify" to stay independent from source of message and to avoid
+giving a warning if the message is indeed virtually identical?
+
 Worrying a bit about people having "sun style" mbox files, which the
 current mbox parser will not handle well (see docs/mbox.txt). Offer to
 use one of the other mbox parsers by way of a config option, or
