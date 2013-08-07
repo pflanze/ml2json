@@ -176,6 +176,7 @@ sub parse_mbox_ghost {
 					()
 				    }
 				} @{$$h{date}||[]};
+			      #^ XX should unwrap or decode_mimewords $$h{date} right?
 			      if (@unixtimes) {
 				  my $first= shift @unixtimes;
 				  array_fold(\&min, $first, \@unixtimes)

@@ -240,23 +240,18 @@ sub json_orig_headers {
 sub _json_mailparsed_header {
     my $s=shift;
     @_==2 or die;
-    my ($m, $lcname)=@_;
-    my $h= $m->header_hashref_lc;
-    if (my $v= $$h{$lcname}) {
-	[
+    my ($m, $key)=@_;
+    [
+     map {
 	 map {
-	     map {
-		 +{
-		   phrase=> scalar decode_mimewords($_->phrase),
-		   address=> $_->address,
-		   comment=> scalar decode_mimewords($_->comment),
-		  }
-	     } Mail::Address->parse($_);
-	 } @$v
-	]
-    } else {
-	[]
-    }
+	     +{
+	       phrase=> scalar decode_mimewords($_->phrase),
+	       address=> $_->address,
+	       comment=> scalar decode_mimewords($_->comment),
+	      }
+	 } Mail::Address->parse($_);
+     } @{ $m->unwrapped_headers($key,"") }
+    ]
 }
 
 sub json_parsed_from {

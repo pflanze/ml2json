@@ -147,18 +147,13 @@ sub unwrapped_headers {
 sub decoded_headers {
     my $s=shift;
     @_==1 or die;
-    my ($lcname)=@_;
-    my $h= $s->header_hashref_lc;
-    if (my $v= $$h{$lcname}) {
-	[
-	 map {
-	     my $str= $_;
-	     scalar decode_mimewords($str)
-	 } @$v
-	]
-    } else {
-	[]
-    }
+    my ($key)=@_;
+    [
+     map {
+	 my $str= $_;
+	 scalar decode_mimewords($str)
+     } @{ $s->headers($key) }
+    ]
 }
 
 sub maybe_cooked_subject {
