@@ -22,7 +22,7 @@ use strict;
 
 use Chj::Ml2json::Mailcollection; # 'Chj::Ml2json::Ghostable';
 use Chj::NoteWarn;
-use MIME::EncWords 'decode_mimewords';
+use Chj::MIME::EncWords 'decode_mimewords';
 use Chj::FP::ArrayUtil 'array_hashing_uniq';
 use Chj::TEST;
 

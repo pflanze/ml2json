@@ -141,7 +141,7 @@ sub Chj::PXML::fragment2string {
 
 use Chj::Ml2json::m2h_text_enriched;
 use Chj::Ml2json::Parse::Plain;
-use MIME::EncWords 'decode_mimewords';
+use Chj::MIME::EncWords 'decode_mimewords';
 
 use Chj::Struct ["jsonfields_orig_headers",
 		 "jsonfields_top",
