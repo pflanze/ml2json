@@ -53,3 +53,5 @@ improve lib/Chj/Ml2json/Mbox.pm? The author has never seen one of
 those, would need your support to test for the latter.
 
 Add message indexes to --html-to to make archive browseable.
+
+Parallelize mbox parsing phase.
