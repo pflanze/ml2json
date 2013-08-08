@@ -351,6 +351,7 @@ sub do_output_message {
 	    my $header_hashref_lc= $m->header_hashref_lc;
 	    my $ctime_UTC= $outputjson->json_ctime_UTC($m,$index);
 	    my $attachments= $outputjson->json_attachments($m,$index);
+	    my $subject= $outputjson->json_decoded_subject($m,$index);
 	    my $inreplyto= $outputjson->json_in_reply_to ($m,$index);
 	    my $replies= $outputjson->json_replies($m,$index);
 	    my $threadleaders= $outputjson->json_threadleaders($m,$index);
@@ -490,7 +491,7 @@ sub do_output_message {
 			      #} B($$orig_headers{Subject}), $maybe_threadleader
 			      #sigh, more complicated (maybe monad?):
 			      do {
-				  my $V0= B($$header_hashref_lc{subject});
+				  my $V0= B($subject);
 				  if ($maybe_threadparent) {
 				      if (my $V2= &$msg_id2maybe_url ($maybe_threadparent)) {
 					  A({href=> $V2}, $V0)
