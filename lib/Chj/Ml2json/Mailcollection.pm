@@ -163,23 +163,23 @@ sub index {
 		     unless ($$seen_ids{$id}) {
 			 $$seen_ids{$id}=1;
 			 my $t= $m->unixtime;
-			 my $inreplytos= $m->inreplytos;
-			 $$index{inreplytos}{$id}= $inreplytos;
+			 my $inreplytos=
+			   $$index{inreplytos}{$id}=
+			     [map {
+				 $$index{messageids}{$_}
+				   || do {
+				       NOTE("unknown message with messageid "
+					    ."'$_' given in in-reply-to header");
+				       $_
+				   };
+			     } @{ $m->inreplytos } ];
 			 for my $inreplyto (@$inreplytos) {
 			     # (*should* be just 0 or one, but..)
-			     # Map inreplyto to normalized id:
-			     my $inreplyto_id= $$index{messageids}{$inreplyto}
-			       || do {
-				   NOTE("unknown message with messageid "
-					."'$inreplyto' given in in-reply-to "
-					."header of ".$m->identify);
-				   $inreplyto
-			       };
-			     if ($inreplyto_id eq $id) {
+			     if ($inreplyto eq $id) {
 				 WARN("email claims to be a reply to itself, "
-				      ."ignoring id '$inreplyto_id'");
+				      ."ignoring id '$inreplyto'");
 			     } else {
-				 push @{ $$index{replies}{$inreplyto_id} }, $id;
+				 push @{ $$index{replies}{$inreplyto} }, $id;
 			     }
 			 }
 			 #for my $reference ($m->references) {
