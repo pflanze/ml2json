@@ -619,6 +619,8 @@ sub parse_and_convert {
 	    $json->end;
 	    $o->xclose;
 	}
+
+	$par1->close;
     };
 
     &$allout;
