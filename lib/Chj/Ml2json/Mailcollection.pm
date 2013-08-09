@@ -97,7 +97,10 @@ use Chj::Try;
 use Chj::NoteWarn;
 use Chj::Ml2json::MailcollectionIndex;
 use Chj::FP2::Stream ':all';
-use Chj::FP2::List;
+use Chj::FP2::List ":all";
+use Chj::FP::ArrayUtil ":all";
+use Chj::FP::Array_sort ":all";
+use Chj::FP::HashSet ":all";
 
 use Chj::Struct [], 'Chj::Ml2json::Ghostable';
 
@@ -163,29 +166,33 @@ sub index {
 		     unless ($$seen_ids{$id}) {
 			 $$seen_ids{$id}=1;
 			 my $t= $m->unixtime;
-			 my $inreplytos=
-			   $$index{inreplytos}{$id}=
+			 my $map_to_and_store_as_ids= sub {
+			     my ($field_and_method,$headername)=@_;
+			     $$index{$field_and_method}{$id}=
 			     [map {
 				 $$index{messageids}{$_}
 				   || do {
 				       NOTE("unknown message with messageid "
-					    ."'$_' given in in-reply-to header");
+					    ."'$_' given in $headername header");
 				       $_
 				   };
-			     } @{ $m->inreplytos } ];
+			     } @{ $m->$field_and_method } ];
+			 };
+			 my $inreplytos= &$map_to_and_store_as_ids
+			   ("inreplytos", "In-Reply-To");
 			 for my $inreplyto (@$inreplytos) {
-			     # (*should* be just 0 or one, but..)
 			     if ($inreplyto eq $id) {
 				 WARN("email claims to be a reply to itself, "
 				      ."ignoring id '$inreplyto'");
 			     } else {
-				 push @{ $$index{replies}{$inreplyto} }, $id;
+				 if (exists $$index{ids}{$inreplyto}) {
+				     push @{ $$index{replies}{$inreplyto} }, $id
+				 }
 			     }
 			 }
-			 #for my $reference ($m->references) {
-			 #my $oldrefs = $$index{replies}{$reference}||[];
-			 #XX
-			 #}
+
+			 my $references= &$map_to_and_store_as_ids
+			   ("references", "References");
 		     }
 		 } $mg;
 	     },

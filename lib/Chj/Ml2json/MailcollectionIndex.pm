@@ -34,6 +34,7 @@ use Chj::Struct
    "ids",        # id -> [t, mg],
    "inreplytos", # id -> [ id..],  inverse function of replies,
    #                               *except* also contains unknown messageids!
+   "references", # id -> [ id..],  fixed but also contains unknown messageids
    "messageids", # messageid -> id,  one entry for every messageid of $mg.
    # For thread grouping by subject lines:
    "cookedsubjects", # cookedsubject -> [[t, threadleaderid]..]; entries sorted by t
