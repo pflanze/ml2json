@@ -183,6 +183,10 @@
    # 'content_type' field, are always in lower case characters.
 
    [identify=> "json_identify",1],
-   # see docs/message_identification.txt
+   # see docs/message_identification.txt about what the "identify"
+   # means; this field is meant to be used for debugging only, i.e. to
+   # map back log messages to the source (message-id can't be used for
+   # that purpose as it can be missing or ambiguous during processing,
+   # but it is unambiguous in the output).
   ]
  }
