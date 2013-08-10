@@ -89,6 +89,18 @@ sub usage {
                 --deidentify takes) and link them in the html files
                 produced with --html-to
 
+    --open-message-id message-id
+                run \$BROWSER on the given message that was written
+                before using --html-to. Needs html-to option again to
+                know where the files are, but doesn't regenerare files
+                nor does it run json generation.
+
+    --open-identify identifystring
+                run \$BROWSER on the given message that was written
+                before using --html-to. Needs html-to option again to
+                know where the files are, but doesn't regenerare files
+                nor does it run json generation.
+
     --deidentify string
                 print message identified by the given string, which is
                 output into the JSON by the json_identify method (as
@@ -132,6 +144,8 @@ our $opt_repl;
 our $opt_json_to;
 our $opt_html_to;
 our $opt_source_to;
+our @open_message_id;
+our @open_identify;
 GetOptions("verbose"=> \$verbose,
 	   "repl"=> \$opt_repl,
 	   "help"=> sub{usage},
@@ -152,6 +166,14 @@ GetOptions("verbose"=> \$verbose,
 	   "source-to=s"=> \$opt_source_to,
 	   "deidentify=s"=> \$opt_deidentify,
 	   "show-mbox-path=s"=> \$opt_show_mbox_path,
+	   "open-message-id=s"=> sub {
+	       my ($_,$v)=@_;
+	       push @open_message_id, $v
+	   },
+	   "open-identify=s"=> sub {
+	       my ($_,$v)=@_;
+	       push @open_identify, $v
+	   },
 	   "jobs=i"=> \$numjobs,
 	   #"dry-run"=> \$opt_dry,
 	   ) or exit 1;
@@ -255,6 +277,19 @@ use Chj::Ml2json::Parse::HTML;
 use Chj::xperlfunc ':all';
 use Chj::Parallel;
 use Chj::PClosure;
+use Chj::Browser;
+
+sub identify2xhtml_basename {
+    my ($idn)=@_;
+    $idn=~ s|/|-|g;
+    "$idn.xhtml"
+}
+
+sub identify2xhtml_path {
+    my ($idn)=@_;
+    "$opt_html_to/".identify2xhtml_basename($idn)
+}
+
 
 our $parallel= Chj::Parallel->new($numjobs);
 
@@ -317,9 +352,9 @@ sub do_output_message {
 	    $json->message_print($m,$index);
 	}
 	
+	my $idn= $m->identify;
 	my $source_path;
 	if ($opt_source_to) {
-	    my $idn= $m->identify;
 	    my $path= "$opt_source_to/$idn.txt";
 	    mkdir dirname($path);
 	    my $out= xopen_write $path;
@@ -339,10 +374,7 @@ sub do_output_message {
 	}
 	if ($opt_html_to) {
 	    my $id= $m->id;
-	    my $idn= $m->identify;
-	    my $p= $idn;
-	    $p=~ s|/|-|g;
-	    my $path= "$opt_html_to/$p.xhtml";
+	    my $path= identify2xhtml_path($idn);
 	    # iceweasel ignores encoding in .html files, thus
 	    # needs to be .xhtml suffix
 	    my $out= xopen_write $path;
@@ -372,11 +404,7 @@ sub do_output_message {
 		my ($id)=@_;
 		if (my $mg= &$id2maybe_mg ($id)) {
 		    my $m= $mg->resurrect; # necessary as $mg->identify is different
-		    my $idn= $m->identify;
-		    #COPYPASTE from above
-		    my $p= $idn;
-		    $p=~ s|/|-|g;
-		    "$p.xhtml"
+		    identify2xhtml_basename($m->identify);
 		} else {
 		    undef
 		}
@@ -390,12 +418,7 @@ sub do_output_message {
 		my $_id= $$subthread{id};
 		if (my $mg= &$id2maybe_mg ($_id)) {
 		    my $m= $mg->resurrect;
-		    #hm again COPYPASTE; even again to avoid fetching $m again
-		    my $idn= $m->identify;
-		    my $p= $idn;
-		    $p=~ s|/|-|g;
-		    my $url= "$p.xhtml";
-		    #/CP
+		    my $url= identify2xhtml_basename($m->identify);
 
 		    my ($from)= @{$outputjson->json_parsed_from($m,undef)};
 		    my $fromstr= (phrase_dequote($$from{phrase})
@@ -571,18 +594,11 @@ sub do_output_message {
     } $m;
 }
 
-
 sub parse_and_convert {
     my @sourcepaths=@ARGV;
 
-    if ($opt_html_to and not -d $opt_html_to) {
-	xmkdir $opt_html_to
-    }
-    if ($opt_source_to and not -d $opt_source_to) {
-	xmkdir $opt_source_to
-    }
-
-    my $coll= $collectionparser->parse_trees(\@sourcepaths, $tmp, $opt_max_date_deviation);
+    my $coll= $collectionparser->parse_trees
+      (\@sourcepaths, $tmp, $opt_max_date_deviation);
 
     local $index= $coll->index ($max_thread_duration);
 
@@ -590,7 +606,39 @@ sub parse_and_convert {
 	Chj::repl::repl();
 	exit;
     }
+    if (@open_message_id or @open_identify) {
+	my $idf=
+	  [
+	   (map {
+	       my $id= $$index{messageids}{$_} || $_;
+	       my $t_mg= $$index{ids}{$id}
+		 or die "unknown message id '$id'";
+	       my ($t,$mg)=@$t_mg;
+	       $mg->resurrect->identify
+	   } @open_message_id),
+	   (map {
+	       m{\b([a-f0-9]{32}[/-]\d+)\b}
+		 or die "could not find identify string in '$_'";
+	       my $str= $1;
+	       $str=~ s|-|/|;
+	       $str
+	   } @open_identify)
+	  ];
+	Browser_exec map {
+	    my $p=identify2xhtml_path($_);
+	    #my $absp= $p=~ m|^/| ? $p : $ENV{PWD}."/".$p;
+	    use Cwd 'abs_path';
+	    my $absp= abs_path $p;
+	    "file://$absp"
+	} @{array_hashing_uniq $idf};
+    }
 
+    if ($opt_html_to and not -d $opt_html_to) {
+	xmkdir $opt_html_to
+    }
+    if ($opt_source_to and not -d $opt_source_to) {
+	xmkdir $opt_source_to
+    }
     my $allout= sub {
 	my $o;
 	if ($opt_json_to) {
