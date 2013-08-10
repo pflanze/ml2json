@@ -174,7 +174,7 @@ sub threadleaders_precise {
 		      exists $$s{ids}{$_}
 		  } @{ $$inreplytos{$id} || [] };
 		  if (@ids) {
-		      list__array_fold_right
+		      array_fold_right
 			($leaders, # dropping $suppress_self
 			 $tail,
 			 \@ids);
