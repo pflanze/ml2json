@@ -1,5 +1,6 @@
 COPYING
 Chj/Backtrace.pm
+Chj/Browser.pm
 Chj/Chomp.pm
 Chj/IO/Dir.pm
 Chj/IO/File.pm
