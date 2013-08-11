@@ -244,10 +244,14 @@ sub _json_mailparsed_header {
     [
      map {
 	 map {
+	     my $phrase= decode_mimewords($_->phrase);
+	     my $comment= decode_mimewords($_->comment);
 	     +{
-	       phrase=> scalar decode_mimewords($_->phrase),
+	       phrase=> $phrase,
 	       address=> $_->address,
-	       comment=> scalar decode_mimewords($_->comment),
+	       comment=> $comment,
+	       phraseandcomment=>
+	       join(" ", grep {not /^\s*$/} $phrase, $comment)
 	      }
 	 } Mail::Address->parse($_);
      } @{ $m->unwrapped_headers($key," ") }

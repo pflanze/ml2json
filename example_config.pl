@@ -60,11 +60,14 @@
    #             "address": "foo@bar.com",
    #             "comment": "",
    #             "phrase": "\"Ken Baz\""
+   #             "phraseandcomment": "\"Ken Baz\""
    #         }
    #     ],
    # 'comment' is the part before the address, 'phrase' the part
    # after. Angle brackets around the address and space between
-   # address and comment/phrase are/is dropped.
+   # address and comment/phrase are/is dropped. 'phraseandcomment' is
+   # the set of the non-empty phrase and comment fields, joined with a
+   # space (for retrievel without need for logic).
 
    ["decoded_subject"=> "json_decoded_subject", 1],
    # mime-word decoded subject header
