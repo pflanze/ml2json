@@ -164,6 +164,24 @@
    # currently simply "inline" if the attachment is an image,
    # "attachment" otherwise.
 
+   [attachments_by_type=> "json_attachments_by_type", 2],
+   # a map from Content-type (without the subtype) to a list of the
+   # attachments of that type, e.g.:
+   #    "attachments_by_type": {
+   #        "image": [
+   #            {
+   #                "content_type": "image/gif",
+   #                "disposition": "inline",
+   #                "file_name": "bar.gif",
+   #                "path": "tmp/OUT/591785b794601e212b260e25925636fd/149/bar.gif",
+   #                "size": "9428",
+   #                "url": "tmp/OUT/591785b794601e212b260e25925636fd/149/bar.gif"
+   #            }
+   #        ]
+   #    },
+   # Note: the types like "image" above, as well as the value of the
+   # 'content_type' field, are always in lower case characters.
+
    [identify=> "json_identify",1],
    # see docs/message_identification.txt
   ]

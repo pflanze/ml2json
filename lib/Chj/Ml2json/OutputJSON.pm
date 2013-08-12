@@ -76,6 +76,7 @@ our $default_jsonfields_top=
    [orig_html_dangerous=> "json_orig_html_dangerous", 2],
    [html=> "json_html", 2],
    [attachments=> "json_attachments", 2],
+   [attachments_by_type=> "json_attachments_by_type", 2],
    [identify=> "json_identify",1],
   ];
 
@@ -296,36 +297,52 @@ sub json_cooked_subject {
 }
 
 
+sub attachment2json {
+    my ($att,$m)=@_;
+    # 'URL Attachments ' vs: 'With embedded attachments the
+    # attachment content is passed in base-64 encoding to the
+    # content parameter of the attachment'. But why not output
+    # 'path' key instead, in our case?
+    my $ent= $att->ent;
+    #use Chj::repl;repl;
+    my $path= MIME_Entity_path($ent,$m);
+    my $uri= URI::file->new($path);
+    my $filename= basename $path;
+    +{
+      #"url": "http://example.com/file1.txt"
+      #content=>"dGVzdGZpbGU=",
+      # instead:
+      path=> $path,
+      url=> $uri->as_string,
+      "file_name"=> $filename, # not to feed it, just informatively??
+      "content_type"=> MIME_Entity_maybe_content_type_lc($ent),
+      "size"=> xstat($path)->size, # bytes, not characters
+      "disposition"=> $att->disposition, #"attachment" not 'attached', k?
+     }
+}
+
 sub json_attachments {
     my $s=shift;
     @_==2 or die;
     my ($m,$index)=@_;
     [
-     # 'URL Attachments ' vs: 'With embedded attachments the
-     # attachment content is passed in base-64 encoding to the
-     # content parameter of the attachment'. But why not output
-     # 'path' key instead, in our case?
      map {
-	 my ($att)=$_;
-	 #local our
-	 my $ent= $att->ent;
-	 #use Chj::repl;repl;
-	 my $path= MIME_Entity_path($ent,$m);
-	 my $uri= URI::file->new($path);
-	 my $filename= basename $path;
-	 +{
-	   #"url": "http://example.com/file1.txt"
-	   #content=>"dGVzdGZpbGU=",
-	     # instead:
-	   path=> $path,
-	   url=> $uri->as_string,
-	   "file_name"=> $filename, # not to feed it, just informatively??
-	   "content_type"=> MIME_Entity_maybe_content_type_lc($ent),
-	   "size"=> xstat($path)->size, # bytes, not characters
-	   "disposition"=> $att->disposition, #"attachment" not 'attached', k?
-	  },
-      } @{$m->attachments}
+	 attachment2json($_,$m)
+     } @{$m->attachments}
     ]
+}
+
+sub json_attachments_by_type {
+    my $s=shift;
+    @_==2 or die;
+    my ($m,$index)=@_;
+    my %by_type;
+    for my $att (@{$m->attachments}) {
+	my ($type,$maybe_subtype)=
+	  MIME_Entity_maybe_content_type_lc_split($att->ent);
+	push @{$by_type{$type}}, attachment2json ($att,$m);
+    }
+    \%by_type
 }
 
 sub json_orig_plain {
