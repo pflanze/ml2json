@@ -26,15 +26,6 @@ use Chj::FP::ArrayUtil ":all";
 use Chj::FP2::List ":all";
 use Chj::NoteWarn;
 
-sub array2hash ($) {
-    +{
-      map {
-	  $_=> $_
-      } @{$_[0]}
-     }
-}
-
-
 use Chj::Struct
   ["replies",    # id -> [ id.. ], using normalized messageids.
    #                               (ordered by occurrence in input stream!)
@@ -82,7 +73,7 @@ sub sorted_replies {
        ),
        (
 	map {
-	    (exists array2hash($s->threadleaders_precise($_))->{$id}
+	    (exists array2hashset($s->threadleaders_precise($_))->{$id}
 	     ? ()
 	     : +{ id=> $_, ref=> "subject" })
 	} @{($$s{possiblereplies}{$id}||[])}
