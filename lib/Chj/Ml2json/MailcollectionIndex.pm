@@ -25,6 +25,7 @@ use Chj::FP::Array_sort;
 use Chj::FP::ArrayUtil ":all";
 use Chj::FP2::List ":all";
 use Chj::NoteWarn;
+use Chj::FP::HashSet ":all";
 
 use Chj::Struct
   ["replies",    # id -> [ id.. ], using normalized messageids.
