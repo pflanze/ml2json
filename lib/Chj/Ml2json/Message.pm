@@ -37,7 +37,7 @@ sub origplain_origrich_orightml_string {
     $$m{_origplain_origrich_orightml_string}||=
       [
        map {
-	   defined ($_) ? MIME_Entity_body_as_string($_) : $_
+	   defined ($_) ? ${MIME_Entity_body_as_stringref($_)} : $_
        } $m->origplain_origrich_orightml
       ];
     @{$$m{_origplain_origrich_orightml_string}}

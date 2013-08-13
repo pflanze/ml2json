@@ -26,13 +26,15 @@ package Chj::Ml2json::MIMEExtract;
 	      MIME_Entity_maybe_content_type_lc
 	      MIME_Entity_path
 	      MIME_Entity_body_maybe_charset
-	      MIME_Entity_body_as_string
+	      MIME_Entity_body_as_stringref
 	    );
 %EXPORT_TAGS=(all=>[@EXPORT,@EXPORT_OK]);
 
 use strict;
 
 use Chj::NoteWarn;
+use Chj::FP::HashSet ":all";
+
 
 sub MIME_Entity_all_parts {
     my $s=shift;
@@ -304,7 +306,108 @@ sub MIME_Entity_body_maybe_charset {
 }
 
 
-sub MIME_Entity_body_as_string {
+sub read_all_ref($) {
+    my ($in)=@_;
+    local $/;
+    my $str= <$in>;
+    \$str
+}
+
+use Encode;
+
+our $good_words;
+
+{
+    package Chj::Ml2json::MIMEExtract::_Decoded;
+    use Chj::Struct ["ref","errors","encoding"];
+    sub score {
+	my $s=shift;
+	my $good=0;
+	for (split m{[\s()\[\]/,.:;']}, $ {$$s{ref}}) {
+	    $good++ if $$good_words{lc $_}
+	}
+	$good - $s->errors
+    }
+    _END_
+}
+sub maybe_Decoded($$) {
+    my ($ref0,$encoding)=@_;
+    my $errors=0;
+    my $ref;
+    eval {
+	$ref= \ decode($encoding,$$ref0,
+		       sub {
+			   my ($n)=@_;
+			   $errors++;
+			   sprintf "\\x%x", $n
+		       });
+	1
+    } || do {
+	if ($@=~ /Unrecognised BOM|Unknown encoding/i) {
+	    return
+	} else {
+	    die $@
+	}
+    };
+    $ref or die "???";
+    new Chj::Ml2json::MIMEExtract::_Decoded($ref,$errors,$encoding)
+}
+
+our $alternative_encodings=
+  # encodings to try when the original one has errors
+  [
+   "iso-8859-1",
+   "windows-1252",
+   "us-ascii",
+   "utf-8",
+   "utf-16",
+  ];
+
+sub bodyhandle_decoding_read_all_ref ($$) {
+    my ($bh,$maybe_encoding)=@_;
+    my $ref0= do {
+	my $in= $bh->open("r");
+	my $r= read_all_ref($in);
+	close $in or die $!;
+	$r
+    };
+    my $decode_sort_select= sub {
+	my ($doneattempts)=@_;
+	my $moreattempts=
+	  [map {
+	       maybe_Decoded($ref0,$_) or ()
+	   } @$alternative_encodings];
+	local our $sorted_attempts=
+	  Array_sort ([@$doneattempts,@$moreattempts],
+		      On (the_method "score",
+			  \&Number_cmp));
+	@$sorted_attempts or die "hu, no attempted decoding worked at all";
+	local our $best= $$sorted_attempts[-1];
+	NOTE "best alternative encoding found: ".$best->encoding;
+	#use Chj::repl;repl;
+	$best->ref
+    };
+    if ($maybe_encoding) {
+	my $attempt0= maybe_Decoded($ref0, $maybe_encoding);
+	if (!$attempt0) {
+	    &$decode_sort_select ([]);
+	} elsif ($attempt0->errors) {
+	    &$decode_sort_select ([$attempt0]);
+	} else {
+	    $attempt0->ref
+	}
+    } else {
+	if ($$ref0=~ /[\x80..\xFF]/) {
+	    NOTE "no encoding specified, but contains 8 bit chars, trying alternatives";
+	    &$decode_sort_select([]);
+	} else {
+	    $ref0
+	}
+    }
+}
+
+
+sub MIME_Entity_body_as_stringref {
     # i.e. *decoded* string, please.  $e->body_as_string re-encodes
     # the body, but bodyhandle only is available for parts that were
     # decoded; thus have to try both. Crazy?
@@ -313,22 +416,11 @@ sub MIME_Entity_body_as_string {
 	#$bh->as_string
 	# even more crazily, charset decoding is not done by the
 	# as_string method, thus:
-	my $in= $bh->open("r");
-	if (my $encoding = MIME_Entity_body_maybe_charset ($s)) {
-	    $encoding=~ /[()]/ and die "invalid encoding? '$encoding'";
-	    no warnings;
-	    binmode $in, ":encoding($encoding)"
-	      or NOTE "could not set binmode to encoding '$encoding'";
-	} else {
-	    NOTE "no encoding";
-	}
-	local $/;
-	my $str= <$in>;
-	close $in or die $!;
-	$str
+	bodyhandle_decoding_read_all_ref
+	  ($bh, MIME_Entity_body_maybe_charset ($s));
     } else {
 	WARN "no bodyhandle, thus falling back to ->body_as_string";
-	$s->body_as_string
+	\($s->body_as_string)
     }
 }
 

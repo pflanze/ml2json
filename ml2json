@@ -18,6 +18,7 @@ our $tmpbase="/tmp/$myname";
 our $tmplink= "$ENV{HOME}/.$myname-tmp"; ## ok to use that path?
 our $mbox_glob= '*.mbox';
 our $max_thread_duration= "1 month";
+our $good_words_path= "$mydir/good_words.txt";
 
 use Chj::numcores;
 our $numjobs= numcores;
@@ -278,6 +279,23 @@ use Chj::xperlfunc ':all';
 use Chj::Parallel;
 use Chj::PClosure;
 use Chj::Browser;
+use Chj::chompspace;
+
+
+$Chj::Ml2json::MIMEExtract::good_words= # XX hacky way to set
+  do {
+      my $f= xopen_read $good_words_path;
+      binmode $f, ":encoding(utf-8)" or die;
+      my %w;
+      while (<$f>) {
+	  $_= chompspace $_;
+	  next if /^#/;
+	  next unless length $_;
+	  $w{$_}=1;
+      }
+      $f->xclose;
+      \%w
+  };
 
 sub identify2xhtml_basename {
     my ($idn)=@_;

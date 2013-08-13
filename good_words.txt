@@ -1,0 +1,18 @@
+# known good words in utf-8 encoding, to help figure out encoding in
+# emails with broken or missing charset encoding specifications. One
+# word per line. 'Words' are split on whitespace, and ()[]/,.:;' (but
+# *not* on the non-ASCII kinds of apostrophes, for example). ASCII
+# characters are case insensitive.
+
+extérieur
+même
+C’est
+l’appréhension
+Foucault’s
+Society’s
+I’m
+can’t
+–
+généralement
+l’État
+l’angle
