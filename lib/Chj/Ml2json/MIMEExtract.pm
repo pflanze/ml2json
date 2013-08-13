@@ -316,9 +316,9 @@ sub MIME_Entity_body_as_string {
 	my $in= $bh->open("r");
 	if (my $encoding = MIME_Entity_body_maybe_charset ($s)) {
 	    $encoding=~ /[()]/ and die "invalid encoding? '$encoding'";
-	    #NOTE "ENCODING: '$encoding'";
+	    no warnings;
 	    binmode $in, ":encoding($encoding)"
-	      or WARN "could not set binmode to encoding '$encoding'";
+	      or NOTE "could not set binmode to encoding '$encoding'";
 	} else {
 	    NOTE "no encoding";
 	}
