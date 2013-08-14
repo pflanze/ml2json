@@ -19,6 +19,7 @@ our $tmplink= "$ENV{HOME}/.$myname-tmp"; ## ok to use that path?
 our $mbox_glob= '*.mbox';
 our $max_thread_duration= "1 month";
 our $good_words_path= "$mydir/good_words.txt";
+our $default_config_path= "$mydir/default_config.pl";
 
 use Chj::numcores;
 our $numjobs= numcores;
@@ -53,11 +54,14 @@ sub usage {
                 file:// prefix).
 
     --config myconfig.pl
-                load given file containing perl code, which must
-                end with a perl hashref; currently
-                   'jsonfields_orig_headers' and 'jsonfields_top'
-                are used. See docs in lib/Chj/Ml2json/OutputJSON.pm
-
+                load given file containing perl code, which must end
+                with a perl hashref; see default configuration in
+                '$default_config_path' for the options that can be set
+                that way.  Several --config options can be given, each
+                subsequent one overrides options loaded from the
+                previous ones (with regards to the keys of the top
+                level hash ref). The previously loaded config can be
+                accessed from \$main::config.
 
     --max-thread-duration duration[*]
                 When encountering emails with no or no known
@@ -132,10 +136,13 @@ exit (@_ ? 1 : 0);
 
 use Time::Duration::Parse;
 
+use Chj::FP::HashSet ":all";
+
+our $config= require $default_config_path;
+
 use Getopt::Long;
 our $verbose=0;
 #our $opt_dry;
-our $config;
 our $opt_deidentify;
 our $opt_show_mbox_path;
 our $opt_attachment_basedir;
@@ -156,7 +163,10 @@ GetOptions("verbose"=> \$verbose,
 	   "recurse"=> \$opt_recurse,
 	   "config=s"=> sub {
 	       my ($_,$path)=@_;
-	       $config= require $path
+	       my $c= require $path;
+	       ref ($c) eq "HASH"
+		 or die "config file '$path' returned something other than a hash ref: $c";
+	       $config= hashset_union ($c, $config);
 	   },
 	   "max-thread-duration=s"=> \$max_thread_duration,
 	   "max-date-deviation=s"=> sub {
