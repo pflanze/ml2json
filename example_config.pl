@@ -1,4 +1,5 @@
 +{
+
   # List of which email headers to output to the sub-JSON returned by
   # the json_orig_headers method.  Email headers not present are
   # ignored.  A mapping to 1 means, if there is exactly 1 such header in
@@ -190,5 +191,36 @@
    # also, there can be multiple source messages with the same
    # message-id (all but one will be ignored), so 'message-id' doesn't
    # identify the source unambiguously, whereas 'identify' does).
-  ]
+  ],
+
+  # List of matches for text parts that should be removed from the
+  # json_html output. The replacements act on the serialized HTML,
+  # although the HTML tags have been replaced with spaces (thus
+  # regular expressions will never see tags, and instead must accept '
+  # *' where tags would have gone). The matches/substitutions are run
+  # in the same order as specified here. If any such text is removed,
+  # the resulting shortened HTML code is parsed again and serialized,
+  # so as to try to fix up any HTML tags that were broken (unbalanced)
+  # in the process; this doesn't guarantee sensible HTML, but at least
+  # should leave it in a well-formed state.
+  strip_text=>
+  [
+   # ["from", "to"], qr/regex/, or "text".
+   # Matches ["from","to"] are non-greedy, i.e. match the first "to"
+   # after "from", not the farthest possible.
+
+   # -- Yahoo ---
+   ["Do you Yahoo!?","Try the all-new Yahoo! Messenger"],
+   qr/(_{10,100}\s*)?(Do You Yahoo|DO YOU YAHOO)\!\?.*?yahoo\.(com|ca|fr|ch|de|co.uk)\S*/,
+   #["Do you Yahoo!?", "http://taxes.yahoo.com/filing.html"],
+   #["Do you Yahoo!?", "http://antispam.yahoo.com/tools"],
+   ["Do you Yahoo!?", "MB free storage!"],
+   #["Do You Yahoo!?", "yahoo.com"],
+   #["Do You Yahoo!?", "yahoo.ca"],
+
+   # -- spurious separator from pseudo mbox files--
+   qr/     ------------------\s*\z/,
+
+  ],
+
  }
