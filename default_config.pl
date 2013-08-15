@@ -1,4 +1,10 @@
+use Chj::numcores;
+
 +{
+  jobs=> numcores,
+  mbox_glob=> '*.mbox',
+  max_thread_duration=> "1 month",
+  good_words_path=> "$mydir/good_words.txt",
 
   # List of which email headers to output to the sub-JSON returned by
   # the json_orig_headers method.  Email headers not present are

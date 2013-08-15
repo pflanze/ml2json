@@ -5,7 +5,7 @@
 
 use strict;
 
-my ($mydir, $myname);
+our ($mydir, $myname);
 BEGIN {
     $0=~ /(.*?)([^\/]+)\z/s or die "?";
     ($mydir, $myname)=($1,$2);
@@ -17,15 +17,7 @@ use lib "$mydir/lib";
 our $tmpbase="/tmp/$myname";
 our $tmplink= "$ENV{HOME}/.$myname-tmp"; ## ok to use that path?
 our $default_config_path= "$mydir/default_config.pl";
-
-our %opt;
-
-$opt{mbox_glob}= '*.mbox';
-$opt{max_thread_duration}= "1 month";
-$opt{good_words_path}= "$mydir/good_words.txt";
-
-use Chj::numcores;
-$opt{jobs}= numcores;
+our $config= require $default_config_path;
 
 sub usage {
     print STDERR map{"$_\n"} @_ if @_;
@@ -34,6 +26,9 @@ sub usage {
   sourcedir should be a directory with *.mbox files directly in it
   ($myname does not currently recurse into subdirectories).
   If a file is given instead, it is assumed to be an mbox file.
+
+  Most options and even actions (and some more) can be configured from
+  a config file, see --config. Command line options have precedence.
 
   Actions:
 
@@ -96,7 +91,7 @@ sub usage {
 
     --mbox-glob globstring
                 glob to use to find files in directories that contain
-                mboxes. Defaults to '$opt{mbox_glob}'.
+                mboxes. Defaults to '$$config{mbox_glob}'.
 
 
     --attachment-basedir path
@@ -115,7 +110,7 @@ sub usage {
                 the same thread according to their subject line as
                 long as the time span between the first mail of that
                 subject and the last one doesn't exceed the given
-                duration. Pass '0' to disable. Default: '$opt{max_thread_duration}'.
+                duration. Pass '0' to disable. Default: '$$config{max_thread_duration}'.
 
     --max-date-deviation duration[*]
                 When mbox separators (lines starting with 'From ')
@@ -128,7 +123,7 @@ sub usage {
                 were copied around.
 
     --jobs n
-                use n instead of the default $opt{jobs} jobs in parallel
+                use n instead of the default $$config{jobs} jobs in parallel
 
   [*] duration can be anything that Time::Duration::Parse supports,
       like '1 day' or '1d and 5h'; bare numbers are interpreted as
@@ -146,12 +141,12 @@ use Time::Duration::Parse;
 
 use Chj::FP::HashSet ":all";
 
-our $config= require $default_config_path;
 our @open_message_id;
 our @open_identify;
 
 use Getopt::Long;
 use Hash::Util 'lock_hash';
+our %opt;
 GetOptions("verbose"=> \$opt{verbose},
 	   "repl"=> \$opt{repl},
 	   "help"=> sub{usage},
