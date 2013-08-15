@@ -180,7 +180,7 @@ GetOptions("verbose"=> \$opt{verbose},
 	   #"dry-run"=> \$opt{dry},
 	  ) or exit 1;
 
-*opt= hashset_union(\%opt, $config);
+*opt= hashset_union_defined(\%opt, $config);
 
 $opt{max_date_deviation}&&= parse_duration $opt{max_date_deviation};
 $opt{max_thread_duration}&&= parse_duration $opt{max_thread_duration};
