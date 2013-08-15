@@ -224,8 +224,10 @@ sub parse_mbox_ghost {
 			->ghost($targetdir);
 		  } "'$mboxpath', $mboxpathhash/$n"
 	      }, stream_zip2 stream_iota(), $msgs;
-	    Chj::Ml2json::Mailcollection::Mbox->new(stream2array($msgghosts),$mboxpath)
-		->ghost($mboxtargetbase);
+	    my $nonerrormsgghosts=
+	      stream_filter sub{defined $_[0]}, $msgghosts;
+	    Chj::Ml2json::Mailcollection::Mbox->new(stream2array $nonerrormsgghosts)
+		  ->ghost($mboxtargetbase);
 	} $mboxpath;
     };
 
