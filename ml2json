@@ -16,13 +16,16 @@ use lib "$mydir/lib";
 
 our $tmpbase="/tmp/$myname";
 our $tmplink= "$ENV{HOME}/.$myname-tmp"; ## ok to use that path?
-our $mbox_glob= '*.mbox';
-our $max_thread_duration= "1 month";
-our $good_words_path= "$mydir/good_words.txt";
 our $default_config_path= "$mydir/default_config.pl";
 
+our %opt;
+
+$opt{mbox_glob}= '*.mbox';
+$opt{max_thread_duration}= "1 month";
+$opt{good_words_path}= "$mydir/good_words.txt";
+
 use Chj::numcores;
-our $numjobs= numcores;
+$opt{jobs}= numcores;
 
 sub usage {
     print STDERR map{"$_\n"} @_ if @_;
@@ -93,7 +96,7 @@ sub usage {
 
     --mbox-glob globstring
                 glob to use to find files in directories that contain
-                mboxes. Defaults to '$mbox_glob'.
+                mboxes. Defaults to '$opt{mbox_glob}'.
 
 
     --attachment-basedir path
@@ -112,7 +115,7 @@ sub usage {
                 the same thread according to their subject line as
                 long as the time span between the first mail of that
                 subject and the last one doesn't exceed the given
-                duration. Pass '0' to disable. Default: '$max_thread_duration'.
+                duration. Pass '0' to disable. Default: '$opt{max_thread_duration}'.
 
     --max-date-deviation duration[*]
                 When mbox separators (lines starting with 'From ')
@@ -125,7 +128,7 @@ sub usage {
                 were copied around.
 
     --jobs n
-                use n instead of the default $numjobs jobs in parallel
+                use n instead of the default $opt{jobs} jobs in parallel
 
   [*] duration can be anything that Time::Duration::Parse supports,
       like '1 day' or '1d and 5h'; bare numbers are interpreted as
@@ -144,28 +147,18 @@ use Time::Duration::Parse;
 use Chj::FP::HashSet ":all";
 
 our $config= require $default_config_path;
-
-use Getopt::Long;
-our $verbose=0;
-#our $opt_dry;
-our $opt_deidentify;
-our $opt_show_mbox_path;
-our $opt_attachment_basedir;
-our $opt_max_date_deviation;
-our $opt_recurse;
-our $opt_repl;
-our $opt_json_to;
-our $opt_html_to;
-our $opt_source_to;
 our @open_message_id;
 our @open_identify;
-GetOptions("verbose"=> \$verbose,
-	   "repl"=> \$opt_repl,
+
+use Getopt::Long;
+use Hash::Util 'lock_hash';
+GetOptions("verbose"=> \$opt{verbose},
+	   "repl"=> \$opt{repl},
 	   "help"=> sub{usage},
-	   "cleanup"=> sub { cleanup_tmp(); exit 0; },
-	   "attachment-basedir=s"=> \$opt_attachment_basedir,
-	   "mbox-glob=s"=> \$mbox_glob,
-	   "recurse"=> \$opt_recurse,
+	   "cleanup"=> \$opt{cleanup},
+	   "attachment-basedir=s"=> \$opt{attachment_basedir},
+	   "mbox-glob=s"=> \$opt{mbox_glob},
+	   "recurse"=> \$opt{recurse},
 	   "config=s"=> sub {
 	       my ($_,$path)=@_;
 	       my $c= require $path;
@@ -173,15 +166,13 @@ GetOptions("verbose"=> \$verbose,
 		 or die "config file '$path' returned something other than a hash ref: $c";
 	       $config= hashset_union ($c, $config);
 	   },
-	   "max-thread-duration=s"=> \$max_thread_duration,
-	   "max-date-deviation=s"=> sub {
-	       $opt_max_date_deviation= parse_duration $_[1]
-	   },
-	   "json-to=s"=> \$opt_json_to,
-	   "html-to=s"=> \$opt_html_to,
-	   "source-to=s"=> \$opt_source_to,
-	   "deidentify=s"=> \$opt_deidentify,
-	   "show-mbox-path=s"=> \$opt_show_mbox_path,
+	   "max-thread-duration=s"=> \$opt{max_thread_duration},
+	   "max-date-deviation=s"=> \$opt{max_date_deviation},
+	   "json-to=s"=> \$opt{json_to},
+	   "html-to=s"=> \$opt{html_to},
+	   "source-to=s"=> \$opt{source_to},
+	   "deidentify=s"=> \$opt{deidentify},
+	   "show-mbox-path=s"=> \$opt{show_mbox_path},
 	   "open-message-id=s"=> sub {
 	       my ($_,$v)=@_;
 	       push @open_message_id, $v
@@ -190,27 +181,33 @@ GetOptions("verbose"=> \$verbose,
 	       my ($_,$v)=@_;
 	       push @open_identify, $v
 	   },
-	   "jobs=i"=> \$numjobs,
-	   #"dry-run"=> \$opt_dry,
-	   ) or exit 1;
+	   "jobs=i"=> \$opt{jobs},
+	   #"dry-run"=> \$opt{dry},
+	  ) or exit 1;
+
+*opt= hashset_union(\%opt, $config);
+
+$opt{max_date_deviation}&&= parse_duration $opt{max_date_deviation};
+$opt{max_thread_duration}&&= parse_duration $opt{max_thread_duration};
+
+lock_hash %opt;
+
 usage unless
-  (@ARGV and ($opt_json_to or $opt_html_to or $opt_source_to))
-  or $opt_deidentify or $opt_show_mbox_path or $opt_repl;
+  (@ARGV and ($opt{json_to} or $opt{html_to} or $opt{source_to}))
+  or $opt{deidentify} or $opt{show_mbox_path} or $opt{repl};
 
-
-$max_thread_duration= parse_duration $max_thread_duration;
 
 use Chj::NoteWarn;
-NoteWarn_attenuation_level($verbose ? 0 : 1);
+NoteWarn_attenuation_level($opt{verbose} ? 0 : 1);
 
 use Chj::tempdir;
 
 use Chj::xperlfunc ':all';
 
 our $tmp= do {
-    if ($opt_attachment_basedir) {
-	xmkdir $opt_attachment_basedir if not -d $opt_attachment_basedir;
-	$opt_attachment_basedir
+    if ($opt{attachment_basedir}) {
+	xmkdir $opt{attachment_basedir} if not -d $opt{attachment_basedir};
+	$opt{attachment_basedir}
     } else {
 	my $create= sub {
 	    my $t= tempdir $tmpbase;
@@ -243,14 +240,14 @@ sub print_deidentify {
     print $m->ent->as_string
       or die $!;
 }
-if ($opt_deidentify) {
+if ($opt{deidentify}) {
     require Chj::Ml2json::Debug;
-    print_deidentify $opt_deidentify;
+    print_deidentify $opt{deidentify};
 }
 
-if ($opt_show_mbox_path) {
-    my ($md5)= $opt_show_mbox_path=~ /\b([a-f0-9]{32})\b/
-      or usage "does not contain an md5 hex string: '$opt_show_mbox_path'";
+if ($opt{show_mbox_path}) {
+    my ($md5)= $opt{show_mbox_path}=~ /\b([a-f0-9]{32})\b/
+      or usage "does not contain an md5 hex string: '$opt{show_mbox_path}'";
     my $p="$tmp/$md5";
     my $mbox= Chj::Ml2json::Ghostable->load($p);
     if (my $path= $mbox->path) {
@@ -261,8 +258,8 @@ if ($opt_show_mbox_path) {
 }
 
 sub cleanup_tmp {
-    if ($opt_attachment_basedir) {
-	my $p= $opt_attachment_basedir;
+    if ($opt{attachment_basedir}) {
+	my $p= $opt{attachment_basedir};
 	system ("rm", "-rf", "--", $p)==0 or die "rm -rf '$p' failed";
     } else {
 	# partially COPYPASTE..
@@ -299,7 +296,7 @@ use Chj::chompspace;
 
 $Chj::Ml2json::MIMEExtract::good_words= # XX hacky way to set
   do {
-      my $f= xopen_read $good_words_path;
+      my $f= xopen_read $opt{good_words_path};
       binmode $f, ":encoding(utf-8)" or die;
       my %w;
       while (<$f>) {
@@ -320,25 +317,25 @@ sub identify2xhtml_basename {
 
 sub identify2xhtml_path {
     my ($idn)=@_;
-    "$opt_html_to/".identify2xhtml_basename($idn)
+    "$opt{html_to}/".identify2xhtml_basename($idn)
 }
 
 
-our $parallel= Chj::Parallel->new($numjobs);
+our $parallel= Chj::Parallel->new($opt{jobs});
 
 
 our $collectionparser= Chj::Ml2json::MailcollectionParser->new
   ('Chj::Ml2json::Message',
-   $mbox_glob,
-   $opt_recurse);
+   $opt{mbox_glob},
+   $opt{recurse});
 
 ## config file input ?
 our $htmlmapper= Chj::Ml2json::Parse::HTML->new ("html");
 our $enrichedmapper= Chj::Ml2json::Parse::HTML->new ("enriched");
 
 our $outputjson= Chj::Ml2json::OutputJSON->new
-  ($$config{jsonfields_orig_headers},
-   $$config{jsonfields_top},
+  ($opt{jsonfields_orig_headers},
+   $opt{jsonfields_top},
    $htmlmapper,
    $enrichedmapper);
 
@@ -379,16 +376,16 @@ our ($json, $index);
 sub do_output_message {
     my ($m,$pos)=@_;
     Try {
-	if ($opt_json_to) {
+	if ($opt{json_to}) {
 	    $json->set_not_first(1)
-	      if ($numjobs > 1 and $pos > 0);
+	      if ($opt{jobs} > 1 and $pos > 0);
 	    $json->message_print($m,$index);
 	}
 	
 	my $idn= $m->identify;
 	my $source_path;
-	if ($opt_source_to) {
-	    my $path= "$opt_source_to/$idn.txt";
+	if ($opt{source_to}) {
+	    my $path= "$opt{source_to}/$idn.txt";
 	    mkdir dirname($path);
 	    my $out= xopen_write $path;
 	    # Choice of either deparsing the entity, which is
@@ -405,7 +402,7 @@ sub do_output_message {
 	    $out->xclose;
 	    $source_path= $path;
 	}
-	if ($opt_html_to) {
+	if ($opt{html_to}) {
 	    my $id= $m->id;
 	    my $path= identify2xhtml_path($idn);
 	    # iceweasel ignores encoding in .html files, thus
@@ -631,11 +628,11 @@ sub parse_and_convert {
     my @sourcepaths=@ARGV;
 
     my $coll= $collectionparser->parse_trees
-      (\@sourcepaths, $tmp, $opt_max_date_deviation);
+      (\@sourcepaths, $tmp, $opt{max_date_deviation});
 
-    local $index= $coll->index ($max_thread_duration);
+    local $index= $coll->index ($opt{max_thread_duration});
 
-    if ($opt_repl) {
+    if ($opt{repl}) {
 	Chj::repl::repl();
 	exit;
     }
@@ -666,22 +663,22 @@ sub parse_and_convert {
 	} @{array_hashing_uniq $idf};
     }
 
-    if ($opt_html_to and not -d $opt_html_to) {
-	xmkdir $opt_html_to
+    if ($opt{html_to} and not -d $opt{html_to}) {
+	xmkdir $opt{html_to}
     }
-    if ($opt_source_to and not -d $opt_source_to) {
-	xmkdir $opt_source_to
+    if ($opt{source_to} and not -d $opt{source_to}) {
+	xmkdir $opt{source_to}
     }
     my $allout= sub {
 	my $o;
-	if ($opt_json_to) {
-	    $o= xopen_write $opt_json_to;
+	if ($opt{json_to}) {
+	    $o= xopen_write $opt{json_to};
 	    binmode $o, ":utf8" or die;
 	}
 	local $json= Chj::Ml2json::OutputJSON::Continuous->new($o,$outputjson);
 	#^ XX HACK: $o may be undefined; really misusing that
 	# mechanism now.
-	if ($opt_json_to) {
+	if ($opt{json_to}) {
 	    $json->print_opening;
 	}
 
@@ -696,7 +693,7 @@ sub parse_and_convert {
 	   $index->all_messages_threadsorted,
 	   20);
 
-	if ($opt_json_to) {
+	if ($opt{json_to}) {
 	    #$json->set_not_first($len);
 	    $json->end;
 	    $o->xclose;
@@ -716,12 +713,17 @@ $SIG{INT}= sub {
 };
 
 
-if ($opt_repl) {
+if ($opt{repl}) {
     import Chj::Ml2json::MIMEExtract ':all';
     require Chj::Ml2json::Debug;
     import Chj::Ml2json::Debug;
     require Chj::repl;
     Chj::repl::repl() unless @ARGV;
+}
+
+if ($opt{cleanup}) {
+    cleanup_tmp();
+    exit 0;
 }
 
 parse_and_convert if @ARGV;
