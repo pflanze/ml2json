@@ -287,6 +287,7 @@ use Chj::Parallel;
 use Chj::PClosure;
 use Chj::Browser;
 use Chj::chompspace;
+use Chj::Ml2json::Parse::TextStripper;
 
 
 $Chj::Ml2json::MIMEExtract::good_words= # XX hacky way to set
@@ -324,15 +325,22 @@ our $collectionparser= Chj::Ml2json::MailcollectionParser->new
    $opt{mbox_glob},
    $opt{recurse});
 
+
 ## config file input ?
 our $htmlmapper= Chj::Ml2json::Parse::HTML->new ("html");
 our $enrichedmapper= Chj::Ml2json::Parse::HTML->new ("enriched");
+
+our $textstripper= Chj::Ml2json::Parse::TextStripper->new
+  ($opt{strip_text});
 
 our $outputjson= Chj::Ml2json::OutputJSON->new
   ($opt{jsonfields_orig_headers},
    $opt{jsonfields_top},
    $htmlmapper,
-   $enrichedmapper);
+   $enrichedmapper,
+   $textstripper,
+   "Chj::Ml2json::Parse::HTML",
+  );
 
 use Chj::PXML::Serialize 'pxml_xhtml_print_fast';
 use Chj::PXHTML ':all';

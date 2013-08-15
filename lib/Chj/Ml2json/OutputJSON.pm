@@ -148,6 +148,8 @@ use Chj::Struct ["jsonfields_orig_headers",
 		 "jsonfields_top",
 		 "htmlmapper",
 		 "enrichedmapper",
+		 "textstripper",
+		 "textstripper_htmlmapper_class"
 		];
 
 
@@ -395,7 +397,9 @@ sub json_html {
     my $s=shift;
     @_==2 or die;
     my ($m,$index)=@_;
-    $s->html($m)->fragment2string
+    $s->textstripper->strip_html2string
+      ($s->html($m),
+       $s->textstripper_htmlmapper_class->new($s->html_choice ($m)))
 }
 
 sub json_message_id {
