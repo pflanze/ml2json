@@ -333,6 +333,7 @@ sub _map_body {
 	     map {
 		 if (ref $_) {
 		     # another HTML::Element
+		     no warnings "recursion";# XX should rather sanitize input?
 		     _map_body ($s,$_,$unknown)
 		 } else {
 		     # a string
