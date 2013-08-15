@@ -1,0 +1,11 @@
+#!/bin/bash
+
+set -eu
+
+# Workaround for bug in older Perls that prevent incremental stream
+# release, hence need more stack space for the recursion during the
+# memory freeing phase.
+
+ulimit -S -s 100000
+
+exec "$0"_ "$@"
