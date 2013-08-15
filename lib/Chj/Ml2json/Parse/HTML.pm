@@ -128,7 +128,7 @@ our $tag_map_att=
 	 my ($url)=@_;
 	 my $uri= URI->new($url);
 	 if ($uri->scheme) {
-	     WARN "ignoring img with external URI"; # XXX?
+	     NOTE "dropping img with external URI";
 	     undef
 	 } else {
 	     # Presumably attached image: XX check?
