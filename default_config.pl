@@ -216,13 +216,9 @@ use Chj::numcores;
    # after "from", not the farthest possible.
 
    # -- Yahoo ---
-   ["Do you Yahoo!?","Try the all-new Yahoo! Messenger"],
    qr/(_{10,100}\s*)?(Do You Yahoo|DO YOU YAHOO)\!\?.*?yahoo\.(com|ca|fr|ch|de|co.uk)\S*/,
-   #["Do you Yahoo!?", "http://taxes.yahoo.com/filing.html"],
-   #["Do you Yahoo!?", "http://antispam.yahoo.com/tools"],
+   ["Do you Yahoo!?","Try the all-new Yahoo! Messenger"],
    ["Do you Yahoo!?", "MB free storage!"],
-   #["Do You Yahoo!?", "yahoo.com"],
-   #["Do You Yahoo!?", "yahoo.ca"],
 
    # -- spurious separator from pseudo mbox files--
    qr/     ------------------\s*\z/,
