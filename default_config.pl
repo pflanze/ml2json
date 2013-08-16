@@ -202,13 +202,13 @@ use Chj::numcores;
   # List of matches for text parts that should be removed from the
   # json_html output. The replacements act on the serialized HTML,
   # although the HTML tags have been replaced with spaces (thus
-  # regular expressions will never see tags, and instead must accept '
-  # *' where tags would have gone). The matches/substitutions are run
-  # in the same order as specified here. If any such text is removed,
-  # the resulting shortened HTML code is parsed again and serialized,
-  # so as to try to fix up any HTML tags that were broken (unbalanced)
-  # in the process; this doesn't guarantee sensible HTML, but at least
-  # should leave it in a well-formed state.
+  # regular expressions will never see tags, and instead must accept
+  # '\s*' where tags would have gone). The matches/substitutions are
+  # run in the same order as specified here. If any such text is
+  # removed, the resulting shortened HTML code is parsed again and
+  # serialized, so as to try to fix up any HTML tags that were broken
+  # (unbalanced) in the process; this doesn't guarantee sensible HTML,
+  # but at least should leave it in a well-formed state.
   strip_text=>
   [
    # ["from", "to"], qr/regex/, or "text".
