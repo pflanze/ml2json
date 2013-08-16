@@ -189,8 +189,10 @@ lock_hash %opt;
 
 usage unless
   (@ARGV and ($opt{json_to} or $opt{html_to} or $opt{source_to}))
-  or $opt{deidentify} or $opt{show_mbox_path} or $opt{repl};
-
+  or $opt{deidentify} or $opt{show_mbox_path} or $opt{repl}
+  or ($opt{html_to} and @open_identify);
+# XX should probably instead call usage if nothing was done at the end
+# and/or where the data is missing.
 
 use Chj::NoteWarn;
 NoteWarn_attenuation_level($opt{verbose} ? 0 : 1);
@@ -729,5 +731,5 @@ if ($opt{cleanup}) {
     exit 0;
 }
 
-parse_and_convert if @ARGV;
+parse_and_convert if (@ARGV or @open_identify);
 
