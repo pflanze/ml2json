@@ -224,12 +224,11 @@ sub parse_mbox_ghost {
 					     $cursor)
 			->ghost($targetdir);
 		  } "'$mboxpath', $mboxpathhash/$n",
-		    { "Chj::Ml2json::NoBodyException" => sub {
+		    [["Chj::Ml2json::NoBodyException" => sub {
 			  my ($e)=@_;
 			  WARN "dropping message $n because: ".$e->msg;
 			  undef # filtered out later, see $nonerrormsgghosts
-		      }
-		    };
+		      }]];
 	      }, stream_zip2 stream_iota(), $msgs;
 	    my $nonerrormsgghosts=
 	      stream_filter sub{defined $_[0]}, $msgghosts;
