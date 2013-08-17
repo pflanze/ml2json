@@ -495,8 +495,11 @@ sub MIME_Entity_origplain_origrich_orightml {
 		     or $ct eq "text/richtext") {
 		(undef,$s,undef)
 	    } else {
-		WARN ("no textual part found in the mail, toplevel content-type is '$ct'");
-		($s, undef, undef)
+		NOTE("no textual part found in the mail, "
+		     ."toplevel content-type is '$ct'");
+		# happens when someone really just sends an attachment
+		# but no text from Apple-Mail
+		(undef, undef, undef)
 	    }
 	} else {
 	    WARN("email does not have a content-type header");

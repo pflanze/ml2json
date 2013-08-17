@@ -378,7 +378,8 @@ sub html {
 	# keep this logic in sync with the html_choice method!
 	($ht_ ? $s->_cleanuphtml($ht_,$ht) :
 	 $rt_ ? $s->_enriched2html($rt_,$rt) :
-	 $pl_ ? $s->_plain2html($pl_,$pl) : die "message with no text part")
+	 $pl_ ? $s->_plain2html($pl_,$pl) :
+	 DIV({class=> "notext"}))
     }
 }
 
