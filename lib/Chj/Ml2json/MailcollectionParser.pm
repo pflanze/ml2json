@@ -57,6 +57,7 @@ use Chj::Parse::Mbox 'mbox_stream_open';
 use Chj::FP2::Stream ':all';
 use Chj::Ml2json::Mailcollection;
 use Cwd 'abs_path';
+use Chj::Ml2json::Exceptions;
 
 # date parsing is complicated matters with there being software not
 # creating standard conform formats, especially if there are emails
@@ -90,7 +91,7 @@ sub fixup_msg {
 	    push @head, $line;
 	}
     }
-    die "message with no head-body-separator";
+    die NoBodyException;
 }
 
 sub unless_seen_path ($$$) {
@@ -222,7 +223,13 @@ sub parse_mbox_ghost {
 					     $i,
 					     $cursor)
 			->ghost($targetdir);
-		  } "'$mboxpath', $mboxpathhash/$n"
+		  } "'$mboxpath', $mboxpathhash/$n",
+		    { "Chj::Ml2json::NoBodyException" => sub {
+			  my ($e)=@_;
+			  WARN "dropping message $n because: ".$e->msg;
+			  undef # filtered out later, see $nonerrormsgghosts
+		      }
+		    };
 	      }, stream_zip2 stream_iota(), $msgs;
 	    my $nonerrormsgghosts=
 	      stream_filter sub{defined $_[0]}, $msgghosts;
