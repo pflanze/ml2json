@@ -9,7 +9,7 @@ use Chj::numcores;
   # whether to turn a<br><br>b into <p>a</p><p>b</p> in html mapper
   # (for the richtext and plain to html conversions, paragraphy is
   # always done):
-  do_paragraphy=> 1,
+  do_paragraphy=> 0,
   # whether to turn both <br>\n and \n into <br>\n in html mapper:
   do_newline2br=> 0,
 
