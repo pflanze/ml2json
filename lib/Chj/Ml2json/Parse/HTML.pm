@@ -197,6 +197,7 @@ our $parents; # linked list holding the element names of the parents
 
 our $content_subtype; # "html" or "enriched" (for "plain" see ::Plain
                       # module)
+our $do_paragraphy;
 
 sub atts ($) {
     my ($tagname)=@_;
@@ -222,7 +223,8 @@ our $keepbody= sub{$body};
 
 our $map=
   +{
-    body=> _SPAN{{class=> $content_subtype}, paragraphy($body) },
+    body=> _SPAN{{class=> $content_subtype},
+		   $do_paragraphy ? paragraphy($body) : $body },
     #"body/" => DIV { $body },
     p=> _P{ $body },
     div=> _DIV{ $body },##P ?
@@ -311,7 +313,7 @@ our $map=
 use HTML::Element;
 use HTML::TreeBuilder;
 
-use Chj::Struct ["content_subtype"];
+use Chj::Struct ["content_subtype","do_paragraphy","do_newline2br"];
 
 sub _map_body {
     my $s=shift;
@@ -324,6 +326,7 @@ sub _map_body {
 	    $att{lc $_}= $e->attr($_);
 	}
 	local $content_subtype= $$s{content_subtype};
+	local $do_paragraphy= $$s{do_paragraphy};
 
 	my $maybe_body_mapper= $$map{$name."/"};
 
@@ -370,6 +373,8 @@ sub map_body {
 sub parse_body {
     my $s=shift;
     my ($html)=@_;
+    $html=~ s{(?:<[Bb][Rr][^<>]*/?>[ \t$nbsp]*)?[\r\n]}{<br>\n}sg
+      if $$s{do_newline2br};
     my $t= HTML::TreeBuilder->new;
     $t->parse_content ($html);
     my $e= $t->elementify;

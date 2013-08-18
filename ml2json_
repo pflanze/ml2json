@@ -329,8 +329,14 @@ our $collectionparser= Chj::Ml2json::MailcollectionParser->new
 
 
 ## config file input ?
-our $htmlmapper= Chj::Ml2json::Parse::HTML->new ("html");
-our $enrichedmapper= Chj::Ml2json::Parse::HTML->new ("enriched");
+our $htmlmapper= Chj::Ml2json::Parse::HTML->new_
+  (content_subtype=> "html",
+   do_paragraphy=> $opt{do_paragraphy},
+   do_newline2br=> $opt{do_newline2br});
+our $enrichedmapper= Chj::Ml2json::Parse::HTML->new_
+  (content_subtype=> "enriched",
+   do_paragraphy=> 1,
+   do_newline2br=> 0);
 
 our $textstripper= Chj::Ml2json::Parse::TextStripper->new
   ($opt{strip_text});

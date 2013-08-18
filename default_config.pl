@@ -6,6 +6,13 @@ use Chj::numcores;
   max_thread_duration=> "1 month",
   good_words_path=> "$mydir/good_words.txt",
 
+  # whether to turn a<br><br>b into <p>a</p><p>b</p> in html mapper
+  # (for the richtext and plain to html conversions, paragraphy is
+  # always done):
+  do_paragraphy=> 1,
+  # whether to turn both <br>\n and \n into <br>\n in html mapper:
+  do_newline2br=> 0,
+
   # List of which email headers to output to the sub-JSON returned by
   # the json_orig_headers method.  Email headers not present are
   # ignored.  A mapping to 1 means, if there is exactly 1 such header in
