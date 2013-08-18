@@ -10,7 +10,8 @@ use Chj::numcores;
   # (for the richtext and plain to html conversions, paragraphy is
   # always done):
   do_paragraphy=> 0,
-  # whether to turn both <br>\n and \n into <br>\n in html mapper:
+  # whether to turn both <br>\n and \n into <br>\n in html mapper
+  # (experimental, probably no use):
   do_newline2br=> 0,
 
   # List of which email headers to output to the sub-JSON returned by

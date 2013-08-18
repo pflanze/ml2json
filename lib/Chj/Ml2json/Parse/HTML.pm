@@ -373,8 +373,15 @@ sub map_body {
 sub parse_body {
     my $s=shift;
     my ($html)=@_;
-    $html=~ s{(?:<[Bb][Rr][^<>]*/?>[ \t$nbsp]*)?[\r\n]}{<br>\n}sg
-      if $$s{do_newline2br};
+    if ($$s{do_newline2br}) {
+	# remove newlines from within tags to make the second RE safe
+	$html=~ s{(<.*?>)}{
+	    my $str= $1;
+	    $str=~ s/[\r\n]/ /sg;
+	    $str
+        }sge;
+	$html=~ s{(?:<[Bb][Rr][^<>]*/?>[ \t$nbsp]*)?[\r\n]}{<br>\n}sg;
+    }
     my $t= HTML::TreeBuilder->new;
     $t->parse_content ($html);
     my $e= $t->elementify;
