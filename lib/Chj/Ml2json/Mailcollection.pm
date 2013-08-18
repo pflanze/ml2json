@@ -231,7 +231,7 @@ sub index {
 		    $$index{cookedsubjects}{$cs}= [$t_mg];
 		}
 	    } else {
-		NOTE "message does not have a (cooked) subject"
+		NOTE "message '".$m->identify."' does not have a (cooked) subject"
 	    }
 	}
     }
