@@ -27,8 +27,8 @@ sub usage {
   ($myname does not currently recurse into subdirectories).
   If a file is given instead, it is assumed to be an mbox file.
 
-  All options and actions except for --open-message-id and
-  --open-identify (and --help and --config) can alternatively be
+  All options and actions except for --deidentify, --open-message-id
+  and --open-identify (and --help and --config) can alternatively be
   configured from a config file, see --config. Command line options
   have precedence. Sourcepath(s) can be configured as a 'sourcepaths'
   config key holding an array.
@@ -145,6 +145,7 @@ use Time::Duration::Parse;
 
 use Chj::FP::HashSet ":all";
 
+our @deidentify;
 our @open_message_id;
 our @open_identify;
 
@@ -170,7 +171,10 @@ GetOptions("verbose"=> \$opt{verbose},
 	   "json-to=s"=> \$opt{json_to},
 	   "html-to=s"=> \$opt{html_to},
 	   "source-to=s"=> \$opt{source_to},
-	   "deidentify=s"=> \$opt{deidentify},
+	   "deidentify=s"=> sub {
+	       my ($_,$v)=@_;
+	       push @deidentify, $v
+	   },
 	   "show-mbox-path=s"=> \$opt{show_mbox_path},
 	   "open-message-id=s"=> sub {
 	       my ($_,$v)=@_;
@@ -201,7 +205,7 @@ sub have ($) {
 
 usage unless
   (have $opt{sourcepaths} and ($opt{json_to} or $opt{html_to} or $opt{source_to}))
-  or $opt{deidentify} or $opt{show_mbox_path} or $opt{repl}
+  or @deidentify or $opt{show_mbox_path} or $opt{repl}
   or ($opt{html_to} and @open_identify);
 # XX should probably instead call usage if nothing was done at the end
 # and/or where the data is missing.
@@ -249,9 +253,12 @@ sub print_deidentify {
     print $m->ent->as_string
       or die $!;
 }
-if ($opt{deidentify}) {
+
+if (@deidentify) {
     require Chj::Ml2json::Debug;
-    print_deidentify $opt{deidentify};
+    print_deidentify $_
+      for @deidentify;
+    exit 0;
 }
 
 if ($opt{show_mbox_path}) {
