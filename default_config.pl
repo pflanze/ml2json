@@ -1,3 +1,7 @@
+
+# NOTE: the config is Perl code, and it is hence not safe to let
+# entities with lower privileges change it.
+
 use Chj::numcores;
 
 +{
