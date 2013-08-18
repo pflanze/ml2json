@@ -484,7 +484,7 @@ sub MIME_Entity_origplain_origrich_orightml {
 		    my $lcstr= lc($$rf);
 		    if (! ($lcstr=~ /<(?:html|body|p|br|div|span|a|ul|ol)\b/
 			   or
-			   $lcstr=~ /\&lt;/)) {
+			   $lcstr=~ /\&(?:lt|amp|auml|ouml|uuml);/)) {
 			WARN("claimed text/html content doesn't look like html, treating as plain text instead");
 			$pos=0;
 		    }
