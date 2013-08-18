@@ -6,6 +6,9 @@ use Chj::numcores;
   max_thread_duration=> "1 month",
   good_words_path=> "$mydir/good_words.txt",
 
+  # whether to check whether a body claimed to be HTML really is
+  # looking like it, and if it doesn't, treat as plain text instead:
+  do_confirm_html=> 1,
   # whether to turn a<br><br>b into <p>a</p><p>b</p> in html mapper
   # (for the richtext and plain to html conversions, paragraphy is
   # always done):

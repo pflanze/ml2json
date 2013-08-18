@@ -25,22 +25,28 @@ use Chj::Ml2json::MIMEExtract ":all"; # MIME_Entity_*
 use Chj::Struct [], 'Chj::Ml2json::Mailcollection::Message';
 
 sub origplain_origrich_orightml {
-    my ($m)=@_;
-    $$m{_origplain_origrich_orightml}||=
-      [MIME_Entity_origplain_origrich_orightml ($m->ent)];
-    @{$$m{_origplain_origrich_orightml}}
+    @_==2 or die;
+    my ($m,$do_confirm_html)=@_;
+    my $key= ("_origplain_origrich_orightml"
+	      .($do_confirm_html ? 1 : 0));
+    $$m{$key}||=
+      [MIME_Entity_origplain_origrich_orightml ($m->ent, $do_confirm_html)];
+    @{$$m{$key}}
 }
 
 
 sub origplain_origrich_orightml_string {
-    my ($m)=@_;
-    $$m{_origplain_origrich_orightml_string}||=
+    @_==2 or die;
+    my ($m,$do_confirm_html)=@_;
+    my $key= ("_origplain_origrich_orightml_string"
+	      .($do_confirm_html ? 1 : 0));
+    $$m{$key}||=
       [
        map {
 	   defined ($_) ? ${MIME_Entity_body_as_stringref($_)} : $_
-       } $m->origplain_origrich_orightml
+       } $m->origplain_origrich_orightml ($do_confirm_html)
       ];
-    @{$$m{_origplain_origrich_orightml_string}}
+    @{$$m{$key}}
 }
 
 

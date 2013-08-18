@@ -149,7 +149,8 @@ use Chj::Struct ["jsonfields_orig_headers",
 		 "htmlmapper",
 		 "enrichedmapper",
 		 "textstripper",
-		 "textstripper_htmlmapper_class"
+		 "textstripper_htmlmapper_class",
+		 "do_confirm_html",
 		];
 
 
@@ -351,21 +352,21 @@ sub json_orig_plain {
     my $s=shift;
     @_==2 or die;
     my ($m,$index)=@_;
-    ($m->origplain_origrich_orightml_string)[0]
+    ($m->origplain_origrich_orightml_string ($$s{do_confirm_html}))[0]
 }
 
 sub json_orig_enriched {
     my $s=shift;
     @_==2 or die;
     my ($m,$index)=@_;
-    ($m->origplain_origrich_orightml_string)[1]
+    ($m->origplain_origrich_orightml_string ($$s{do_confirm_html}))[1]
 }
 
 sub json_orig_html_dangerous {
     my $s=shift;
     @_==2 or die;
     my ($m,$index)=@_;
-    ($m->origplain_origrich_orightml_string)[2]
+    ($m->origplain_origrich_orightml_string ($$s{do_confirm_html}))[2]
 }
 
 sub html {
@@ -373,8 +374,10 @@ sub html {
     @_==1 or die;
     my ($m)=@_;
     $$m{_OutputJSON_html} ||= do {
-	my ($pl,$rt,$ht)= $m->origplain_origrich_orightml;
-	my ($pl_,$rt_,$ht_)= $m->origplain_origrich_orightml_string;
+	my ($pl,$rt,$ht)=
+	  $m->origplain_origrich_orightml ($$s{do_confirm_html});
+	my ($pl_,$rt_,$ht_)=
+	  $m->origplain_origrich_orightml_string ($$s{do_confirm_html});
 	# keep this logic in sync with the html_choice method!
 	($ht_ ? $s->_cleanuphtml($ht_,$ht) :
 	 $rt_ ? $s->_enriched2html($rt_,$rt) :
@@ -387,7 +390,8 @@ sub html_choice {
     my $s=shift;
     @_==1 or die;
     my ($m)=@_;
-    my ($pl_,$rt_,$ht_)= $m->origplain_origrich_orightml_string;
+    my ($pl_,$rt_,$ht_)=
+      $m->origplain_origrich_orightml_string ($$s{do_confirm_html});
     # keep this logic in sync with the html method!
     ($ht_ ? "html" :
      $rt_ ? "rich" :

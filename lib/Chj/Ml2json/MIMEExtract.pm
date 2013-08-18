@@ -428,7 +428,8 @@ sub MIME_Entity_body_as_stringref {
 
 
 sub MIME_Entity_origplain_origrich_orightml {
-    my $s=shift;
+    @_==2 or die;
+    my ($s,$do_confirm_html)=@_;
     if (my $alt_or_single=
 	MIME_Entity_maybe_alternative_or_singletext_valuedentity ($s)) {
 	if ($alt_or_single->is_alternative) {
@@ -477,6 +478,17 @@ sub MIME_Entity_origplain_origrich_orightml {
 		"text/html"=> 2,
 	       }->{$ct};
 	    if (defined $pos) {
+		if ($pos == 2 and $do_confirm_html) {
+		    # check whether content really seems to be HTML
+		    my $rf= MIME_Entity_body_as_stringref ($single);
+		    my $lcstr= lc($$rf);
+		    if (! ($lcstr=~ /<(?:html|body|p|br|div|span|a|ul|ol)\b/
+			   or
+			   $lcstr=~ /\&lt;/)) {
+			WARN("claimed text/html content doesn't look like html, treating as plain text instead");
+			$pos=0;
+		    }
+		}
 		my @res= (undef,undef,undef);
 		$res[$pos]= $single;
 		@res

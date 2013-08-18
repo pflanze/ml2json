@@ -348,6 +348,7 @@ our $outputjson= Chj::Ml2json::OutputJSON->new
    $enrichedmapper,
    $textstripper,
    "Chj::Ml2json::Parse::HTML",
+   $opt{do_confirm_html},
   );
 
 use Chj::PXML::Serialize 'pxml_xhtml_print_fast';
@@ -450,7 +451,7 @@ sub do_output_message {
 		    undef
 		}
 	    };
-	    my @choice= $m->origplain_origrich_orightml_string;
+	    my @choice= $m->origplain_origrich_orightml_string ($opt{do_confirm_html});
 	    my $choice= array_zip2 \@choice, [qw(plain rich html)];
 	    my $choosen= $outputjson->html_choice($m);
 
