@@ -412,15 +412,17 @@ sub MIME_Entity_body_as_stringref {
     # the body, but bodyhandle only is available for parts that were
     # decoded; thus have to try both. Crazy?
     my ($s)=@_;
-    if (my $bh= $s->bodyhandle) {
-	#$bh->as_string
-	# even more crazily, charset decoding is not done by the
-	# as_string method, thus:
-	bodyhandle_decoding_read_all_ref
-	  ($bh, MIME_Entity_body_maybe_charset ($s));
-    } else {
-	WARN "no bodyhandle, thus falling back to ->body_as_string";
-	\($s->body_as_string)
+    $$s{__ml2json_MIME_Entity_body_as_stringref}||= do {
+	if (my $bh= $s->bodyhandle) {
+	    #$bh->as_string
+	    # even more crazily, charset decoding is not done by the
+	    # as_string method, thus:
+	    bodyhandle_decoding_read_all_ref
+	      ($bh, MIME_Entity_body_maybe_charset ($s));
+	} else {
+	    WARN "no bodyhandle, thus falling back to ->body_as_string";
+	    \($s->body_as_string)
+	}
     }
 }
 
