@@ -282,7 +282,7 @@ sub parse_tree {
 	$s->parse_mbox ($path,$tmp,$maybe_max_date_deviation)
     } elsif ($st->is_dir) {
 	my $mboxcoll= $s->parse_mbox_dir
-	  ($path,$tmp,$maybe_max_date_deviation,$maybe_seen_abspaths);
+	  ($path,$tmp,$maybe_max_date_deviation,$seen_abspaths);
 	if ($s->recurse) {
 	    my $dircoll=
 	      Chj::Ml2json::Mailcollection::Tree->new
