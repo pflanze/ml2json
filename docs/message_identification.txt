@@ -4,7 +4,8 @@ Messages are identified in two ways:
    opposed to message_id), which is the message's "Message-ID" field
    value if usable (i.e. there is exactly one such header, and it has
    some non-empty content), or a newly created ID to take its
-   place. Meant to identify a particular post
+   place. Meant to identify a particular *post*. Newly created IDs are
+   currently using the identify string as described below.
 
  * "identify" string: identification of the mbox and the index of the
    message therein. Can be used to find the original message
@@ -14,3 +15,10 @@ Messages are identified in two ways:
    the same "id" value; a WARN will be issued if that happens and all
    except one instance of the post will be ignored.
 
+   identify = md5(path_to_the_mbox) + "/" + position_within_the_mbox
+
+   Note that path_to_the_mbox is not expanded (made absolute), but
+   directly derived from the source path given to ml2json. Also
+   superfluous slashes are not eliminated, thus e.g. "ml2json foo/ .." 
+   will lead to different values than "ml2json foo ...". See TODO for
+   suggestions to change this.
