@@ -94,11 +94,8 @@ sub fixup_msg {
     die NoBodyException;
 }
 
-use Carp qw(carp cluck);
 sub unless_seen_path ($$$) {
     my ($seen_abspaths,$path,$thunk)=@_;
-    use Data::Dumper;
-    cluck "===unless_seen_path($path): ".Dumper $seen_abspaths;
     if (defined (my $ap= abs_path $path)) {
 	if ($$seen_abspaths{$ap}) {
 	    WARN "already processed path '$ap'";
@@ -260,7 +257,6 @@ sub parse_mbox_dir {
     my $s=shift;
     @_==3 or @_==4 or die;
     my ($dirpath,$tmp,$maybe_max_date_deviation,$maybe_seen_abspaths)=@_;
-    warn "parse_mbox_dir('$dirpath')";
     my $seen_abspaths= $maybe_seen_abspaths||{};
     # does not go into subdirectories of $dirpath
     Chj::Ml2json::Mailcollection::Tree
@@ -289,7 +285,6 @@ sub parse_tree {
     my $s=shift;
     @_==3 or @_==4 or die;
     my ($path,$tmp,$maybe_max_date_deviation,$maybe_seen_abspaths)=@_;
-    warn "parse_tree('$path')";
     my $seen_abspaths= $maybe_seen_abspaths||{};
     my $st= xstat $path;
     if ($st->is_file) {
@@ -321,7 +316,6 @@ sub parse_trees {
     my $s=shift;
     @_==3 or @_==4 or die;
     my ($paths,$tmp,$maybe_max_date_deviation,$maybe_seen_abspaths)=@_;
-    warn "parse_trees(@$paths)";
     my $seen_abspaths= $maybe_seen_abspaths||{};
     Chj::Ml2json::Mailcollection::Tree->new
 	([
