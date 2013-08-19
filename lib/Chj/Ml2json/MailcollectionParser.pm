@@ -116,8 +116,8 @@ sub unless_seen_path ($$$) {
 sub path_simplify ($) {
     my ($str)=@_;
     $str=~ s|/+|/|sg;
-    $str=~ s{(^|/)\./+}{$1}s;
-    $str=~ s{/+\.(/|$)}{$1}s;
+    $str=~ s{(^|/)\./+}{$1}sg;
+    $str=~ s{/+\.(/|$)}{$1}sg;
     $str
 }
 
@@ -135,6 +135,7 @@ TEST{path_simplify "./bar/."} 'bar';
 TEST{path_simplify "../bar"} '../bar';
 TEST{path_simplify "bar/."} 'bar';
 TEST{path_simplify "bar/.."} 'bar/..';
+TEST{path_simplify "/./foo//./bar/."} '/foo/bar';
 
 
 
