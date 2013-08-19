@@ -33,6 +33,9 @@ sub usage {
   have precedence. Sourcepath(s) can be configured as a 'sourcepaths'
   config key holding an array.
 
+  The --json-to, --html-to and --source-to actions can be combined in
+  the same run.
+
 
   Actions:
 
