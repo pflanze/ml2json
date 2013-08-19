@@ -99,13 +99,17 @@ sub unless_seen_path ($$$) {
     my ($seen_abspaths,$path,$thunk)=@_;
     use Data::Dumper;
     cluck "===unless_seen_path($path): ".Dumper $seen_abspaths;
-    my $ap= abs_path $path;
-    if ($$seen_abspaths{$ap}) {
-	WARN "already processed path '$ap'";
-	()
+    if (defined (my $ap= abs_path $path)) {
+	if ($$seen_abspaths{$ap}) {
+	    WARN "already processed path '$ap'";
+	    ()
+	} else {
+	    $$seen_abspaths{$ap}=1;
+	    &$thunk
+	}
     } else {
-	$$seen_abspaths{$ap}=1;
-	&$thunk
+	WARN "can't get abspath of '$path': $!";
+	()
     }
 }
 
