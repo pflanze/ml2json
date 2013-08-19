@@ -58,6 +58,7 @@ use Chj::FP2::Stream ':all';
 use Chj::Ml2json::Mailcollection;
 use Cwd 'abs_path';
 use Chj::Ml2json::Exceptions;
+use Chj::TEST;
 
 # date parsing is complicated matters with there being software not
 # creating standard conform formats, especially if there are emails
@@ -111,6 +112,33 @@ sub unless_seen_path ($$$) {
 }
 
 
+# XX move to some lib?
+sub path_simplify ($) {
+    my ($str)=@_;
+    $str=~ s|/+|/|sg;
+    $str=~ s{(^|/)\./+}{$1}s;
+    $str=~ s{/+\.(/|$)}{$1}s;
+    $str
+}
+
+
+TEST{path_simplify "" } '';
+TEST{path_simplify "foo" } 'foo';
+TEST{path_simplify "foo/"} 'foo/'; # doesn't help with that. ok.
+TEST{path_simplify "foo//bar"} 'foo/bar';
+TEST{path_simplify "//foo//bar"} '/foo/bar';
+TEST{path_simplify "//foo/./bar"} '/foo/bar';
+TEST{path_simplify "//foo//./bar"} '/foo/bar';
+TEST{path_simplify "//foo/.//bar"} '/foo/bar';
+TEST{path_simplify "./bar"} 'bar';
+TEST{path_simplify "./bar/."} 'bar';
+TEST{path_simplify "../bar"} '../bar';
+TEST{path_simplify "bar/."} 'bar';
+TEST{path_simplify "bar/.."} 'bar/..';
+
+
+
+
 use Chj::Struct "Chj::Ml2json::MailcollectionParser"=>
   ['messageclass', # class name
    'mbox_glob', # filename-matching glob string
@@ -125,11 +153,7 @@ sub parse_mbox_ghost {
     # $maybe_max_date_deviation: seconds max allowed deviation between
     # Date header and mbox time
 
-    my $mboxpathhash= do {
-	my $str= $mboxpath;
-	$str=~ s|/+|/|sg;
-	md5_hex($str);
-    };
+    my $mboxpathhash= md5_hex(path_simplify $mboxpath);
     my $mboxtargetbase= "$tmp/$mboxpathhash";
 
     my $Do= sub {
