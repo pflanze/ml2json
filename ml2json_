@@ -133,8 +133,9 @@ sub usage {
       like '1 day' or '1d and 5h'; bare numbers are interpreted as
       seconds.
 
-  (Option names can be shortened as long as they are unambiguous and
-  that you take the risk for future ambiguity.)
+  (Option names can be shortened when given as command arguments (not
+  when given in config files) as long as they are unambiguous and that
+  you take the risk for future ambiguity.)
 
   (Christian Jaeger <$email>)
 ";
