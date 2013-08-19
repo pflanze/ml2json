@@ -262,8 +262,13 @@ sub parse_mbox_dir {
     Chj::Ml2json::Mailcollection::Tree
 	->new([
 	       map {
-		   unless_seen_path $seen_abspaths, $_, sub {
-		       $s->parse_mbox_ghost($_,$tmp,$maybe_max_date_deviation)
+		   if (-d $_) {
+		       # glob might match dirs, too!
+		       ()
+		   } else {
+		       unless_seen_path $seen_abspaths, $_, sub {
+			   $s->parse_mbox_ghost($_,$tmp,$maybe_max_date_deviation)
+		       }
 		   }
 	       } glob quotemeta($dirpath)."/".$s->mbox_glob
 	      ]);
