@@ -125,7 +125,11 @@ sub parse_mbox_ghost {
     # $maybe_max_date_deviation: seconds max allowed deviation between
     # Date header and mbox time
 
-    my $mboxpathhash= md5_hex($mboxpath);
+    my $mboxpathhash= do {
+	my $str= $mboxpath;
+	$str=~ s|/+|/|sg;
+	md5_hex($str);
+    };
     my $mboxtargetbase= "$tmp/$mboxpathhash";
 
     my $Do= sub {
