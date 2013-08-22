@@ -3,13 +3,13 @@ INSTALL
 MANIFEST
 README
 TODO
+default_config.pl
 docs/hacking.txt
 docs/mbox.txt
 docs/message_identification.txt
 docs/phases.txt
 docs/usage.txt
 docs/warnings.txt
-example_config.pl
 good_words.txt
 lib/Chj/FP/ArrayUtil.pm
 lib/Chj/FP/Array_sort.pm
@@ -19,6 +19,7 @@ lib/Chj/Ghostable.pm
 lib/Chj/MIME/EncWords.pm
 lib/Chj/Ml2json/Color.pm
 lib/Chj/Ml2json/Debug.pm
+lib/Chj/Ml2json/Exceptions.pm
 lib/Chj/Ml2json/MIMEExtract.pm
 lib/Chj/Ml2json/Mailcollection.pm
 lib/Chj/Ml2json/Mailcollection/Message.pm
@@ -31,6 +32,7 @@ lib/Chj/Ml2json/Parse.pm
 lib/Chj/Ml2json/Parse/HTML.pm
 lib/Chj/Ml2json/Parse/HTMLUtil.pm
 lib/Chj/Ml2json/Parse/Plain.pm
+lib/Chj/Ml2json/Parse/TextStripper.pm
 lib/Chj/Ml2json/TestMailcollectionIndex.pm
 lib/Chj/Ml2json/m2h_text_enriched.pm
 lib/Chj/Mylock.pm
@@ -53,4 +55,5 @@ lib/Chj/Try.pm
 lib/Chj/numcores.pm
 lib/Chj/tempdir.pm
 ml2json
+ml2json_
 t/parallel
