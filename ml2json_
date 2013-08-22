@@ -33,6 +33,10 @@ sub usage {
   have precedence. Sourcepath(s) can be configured as a 'sourcepaths'
   config key holding an array.
 
+  Sourcepaths can be files ending in .gz or .bz2, in which case they
+  are uncompressed on the fly. (Note that this leads to different
+  identify values, though.)
+
   The --json-to, --html-to and --source-to actions can be combined in
   the same run.
 
