@@ -12,11 +12,14 @@ Chj/Unix/Signal.pm
 Chj/Unix/exitcode.pm
 Chj/chompspace.pm
 Chj/noTEST.pm
+Chj/opencachefile.pm
 Chj/singlequote.pm
 Chj/xopen.pm
+Chj/xopengzip.pm
 Chj/xperlfunc.pm
 Chj/xpipe.pm
 Chj/xtmpdir.pm
 Class/Array.pm
 MANIFEST
 README
+t/opencachefile
