@@ -118,7 +118,7 @@ sub usage {
                 relative, it is output as a relative URI (i.e. no
                 file:// prefix).
 
-    --max-thread-duration duration[*]
+    --max-thread-duration duration[1]
                 When encountering emails with no or no known
                 in-reply-to and references headers, group them into
                 the same thread according to their subject line as
@@ -126,7 +126,7 @@ sub usage {
                 subject and the last one doesn't exceed the given
                 duration. Pass '0' to disable. Default: '$$config{max_thread_duration}'.
 
-    --max-date-deviation duration[*]
+    --max-date-deviation duration[1]
                 When mbox separators (lines starting with 'From ')
                 contain time stamps, and those deviate more than
                 <duration> from the Date header contained in the mail
@@ -137,11 +137,14 @@ sub usage {
                 were copied around.
 
     --jobs n
-                use n instead of the default $$config{jobs} jobs in parallel
+                use n instead of the default $$config{jobs}\[2] jobs in parallel
 
-  [*] duration can be anything that Time::Duration::Parse supports,
+  [1] duration can be anything that Time::Duration::Parse supports,
       like '1 day' or '1d and 5h'; bare numbers are interpreted as
       seconds.
+
+  [2] default number of jobs is derived from the number of cores on
+      the machine the program is running on.
 
   (Option names can be shortened when given as command arguments (not
   when given in config files) as long as they are unambiguous and that
