@@ -76,6 +76,8 @@ fun htmlmap ($e) {
     my $name= lc($e->tag);
     my $atts=();
     for ($e->all_external_attr_names) {
+	next if $_ eq "/";
+	die "att name '$_'" unless /^\w+\z/s;
 	$$atts{lc $_}= $e->attr($_);
     }
     Chj::PXML->new

@@ -323,7 +323,12 @@ sub _map_body {
     if (local our $fn= $$map{$name}) {
 	local %att=();
 	for ($e->all_external_attr_names) {
-	    $att{lc $_}= $e->attr($_);
+	    next if $_ eq "/";
+	    if (/^\w+\z/s) {
+		$att{lc $_}= $e->attr($_);
+	    } else {
+		NOTE "ignoring invalid attribute with name '$_'";
+	    }
 	}
 	local $content_subtype= $$s{content_subtype};
 	local $do_paragraphy= $$s{do_paragraphy};
