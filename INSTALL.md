@@ -7,14 +7,14 @@ Github repositories).
 The other non-standard dependencies can be installed on a
 Debian-derived Linux system using:
 
- apt-get install libmime-tools-perl libemail-date-perl \
-   libhtml-tree-perl libmime-encwords-perl \
-   libmail-box-perl libtime-duration-parse-perl
+    apt-get install libmime-tools-perl libemail-date-perl \
+      libhtml-tree-perl libmime-encwords-perl \
+      libmail-box-perl libtime-duration-parse-perl
 
 Or install MIME::Tools, HTML::Tree, MIME::EncWords, Email::Date,
 Mail::Message::Field::Date and Time::Duration::Parse from CPAN (run
 'cpan' or 'perl -MCPAN -e shell' then 'install MIME::Tools' etc.)
 
 
-For usage information, run "./ml2json --help", and read the files in
-the "docs" folder.
+For usage information, run `./ml2json --help`, and read
+[usage](docs/usage.xhtml) and the other files in the "docs" folder.
