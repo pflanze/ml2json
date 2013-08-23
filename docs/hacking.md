@@ -70,7 +70,7 @@ source):
             # oops, prints the empty array since $squares_below was set to
             # undef by stream_length
 
- This version works as intended:
+        This version works as intended:
 
             use Chj::FP2::Stream ':all';
             use Data::Dumper;
@@ -87,8 +87,8 @@ source):
             }
             print Dumper(squares_below 10);
 
- Also, Perl as of version v5.14.2 has some issue with nested
- expressions in this case--this leaks:
+        Also, Perl as of version v5.14.2 has some issue with nested
+        expressions in this case--this leaks:
 
             sub squares_below {
                 my ($n)=@_;
@@ -100,9 +100,9 @@ source):
                 stream2array $squares_below2;
             }
 
- probably because something doesn't work right with intermediate
- values on the stack. Binding intermediate values to named variables
- seems to work reliably.
+        probably because something doesn't work right with intermediate
+        values on the stack. Binding intermediate values to named variables
+        seems to work reliably.
 
 * When debugging, you may want to run ml2json with the `--jobs 1` option
 so as to force it to run everything in the same process.
