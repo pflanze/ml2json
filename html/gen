@@ -1,0 +1,157 @@
+#!/usr/bin/perl -w
+
+(my $email='ch%christianjaeger,ch')=~ tr/%,/@./;
+
+use strict;
+use Function::Parameters qw(:strict);
+
+my ($mydir, $myname);
+BEGIN {
+    $0=~ /(.*?)([^\/]+)\z/s or die "?";
+    ($mydir, $myname)=($1,$2);
+}
+use lib "$mydir/../perllib";
+use lib "$mydir/../ftemplate/lib";
+use lib "$mydir/../lib";
+
+our $outbase= "$mydir/out";
+
+mkdir $outbase;
+
+use Text::Markdown 'markdown';
+use Chj::IO::Command;
+use Chj::xperlfunc ':all';
+use Chj::xopen ":all";
+
+our $c= Chj::IO::Command->new_sender("git","ls-files","-z");
+our $files= [grep {
+    /\.md$/
+} $c->xreadline0chop];
+$c->xxfinish;
+
+fun path0 ($path) {
+    ## ugly way to strip path prefix
+    my $path0= $path;
+    while ($path0=~ s|^\.\./||){}; die if $path0=~ /\.\./;
+    $path0
+}
+
+fun suffix_md2html ($path0) {
+    if ($path0 eq "README.md") {
+	"index.html"
+    } else {
+	$path0=~ s/\.md$/.xhtml/ or die;
+	$path0
+    }
+}
+
+fun path02html ($path0) {
+    "$outbase/".suffix_md2html($path0)
+}
+
+fun getfile ($path) {
+    my $in= xopen_read ($path);
+    binmode $in, ":utf8" or die;
+    $in->xcontent
+}
+
+fun putfile ($path,$str) {
+    my $out= xopen_write($path);
+    binmode $out, ":utf8" or die;
+    $out->xprint($str);
+    $out->xclose;
+}
+
+use HTML::TreeBuilder;
+fun htmlparse_raw ($htmlstr,$whichtag) {
+    my $t= HTML::TreeBuilder->new;
+    $t->parse_content ($htmlstr);
+    my $e= $t->elementify;
+    # (^ actually mutates $t into the HTML::Element object already, ugh)
+    $e->find_by_tag_name($whichtag)
+}
+
+use Chj::PXML;
+fun htmlmap ($e) {
+    my $name= lc($e->tag);
+    my $atts=();
+    for ($e->all_external_attr_names) {
+	$$atts{lc $_}= $e->attr($_);
+    }
+    Chj::PXML->new
+	($name,
+	 $atts,
+	 [
+	  map {
+	      if (ref $_) {
+		  # another HTML::Element
+		  no warnings "recursion";# XX should rather sanitize input?
+		  htmlmap ($_)
+	      } else {
+		  # a string
+		  $_
+	      }
+	  } @{$e->content||[]}
+	 ]);
+}
+
+fun htmlparse ($str,$whichtag) {
+    htmlmap htmlparse_raw ($str,$whichtag)
+}
+
+use Chj::PXML::Serialize 'pxml_xhtml_print_fast';
+
+fun puthtmlfile ($path,$p) {
+    my $out= xopen_write($path);
+    binmode $out, ":utf8" or die;
+    pxml_xhtml_print_fast($p, $out, "en");# hard coded lang
+    $out->xclose;
+}
+
+use Chj::PXHTML ":all";
+use Chj::FP::ArrayUtil ":all";
+use File::Spec;
+
+fun genfile ($path) {
+    my $path0= path0 $path;
+    my $outpath= path02html($path0);
+    mkdir dirname( $outpath);
+    my $body= htmlparse(markdown (getfile $path), "body");
+
+    my ($h1,$body1)= do {
+	my $body0= $body->body;
+	my $b0= array_first($body0);
+	if ($b0->name eq "h1") {
+	    ($b0, array_rest($body0))
+	} else {
+	    (H1(ucfirst(basename $path0,".md")), $body0)
+	}
+    };
+
+    puthtmlfile($outpath,
+		HTML (
+		      TITLE ($path0),
+		      BODY(
+			   UL(
+			      array_map
+			      (
+			       fun ($file0) {
+				   LI(
+				      ($file0 eq $path0) ?
+				      $file0
+				      : A ({href=>
+					    File::Spec->abs2rel
+					    (suffix_md2html($file0),
+					     dirname($path0))},
+					   $file0))
+			       },
+			       array_map \&path0, $files)),
+			   HR ({width=> "30%"}),
+			   $h1,
+			   $body1)));
+}
+
+genfile $_ for @$files;
+
+#use Chj::ruse;
+#use Chj::Backtrace; use Chj::repl; repl;
