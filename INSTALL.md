@@ -1,3 +1,7 @@
+Get it from the [Github repo](https://github.com/pflanze/ml2json):
+
+    git clone https://github.com/pflanze/ml2json.git
+
 For convenience, the (required parts of my) ftemplate and perllib
 libraries have been merged into this repository for now (in the
 future, I will properly package those libraries as separate CPAN
