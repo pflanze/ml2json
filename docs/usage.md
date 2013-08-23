@@ -11,7 +11,7 @@ done. If you want to keep the generated attachments, specify the
 --attachment-basedir option.
 
 3. it's possible to customize what fields are output in the JSON by
-using a config file; see example_config.pl and ./mk2json --help.
+using a config file; see default_config.pl and ./mk2json --help.
 
 4. run './mk2json sourcedir targetfile', perhaps with the additional
 options of your choice (in particular you need to use the --mbox-glob
