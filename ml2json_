@@ -95,6 +95,8 @@ sub usage {
                 previous ones (with regards to the keys of the top
                 level hash ref). The previously loaded config can be
                 accessed from \$main::config.
+                Keys in the config file use underscore to separate
+                words, not '-'.
 
     --verbose   show NOTEs in addition to WARNings on stderr
 
