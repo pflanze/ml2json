@@ -8,7 +8,7 @@ importance levels:
  * a WARN level that is used for cases when it worries that something
    done in the conversion may not be right,
 
- * __WARN__ is used whenever Perl or some third party library issues a
+ * \__WARN__ is used whenever Perl or some third party library issues a
    warning itself
 
  * ERROR when there was an exception while handling a message or
@@ -17,7 +17,7 @@ importance levels:
    will be skipped. Should not normally happen (i.e. might indicate a
    bug, please report).
 
-(I may add a --quiet option that silences WARN and __WARN__)
+(I may add a --quiet option that silences WARN and \__WARN__)
 
 In all cases after the level indicator there is an indication of the
 context in which the issue has happened, which is either an "identify"
@@ -27,7 +27,7 @@ useful.
 
 Examples / particular warnings explained:
 
- NOTE[/run/shm/chris/ml2json/b1946ac92492d2347c6235b4d2611184/0/__meta]: unknown message with messageid '591785b794601e212b260e25925636fd@abc.com' given in in-reply-to header of b1946ac92492d2347c6235b4d2611184/0 at lib/Chj/Ml2json/Mailcollection.pm line 173
+    NOTE[/run/shm/chris/ml2json/b1946ac92492d2347c6235b4d2611184/0/__meta]: unknown message with messageid '591785b794601e212b260e25925636fd@abc.com' given in in-reply-to header of b1946ac92492d2347c6235b4d2611184/0 at lib/Chj/Ml2json/Mailcollection.pm line 173
 
 This means that none of the mbox files that were read by ml2json
 contained any message with message-id
@@ -41,10 +41,8 @@ having a in-reply-to header that lists the mail that was private.
 
 It could also happen if the first reply was actually sent to the list,
 but not archived for some reason. Actually with NNTP (Usenet news)
-there is a "X-No-Archive" header that people can set so that their
+there is a ["X-No-Archive"] [1] header that people can set so that their
 message is distributed to the public but not archived on the servers;
 perhaps some mailing list software respects that as well.
 
-[1] http://en.wikipedia.org/wiki/X-No-Archive
-
-
+[1]: http://en.wikipedia.org/wiki/X-No-Archive
