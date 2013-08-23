@@ -113,6 +113,33 @@ fun puthtmlfile ($path,$p) {
 use Chj::PXHTML ":all";
 use Chj::FP::ArrayUtil ":all";
 use File::Spec;
+use Chj::FP::Array_sort;
+
+
+our $sortorder=
+  [qw(
+	 README.md
+	 INSTALL.md
+	 docs/usage.md
+	 docs/phases.md
+	 docs/message_identification.md
+	 docs/warnings.md
+	 TODO.md
+	 docs/hacking.md
+	 docs/mbox.md
+	 COPYING.md
+    )];
+
+our $path02sortkey= do {
+    my $sortprio= do {
+	my $i=1;
+	+{map { $_=> sprintf('-%04d', $i++) } @$sortorder}
+    };
+    fun ($path0) {
+	$$sortprio{$path0} || $path0
+    }
+};
+
 
 fun genfile ($path) {
     my $path0= path0 $path;
@@ -147,7 +174,9 @@ fun genfile ($path) {
 					     dirname($path0))},
 					   $file0))
 			       },
-			       array_map \&path0, $files)),
+			       Array_sort
+			       (array_map( \&path0, $files),
+				On $path02sortkey, \&String_cmp))),
 			   HR ({width=> "30%"}),
 			   $h1,
 			   $body1)));
