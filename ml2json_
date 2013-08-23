@@ -9,6 +9,7 @@ our ($mydir, $myname);
 BEGIN {
     $0=~ /(.*?)([^\/]+?)_?\z/s or die "?";
     ($mydir, $myname)=($1,$2);
+    $mydir= $ENV{ML2JSON_MYDIR} if $ENV{ML2JSON_MYDIR};
 }
 use lib "$mydir/perllib";
 use lib "$mydir/ftemplate/lib";
@@ -89,14 +90,14 @@ sub usage {
     --config myconfig.pl
                 load given file containing perl code, which must end
                 with a perl hashref; see default configuration in
-                '$default_config_path' for the options that can be set
-                that way.  Several --config options can be given, each
-                subsequent one overrides options loaded from the
-                previous ones (with regards to the keys of the top
-                level hash ref). The previously loaded config can be
-                accessed from \$main::config.
-                Keys in the config file use underscore to separate
-                words, not '-'.
+                '$default_config_path'
+                for the options that can be set that way.  Several
+                --config options can be given, each subsequent one
+                overrides options loaded from the previous ones (with
+                regards to the keys of the top level hash ref). The
+                previously loaded config can be accessed from
+                \$main::config.  Keys in the config file use
+                underscore to separate words, not '-'.
 
     --verbose   show NOTEs in addition to WARNings on stderr
 
