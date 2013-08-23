@@ -13,10 +13,10 @@ done. If you want to keep the generated attachments, specify the
 3. it's possible to customize what fields are output in the JSON by
 using a config file; see default_config.pl and `./mk2json --help`.
 
-4. run `./mk2json sourcedir targetfile`, perhaps with the additional
-options of your choice (in particular you need to use the `--mbox-glob`
-option, if the files are not named according to the default mbox glob
-pattern, `*.mbox`).
+4. run `./mk2json sourcedir --json-to targetfile`, perhaps with the
+additional options of your choice (in particular you need to use the
+`--mbox-glob` option, if the files are not named according to the
+default mbox glob pattern, `*.mbox`).
 
 5. the temp / attachments dir is structured as follows:
 
@@ -34,9 +34,7 @@ pattern, `*.mbox`).
  `$n` is the natural number of the position of the email in the mbox.
 
  You can run ml2json `--deidentify "$md5_of_mbox_path/$n"` to make it
- print the original message string (as it was cut out of the mbox file;
- although it regenerates the representation from the parsed
- representation, so will not necessarily be bit identical).
+ print the original message string (as it was cut out of the mbox file).
 
 6. optionally, to clean up the generated temporary / attachments
 files, run ml2json with the `--cleanup` option; if you gave the
