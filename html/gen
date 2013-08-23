@@ -140,12 +140,45 @@ our $path02sortkey= do {
     }
 };
 
+my $usagehook= 'Run `./ml2json --help`.';
+use Chj::xpipe;
+sub helptext {
+    my ($path,$path0)=@_;
+    ## (ugly again)
+    my $diff= substr ($path, 0, length ($path) - length( $path0));
+    my ($r,$w)= xpipe;
+    if (xfork) {
+	$w->xclose;
+	my $str=$r->xcontent;
+	xwait;
+	warn "error in subprocess, $?" unless $? == 0;
+	$str
+    } else {
+	#$r->xclose;
+	local $ENV{ML2JSON_MYDIR}=".";
+	open STDOUT, ">&".fileno($w) or die $!;
+	open STDERR, ">&".fileno($w) or die $!;
+	xchdir $diff if length $diff;
+	xexec "./ml2json","--help";
+    }
+}
 
 fun genfile ($path) {
     my $path0= path0 $path;
     my $outpath= path02html($path0);
     mkdir dirname( $outpath);
-    my $body= htmlparse(markdown (getfile $path), "body");
+    my $str= getfile $path;
+    if ($path0 eq "docs/usage.md") {
+	$str=~ s{\Q$usagehook}{
+	    my $str= helptext($path,$path0);
+	    $str=~ s/^/    /mg;
+	    "Skip to 'instructions' below to see a recipe.\n\n".
+	    "    \$ ./ml2json --help\n".
+	      $str
+	}e or warn "no match"
+    }
+
+    my $body= htmlparse(markdown ($str), "body");
 
     my ($h1,$body1)= do {
 	my $body0= $body->body;

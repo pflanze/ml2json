@@ -1,3 +1,11 @@
+Help text
+---------
+
+Run `./ml2json --help`.
+
+Instructions
+------------
+
 1. collect all mbox files your archive is comprised of into one
 directory (or directory tree, if you use the `--recurse` option)
 
