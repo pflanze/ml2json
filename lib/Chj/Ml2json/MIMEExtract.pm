@@ -282,8 +282,8 @@ sub MIME_Entity_maybe_alternative_or_singletext_valuedentity {
     my $s=shift;
     if (my $l= MIME_Entity_alternative_or_singletext_valuedentity_list($s)) {
 	my $a= list2array ($l);
-	local our $a2= Array_sort $a,
-	  On(\&Chj::Ml2json::MIMEExtract::ValuedEntity::x, Complement(\&Number_cmp));
+	local our $a2= array_sort $a,
+	  on(\&Chj::Ml2json::MIMEExtract::ValuedEntity::x, complement(\&number_cmp));
 	#use Chj::repl;repl if @$a2 > 1;##  hm don't have a message to test
 	$$a2[0] #->ent no, need to see outside what it was
     } else {
@@ -378,9 +378,9 @@ sub bodyhandle_decoding_read_all_ref ($$) {
 	       maybe_Decoded($ref0,$_) or ()
 	   } @$alternative_encodings];
 	local our $sorted_attempts=
-	  Array_sort ([@$doneattempts,@$moreattempts],
-		      On (the_method "score",
-			  \&Number_cmp));
+	  array_sort ([@$doneattempts,@$moreattempts],
+		      on (the_method "score",
+			  \&number_cmp));
 	@$sorted_attempts or die "hu, no attempted decoding worked at all";
 	local our $best= $$sorted_attempts[-1];
 	NOTE "best alternative encoding found: ".$best->encoding;

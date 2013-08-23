@@ -174,9 +174,9 @@ fun genfile ($path) {
 					     dirname($path0))},
 					   $file0))
 			       },
-			       Array_sort
+			       array_sort
 			       (array_map( \&path0, $files),
-				On $path02sortkey, \&String_cmp))),
+				on $path02sortkey, \&string_cmp))),
 			   HR ({width=> "30%"}),
 			   $h1,
 			   $body1)));

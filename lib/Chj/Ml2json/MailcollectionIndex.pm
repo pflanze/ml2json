@@ -54,7 +54,7 @@ use Chj::Struct
 
 sub all_t_sorted { # -> [ [t,mg].. ]
     my $s=shift;
-    Array_sort [ values %{$$s{ids}} ], On sub { $_[0][0] }, \&Number_cmp;
+    array_sort [ values %{$$s{ids}} ], on sub { $_[0][0] }, \&number_cmp;
 }
 
 
@@ -81,12 +81,12 @@ sub sorted_replies {
        ),
       ];
 
-    Array_sort( $replies,
-		On sub {
+    array_sort( $replies,
+		on sub {
 		    my ($v)=@_;
 		    my ($t,$mg)= @{$$s{ids}{$v->{id}}};
 		    $t
-		}, \&Number_cmp );
+		}, \&number_cmp );
 }
 
 
@@ -271,7 +271,7 @@ sub all_threadleaders_sorted {
 	      if $t > $prevt;
 	}
     }
-    Array_sort [keys %threads], On sub { $threads{$_[0]} }, \&Number_cmp;
+    array_sort [keys %threads], on sub { $threads{$_[0]} }, \&number_cmp;
 }
 
 
