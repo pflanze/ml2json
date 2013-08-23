@@ -1,6 +1,6 @@
 The basic principle of operation of ml2json is the following:
 
-A) ml2json iterates over all the *.mbox files in the given directory,
+1. ml2json iterates over all the *.mbox files in the given directory,
 opening each file in turn, iterating over the messages therein,
 parsing each in turn using the MIME parser which creates an object
 plus files in the tmp directory; the code then serializes the object
@@ -15,11 +15,11 @@ faster, also there will be less warnings then). The whole directory is
 also represented as a messagecollection object (a subclass specific
 for dirs).
 
-B) it then iterates over the messages in the (toplevel, i.e. directory)
+2. it then iterates over the messages in the (toplevel, i.e. directory)
 messagecollection object, de-serializing each parsed message object in
 turn, and builds an index of the messageids and replies,
 
-C) after that, it creates a sorted list of messages, grouped by thread
+3. after that, it creates a sorted list of messages, grouped by thread
 and sorted according to the last reply of a thread, and iterates
 through that, deserializing each parsed message once again in turn and
 printing it as JSON (possibly saving message/rfc822 parts as another
@@ -27,6 +27,6 @@ file so that it too can be accessed as a file).
 
 
 For this reason, if changes to the code were done that lead to changed
-results from phase A, the changes will only be seen if phase A is
+results from phase 1, the changes will only be seen if phase 1 is
 being forced to run again by eliminating its result from disk by
-running ml2json --cleanup, first.
+running ml2json `--cleanup`, first.
