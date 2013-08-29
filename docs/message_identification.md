@@ -10,7 +10,7 @@ Messages are identified in two ways:
 
  * "identify" string: identification of the mbox and the index of the
    message therein. Can be used to find the original message
-   unambiguously, see ml2json --deidentify option. In cases where the
+   unambiguously, see the ml2json --deidentify option. In cases where the
    same post appears multiple times in the same or different mbox
    files, there will be multiple "identify" values, but only one and
    the same "id" value; a [warning](warnings.md) will be issued if
