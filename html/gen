@@ -92,7 +92,7 @@ fun htmlmap ($e) {
 	and $$atts{href}=~ /\.md$/) {
 	$$atts{href}= suffix_md2html ($$atts{href});
     }
-    Chj::PXML->new
+    my $res= Chj::PXML->new
 	($name,
 	 $atts,
 	 [
@@ -107,6 +107,17 @@ fun htmlmap ($e) {
 	      }
 	  } @{$e->content||[]}
 	 ]);
+    # add anchors
+    if ($name =~ /^h(\d)$/) {
+	my $bodystr= join("", @{$res->body}); ## should add method, also ~handle subelts
+	#$bodystr=~ s/ /_/sg; ?
+	[
+	 A({name=> $bodystr}),
+	 $res
+	]
+    } else {
+	$res
+    }
 }
 
 fun htmlparse ($str,$whichtag) {
@@ -190,7 +201,7 @@ fun genfile ($path) {
 	$str=~ s{\Q$usagehook}{
 	    my $str= helptext($path,$path0);
 	    $str=~ s/^/    /mg;
-	    "Skip to 'instructions' below to see a recipe.\n\n".
+	    "Skip to [instructions](#Instructions) below to see a recipe.\n\n".
 	    "    \$ ./ml2json --help\n".
 	      $str
 	}e or warn "no match"
@@ -201,6 +212,11 @@ fun genfile ($path) {
     my ($h1,$body1)= do {
 	my $body0= $body->body;
 	my $b0= array_first($body0);
+	## hacky: handle anchor wrapping
+	if (ref $b0 eq "ARRAY") {
+	    $b0= $$b0[1]; # kinda wild guess?..
+	}
+	##/hacky
 	if ($b0->name eq "h1") {
 	    ($b0, array_rest($body0))
 	} else {
