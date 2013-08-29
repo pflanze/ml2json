@@ -21,4 +21,4 @@ Mail::Message::Field::Date and Time::Duration::Parse from CPAN (run
 
 
 For usage information, run `./ml2json --help`, and read
-[usage](docs/usage.xhtml) and the other files in the "docs" folder.
+[usage](docs/usage.md) and the other files in the "docs" folder.
