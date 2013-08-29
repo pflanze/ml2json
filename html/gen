@@ -41,7 +41,7 @@ fun suffix_md2html ($path0) {
 	"index.html"
     } else {
 	$path0=~ s/\.md$/.xhtml/ or die;
-	$path0
+	lc $path0
     }
 }
 
