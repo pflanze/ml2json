@@ -71,6 +71,12 @@ fun htmlparse_raw ($htmlstr,$whichtag) {
     $e->find_by_tag_name($whichtag)
 }
 
+use URI;
+fun url_is_internal ($str) {
+    my $u= URI->new($str);
+    not defined $u->scheme
+}
+
 use Chj::PXML;
 fun htmlmap ($e) {
     my $name= lc($e->tag);
@@ -79,6 +85,12 @@ fun htmlmap ($e) {
 	next if $_ eq "/";
 	die "att name '$_'" unless /^\w+\z/s;
 	$$atts{lc $_}= $e->attr($_);
+    }
+    # fix internal .md links
+    if ($name eq "a"
+	and url_is_internal($$atts{href})
+	and $$atts{href}=~ /\.md$/) {
+	$$atts{href}= suffix_md2html ($$atts{href});
     }
     Chj::PXML->new
 	($name,
