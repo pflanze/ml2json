@@ -175,6 +175,12 @@ sub helptext {
     }
 }
 
+fun path02title ($path0) {
+    my $str= lc( basename $path0,".md" );
+    $str=~ s/_/ /sg;
+    ucfirst $str
+}
+
 fun genfile ($path) {
     my $path0= path0 $path;
     my $outpath= path02html($path0);
@@ -198,7 +204,7 @@ fun genfile ($path) {
 	if ($b0->name eq "h1") {
 	    ($b0, array_rest($body0))
 	} else {
-	    (H1(ucfirst(basename $path0,".md")), $body0)
+	    (H1(path02title ($path0)), $body0)
 	}
     };
 
