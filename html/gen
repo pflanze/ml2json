@@ -192,6 +192,10 @@ fun path02title ($path0) {
     ucfirst $str
 }
 
+use Chj::FP2::Lazy ":all";
+use Chj::FP2::List ":all";
+use Chj::FP2::Stream ":all";
+
 fun genfile ($path) {
     my $path0= path0 $path;
     my $outpath= path02html($path0);
@@ -210,17 +214,21 @@ fun genfile ($path) {
     my $body= htmlparse(markdown ($str), "body");
 
     my ($h1,$body1)= do {
-	my $body0= $body->body;
-	my $b0= array_first($body0);
-	## hacky: handle anchor wrapping
-	if (ref $b0 eq "ARRAY") {
-	    $b0= $$b0[1]; # kinda wild guess?..
-	}
-	##/hacky
-	if ($b0->name eq "h1") {
-	    ($b0, array_rest($body0))
+	my $body= $body->body;
+	my $b= stream_mixed_flatten(do{my $body=$body;$body});
+	my $bwithoutanchor= Force stream_drop_while
+	  (
+	   fun ($v) {
+	       (ref $v
+		and $v->name eq "a"
+		and $v->maybe_attribute("name"))
+	   },
+	   $b);
+	my $b0= car $bwithoutanchor;
+	if (ref $b0 and $b0->name eq "h1") {
+	    ($b0, stream2array(cdr $bwithoutanchor))
 	} else {
-	    (H1(path02title ($path0)), $body0)
+	    (H1(path02title ($path0)), $body)
 	}
     };
 
