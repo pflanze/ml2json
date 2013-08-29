@@ -1,4 +1,4 @@
-Get it from the [Github repo](https://github.com/pflanze/ml2json):
+Get it from the [Github repository](https://github.com/pflanze/ml2json):
 
     git clone https://github.com/pflanze/ml2json.git
 
