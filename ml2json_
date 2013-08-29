@@ -5,9 +5,12 @@
 
 use strict;
 
+use Cwd 'abs_path';
+
 our ($mydir, $myname);
 BEGIN {
-    $0=~ /(.*?)([^\/]+?)_?\z/s or die "?";
+    my $location= (-l $0) ? abs_path ($0) : $0;
+    $location=~ /(.*?)([^\/]+?)_?\z/s or die "?";
     ($mydir, $myname)=($1,$2);
     $mydir= $ENV{ML2JSON_MYDIR} if $ENV{ML2JSON_MYDIR};
 }
@@ -700,7 +703,6 @@ sub parse_and_convert {
 	Browser_exec map {
 	    my $p=identify2xhtml_path($_);
 	    #my $absp= $p=~ m|^/| ? $p : $ENV{PWD}."/".$p;
-	    use Cwd 'abs_path';
 	    my $absp= abs_path $p;
 	    "file://$absp"
 	} @{array_hashing_uniq $idf};

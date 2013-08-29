@@ -8,4 +8,6 @@ set -eu
 
 ulimit -S -s 100000
 
-exec "$0"_ "$@"
+location=`readlink -f "$0"`
+
+exec "$location"_ "$@"

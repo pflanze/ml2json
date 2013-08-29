@@ -21,14 +21,9 @@ Mail::Message::Field::Date and Time::Duration::Parse from CPAN (run
 
 There is no further installation mechanism (yet?). The program can be
 run directly from the checkout (like `./ml2json` or
-`path/to/ml2json`). You can add the path to the checkout directory to
-your PATH env variable, or you could put a shell wrapper that calls it
-into /usr/local/bin/ or similar place (a symlink would not work, since
-it breaks the way the script finds its installation directory):
-
-    #!/bin/bash
-
-    exec "/path/to/ml2json/ml2json" "$@"
+`path/to/ml2json/ml2json`). You could also add the path to the
+checkout directory to your PATH env variable, or you can symlink it to
+one of the directories in your PATH.
 
 For usage information, run `ml2json --help`, and read
 [usage](docs/usage.md) and the other files in the "docs" folder.
