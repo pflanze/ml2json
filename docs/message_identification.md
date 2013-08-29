@@ -13,8 +13,8 @@ Messages are identified in two ways:
    unambiguously, see ml2json --deidentify option. In cases where the
    same post appears multiple times in the same or different mbox
    files, there will be multiple "identify" values, but only one and
-   the same "id" value; a WARN will be issued if that happens and all
-   except one instance of the post will be ignored.
+   the same "id" value; a [warning](warnings.md) will be issued if
+   that happens and all except one instance of the post will be ignored.
 
         identify = md5(path_to_the_mbox) + "/" + position_within_the_mbox
 
