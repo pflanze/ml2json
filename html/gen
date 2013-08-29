@@ -201,6 +201,10 @@ fun genfile ($path) {
     my $outpath= path02html($path0);
     mkdir dirname( $outpath);
     my $str= getfile $path;
+
+    $str=~ s/^\(Check the.*?website.*?---\s+//s
+      or $path=~/COPYING/ or warn "'$path' is missing hint";
+
     if ($path0 eq "docs/usage.md") {
 	$str=~ s{\Q$usagehook}{
 	    my $str= helptext($path,$path0);

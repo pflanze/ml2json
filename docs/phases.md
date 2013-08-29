@@ -1,3 +1,8 @@
+(Check the [Ml2json website](http://ml2json.christianjaeger.ch/) for
+formatted versions of these documents.)
+
+---
+
 The basic principle of operation of ml2json is the following:
 
 1. ml2json iterates over all the files in the given directory /

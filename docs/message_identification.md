@@ -1,3 +1,8 @@
+(Check the [Ml2json website](http://ml2json.christianjaeger.ch/) for
+formatted versions of these documents.)
+
+---
+
 Messages are identified in two ways:
 
  * "id", their message ID, in the source code called just `id` (as
