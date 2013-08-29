@@ -240,14 +240,15 @@ fun genfile ($path) {
 			      array_map
 			      (
 			       fun ($file0) {
+				   my $title= path02title $file0;
 				   LI(
 				      ($file0 eq $path0) ?
-				      $file0
+				      $title
 				      : A ({href=>
 					    File::Spec->abs2rel
 					    (suffix_md2html($file0),
 					     dirname($path0))},
-					   $file0))
+					   $title))
 			       },
 			       array_sort
 			       (array_map( \&path0, $files),
