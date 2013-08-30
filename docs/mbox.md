@@ -10,7 +10,7 @@ overview on the issues. Also see the
 - both `Email::Folder::Mbox` and `Mail::Box::Mbox` have been tried, but
 found to have issues parsing some of the archives this project was
 being developped for. `Chj::Parse::Mbox` with a simple approach of
-matching `'\nFrom '` as separator worked better on the archives in
+matching `\nFrom ` as separator worked better on the archives in
 question; this will probably fail on those mbox files that JWZ
 mentions relying on Content-Length, though, if so, one of the
 formerly-mentioned parsers may be tried again (for this, adapt

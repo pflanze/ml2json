@@ -31,7 +31,7 @@ contents in the body and restore the content-type header? (Solve the
 "email does not have a content-type header" warning cases.)
 
 * Try to write a heuristic that checks context for whether or how many
-levels of quotation to remove from `'^(> *)*From '`. Probably made more
+levels of quotation to remove from `^(> *)*From `. Probably made more
 difficult by the many messages that have broken line wrapping.
 
 * Change the way to retrieve attachments from the mail by putting it
