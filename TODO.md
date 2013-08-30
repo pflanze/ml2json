@@ -60,3 +60,6 @@ those, would need your support to test for the latter.
 * Add message indexes to --html-to to make archive browseable.
 
 * Parallelize mbox parsing phase.
+
+* Read [Maildir](http://en.wikipedia.org/wiki/Maildir) mail boxes.
+
