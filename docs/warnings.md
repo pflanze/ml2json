@@ -17,10 +17,13 @@ importance levels:
    warning itself
 
  * `ERROR` when there was an exception while handling a message or
-   mailbox; the exception was captured, i.e. didn't lead to the abort
-   of the whole conversion process, but means that part of the input
-   will be skipped. Should not normally happen (i.e. might indicate a
-   bug, please report).
+   mailbox; the exception is captured, i.e. didn't lead to the abort
+   of the whole conversion process, but means that the part of the
+   conversion that's indicated in the context of the ERROR (usually
+   one message, or one mailbox file during mbox parsing) is
+   skipped. Unless the input is clearly faulty (corrupt mbox files,
+   for example), this is probably an indication of a bug, please
+   report.
 
 (I may add a `--quiet` option that silences `WARN` and `__WARN__`)
 
