@@ -29,6 +29,15 @@ our $files= [grep {
 } $c->xreadline0chop];
 $c->xxfinish;
 
+
+fun author_date ($path) {
+    my $c= Chj::IO::Command->new_sender
+      ("git", "log", '--pretty=format:%aD', "--", $path);
+    my $res= $c->xreadline;
+    $c->xfinish;
+    chomp $res; $res;
+}
+
 fun path0 ($path) {
     ## ugly way to strip path prefix
     my $path0= $path;
@@ -301,7 +310,10 @@ fun genfile ($path) {
 			       (array_map( \&path0, $files),
 				on $path02sortkey, \&string_cmp))),
 			   $h1,
-			   $body1)));
+			   $body1,
+			   BR,
+			   HR,
+			   DIV({class=>"footer_date"}, author_date($path)))));
 }
 
 genfile $_ for @$files;

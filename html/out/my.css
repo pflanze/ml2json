@@ -38,3 +38,15 @@ body {
   padding-left: 1.8em;
   padding-right: 1.8em;
 }
+
+hr {
+  height: 1px;
+  background-color: #ccc;
+  border: none;
+}
+
+.footer_date {
+  text-align: center;
+  font-style: italic;
+  font-size: small;
+}
