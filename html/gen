@@ -45,6 +45,19 @@ fun suffix_md2html ($path0) {
     }
 }
 
+fun url_md2html ($url) {
+    my $u= URI->new($url);
+    my $path= $u->path;
+    if ($path eq "README.md") { # XX should check basename, actually
+	$u->path("index.html");
+    } else {
+	if ($path=~ s/\.md$/.xhtml/) {
+	    $u->path(lc $path);
+	}
+    }
+    "$u"
+}
+
 fun path02html ($path0) {
     "$outbase/".suffix_md2html($path0)
 }
@@ -88,9 +101,8 @@ fun htmlmap ($e) {
     }
     # fix internal .md links
     if ($name eq "a"
-	and url_is_internal($$atts{href})
-	and $$atts{href}=~ /\.md$/) {
-	$$atts{href}= suffix_md2html ($$atts{href});
+	and url_is_internal($$atts{href})) {
+	$$atts{href}= url_md2html ($$atts{href});
     }
     my $res= Chj::PXML->new
 	($name,
