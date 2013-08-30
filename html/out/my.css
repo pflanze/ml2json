@@ -19,11 +19,15 @@ li.menu {
   padding-right: .5em;
   display: inline;
 }
-a.menu {
-  text-decoration: none;
-}
 .menu_selected {
   font-weight: bold;
+}
+
+a {
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
 }
 
 pre {
