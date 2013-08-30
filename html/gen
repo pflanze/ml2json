@@ -110,7 +110,7 @@ fun htmlmap ($e) {
     # add anchors
     if ($name =~ /^h(\d)$/) {
 	my $bodystr= join("", @{$res->body}); ## should add method, also ~handle subelts
-	#$bodystr=~ s/ /_/sg; ?
+	$bodystr=~ s/ /_/sg;
 	[
 	 A({name=> $bodystr}),
 	 $res
