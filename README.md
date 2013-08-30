@@ -13,7 +13,7 @@ JSON (could be changed to other formats).
 
 Care has been taken to allow it to work on huge archives (although a
 [recent Perl is
-needed](docs/issues.md#Recent_Perl_needed_to_avoid_leaking)), and to
+needed](docs/issues.md#Recent_perl_needed_to_avoid_leaking)), and to
 index the whole archive so as to clean up In-Reply-To headers and
 provide for forward references ("replies").
 
