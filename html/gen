@@ -192,6 +192,23 @@ fun path02title ($path0) {
     ucfirst $str
 }
 
+
+# move to lib
+use File::Spec;
+use Chj::TEST ":all";
+
+fun url_diff ($path0from,$path0to) {
+    my $from= $path0from=~ m|(.*?)/+$|s ? $1 : dirname $path0from;
+    File::Spec->abs2rel($path0to, $from);
+}
+
+TEST{url_diff "foo/", "bar.css"} '../bar.css';
+TEST{url_diff "foo/bar.html", "bar.css"} '../bar.css';
+TEST{url_diff "foo", "bar.css"} 'bar.css';
+#TEST{url_diff ".", "bar.css"} 'bar.css';
+
+#/lib
+
 use Chj::FP2::Lazy ":all";
 use Chj::FP2::List ":all";
 use Chj::FP2::Stream ":all";
@@ -238,7 +255,12 @@ fun genfile ($path) {
 
     puthtmlfile($outpath,
 		HTML (
-		      TITLE ($path0),
+		      HEAD (
+			    TITLE ($path0),
+			    LINK ({rel=> "stylesheet",
+				   href=> url_diff ($path0, "my.css"),
+				   type=> "text/css"}),
+			   ),
 		      BODY(
 			   UL(
 			      array_map
