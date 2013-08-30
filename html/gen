@@ -217,6 +217,9 @@ fun genfile ($path) {
     my $path0= path0 $path;
     my $outpath= path02html($path0);
     mkdir dirname( $outpath);
+
+    my $filetitle= path02title $path0;
+
     my $str= getfile $path;
 
     $str=~ s/^\(Check the.*?website.*?---\s+//s
@@ -256,7 +259,7 @@ fun genfile ($path) {
     puthtmlfile($outpath,
 		HTML (
 		      HEAD (
-			    TITLE ($path0),
+			    TITLE ($filetitle, " - ml2json"),
 			    LINK ({rel=> "stylesheet",
 				   href=> url_diff ($path0, "my.css"),
 				   type=> "text/css"}),
@@ -269,18 +272,18 @@ fun genfile ($path) {
 			      array_map_with_i
 			      (
 			       fun ($i,$file0) {
+				   my $filetitle= path02title $file0;
 				   my $is_first= ($i == 0);
-				   my $title= path02title $file0;
 				   LI({class=> ($is_first ? "menu_first" : "menu")},
 				      ($file0 eq $path0) ?
 				      SPAN({class=> "menu_selected"},
-					   $title)
+					   $filetitle)
 				      : A ({class=> "menu",
 					    href=>
 					    File::Spec->abs2rel
 					    (suffix_md2html($file0),
 					     dirname($path0))},
-					   $title))
+					   $filetitle))
 			       },
 			       array_sort
 			       (array_map( \&path0, $files),
