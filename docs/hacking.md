@@ -5,7 +5,7 @@ formatted versions of these documents.)
 
 * A functional programming approach has been used where applicable. This
 means, less state, better composition and extensibility, properly
-expressed recursive approaches.
+expressed recursive algorithms.
 
 * Functional libraries are found in the Chj::FP::* and Chj::FP2::*
 namespaces (the "FP2" one is to avoid clashes with some earlier
