@@ -26,6 +26,25 @@ a.menu {
   font-weight: bold;
 }
 
+pre {
+  padding: 4px;
+  background-color: #eee;
+  border: 1px solid #ccc;
+}
+
+* > code {
+  padding: 1px;
+  background-color: #eee;
+  border: 1px solid #ddd;
+}
+
+pre > code {
+  padding: 0px;
+  background-color: none;
+  border: none;
+}
+
+
 .header {
   text-align: center;
 }
