@@ -14,7 +14,7 @@ being developped for. `Chj::Parse::Mbox` with a simple approach of
 matching `\nFrom ` as separator worked better on the archives in
 question; this will probably fail on those mbox files that JWZ
 mentions relying on Content-Length, though, if so, one of the
-formerly-mentioned parsers may be tried again (for this, adapt
+formerly-mentioned parsers may have to be tried again (for this, adapt
 `lib/Chj/Ml2json/Mbox.pm` so that it outputs a stream instead of an
 iterator, and add some commandline option for the choice). Also,
 `Mail::Box::Mbox` creates lock files, if those are conformant to some
