@@ -294,8 +294,8 @@ fun genfile ($path) {
 			      (
 			       fun ($i,$file0) {
 				   my $filetitle= path02title $file0;
-				   my $is_first= ($i == 0);
-				   LI({class=> ($is_first ? "menu_first" : "menu")},
+				   my $is_last= ($i == $#$files);
+				   LI({class=> ($is_last ? "menu_last" : "menu")},
 				      ($file0 eq $path0 ?
 				       SPAN({class=> "menu_selected"},
 					    $filetitle)
