@@ -296,15 +296,16 @@ fun genfile ($path) {
 				   my $filetitle= path02title $file0;
 				   my $is_first= ($i == 0);
 				   LI({class=> ($is_first ? "menu_first" : "menu")},
-				      ($file0 eq $path0) ?
-				      SPAN({class=> "menu_selected"},
-					   $filetitle)
-				      : A ({class=> "menu",
-					    href=>
-					    File::Spec->abs2rel
-					    (suffix_md2html($file0),
-					     dirname($path0))},
-					   $filetitle))
+				      ($file0 eq $path0 ?
+				       SPAN({class=> "menu_selected"},
+					    $filetitle)
+				       : A ({class=> "menu",
+					     href=>
+					     File::Spec->abs2rel
+					     (suffix_md2html($file0),
+					      dirname($path0))},
+					    $filetitle)),
+				      " ")
 			       },
 			       array_sort
 			       (array_map( \&path0, $files),

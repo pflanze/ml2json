@@ -9,14 +9,14 @@ ul.menu {
 li.menu_first {
   list-style: none;
   padding-left: 0.5em;
-  padding-right: .5em;
+  padding-right: .3em;
   display: inline;
 }
 li.menu {
   border-left: 1px solid #000;
   list-style: none;
   padding-left: .5em;
-  padding-right: .5em;
+  padding-right: .3em;
   display: inline;
 }
 .menu_selected {
