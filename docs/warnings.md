@@ -16,13 +16,13 @@ importance levels:
  * `__WARN__` is used whenever Perl or some third party library issues a
    warning itself
 
- * ERROR when there was an exception while handling a message or
+ * `ERROR` when there was an exception while handling a message or
    mailbox; the exception was captured, i.e. didn't lead to the abort
    of the whole conversion process, but means that part of the input
    will be skipped. Should not normally happen (i.e. might indicate a
    bug, please report).
 
-(I may add a --quiet option that silences `WARN` and `__WARN__`)
+(I may add a `--quiet` option that silences `WARN` and `__WARN__`)
 
 In all cases after the level indicator there is an indication of the
 context in which the issue has happened, which is either an "identify"
@@ -37,7 +37,7 @@ Particular warnings
 
  This means that none of the mbox files that were read by ml2json
  contained any message with message-id
- '591785b794601e212b260e25925636fd@abc.com'. This would typically
+ `591785b794601e212b260e25925636fd@abc.com`. This would typically
  happen if someone sends a reply to a mailing list email privately,
  i.e. using the "reply" instead of "reply to all" function in their
  mailer, and then the receiver of that reply sending a reply back to
