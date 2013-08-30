@@ -1,7 +1,40 @@
 
-.menu {
-    list-style: none;
-    padding-left: 0.5em;
-    text-indent: -1em;
+ul.menu {
+  border: 1px solid #000;
+  background-color: #eee;
+  padding: 5px;
+  list-style: none;
+  padding-left: 0.5em;
+}
+li.menu_first {
+  list-style: none;
+  padding-left: 0.5em;
+  padding-right: .5em;
+  display: inline;
+}
+li.menu {
+  border-left: 1px solid #000;
+  list-style: none;
+  padding-left: .5em;
+  padding-right: .5em;
+  display: inline;
+}
+a.menu {
+  text-decoration: none;
+}
+.menu_selected {
+  font-weight: bold;
 }
 
+.header {
+  text-align: center;
+}
+.logo {
+  font-weight: bold;
+  font-size:36px;
+}
+
+body {
+  padding-left: 1.8em;
+  padding-right: 1.8em;
+}

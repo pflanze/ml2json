@@ -262,15 +262,21 @@ fun genfile ($path) {
 				   type=> "text/css"}),
 			   ),
 		      BODY(
-			   UL(
-			      array_map
+			   DIV ({class=>"header"},
+				SPAN({class=>"logo"}, "ml2json"),
+				" mail archive processor"),
+			   UL({class=> "menu"},
+			      array_map_with_i
 			      (
-			       fun ($file0) {
+			       fun ($i,$file0) {
+				   my $is_first= ($i == 0);
 				   my $title= path02title $file0;
-				   LI(
+				   LI({class=> ($is_first ? "menu_first" : "menu")},
 				      ($file0 eq $path0) ?
-				      $title
-				      : A ({href=>
+				      SPAN({class=> "menu_selected"},
+					   $title)
+				      : A ({class=> "menu",
+					    href=>
 					    File::Spec->abs2rel
 					    (suffix_md2html($file0),
 					     dirname($path0))},
@@ -279,7 +285,6 @@ fun genfile ($path) {
 			       array_sort
 			       (array_map( \&path0, $files),
 				on $path02sortkey, \&string_cmp))),
-			   HR ({width=> "30%"}),
 			   $h1,
 			   $body1)));
 }
