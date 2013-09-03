@@ -148,6 +148,7 @@ fun htmlparse ($str,$whichtag) {
 use Chj::PXML::Serialize 'pxml_xhtml_print_fast';
 
 fun puthtmlfile ($path,$p) {
+    xmkdir_p dirname $path;
     my $out= xopen_write($path);
     binmode $out, ":utf8" or die;
     pxml_xhtml_print_fast($p, $out, "en");# hard coded lang
