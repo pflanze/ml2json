@@ -245,7 +245,7 @@ fun genfile ($path) {
     my $str= getfile $path;
 
     $str=~ s/^\(Check the.*?website.*?---\s+//s
-      or $path=~/COPYING/ or warn "'$path' is missing hint";
+      or $path=~/COPYING|bugs\// or warn "'$path' is missing hint";
 
     if ($path0 eq "docs/usage.md") {
 	$str=~ s{\Q$usagehook}{
