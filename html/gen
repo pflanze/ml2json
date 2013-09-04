@@ -45,12 +45,19 @@ fun path0 ($path) {
     $path0
 }
 
-fun suffix_md2html ($path0) {
+fun is_allcaps ($str) {
+    not $str=~ /[a-z]/
+}
+
+fun if_suffix_md2html ($path0,$then,$otherwise) {
     if ($path0 eq "README.md") {
-	"index.html"
+	@_=("index.html"); goto $then;
     } else {
-	$path0=~ s/\.md$/.xhtml/ or die;
-	lc $path0
+	if ($path0=~ s/([^\/]*)\.md$/$1.xhtml/) {
+	    @_=(is_allcaps ($1) ? lc $path0 : $path0); goto $then;
+	} else {
+	    @_=($path0); goto $otherwise
+	}
     }
 }
 
@@ -60,15 +67,23 @@ fun url_md2html ($url) {
     if ($path eq "README.md") { # XX should check basename, actually
 	$u->path("index.html");
     } else {
-	if ($path=~ s/\.md$/.xhtml/) {
-	    $u->path(lc $path);
-	}
+	if_suffix_md2html
+	  ($path,
+	   fun ($path) {
+	       $u->path($path);
+	   },
+	   fun ($path) {
+	   });
     }
     "$u"
 }
 
-fun path02html ($path0) {
-    "$outbase/".suffix_md2html($path0)
+fun xsuffix_md2html ($path0) {
+    if_suffix_md2html($path0,sub{$_[0]},sub{die})
+}
+
+fun path02outpath ($path0) {
+    "$outbase/".xsuffix_md2html($path0)
 }
 
 fun getfile ($path) {
@@ -237,7 +252,7 @@ use Chj::FP2::Stream ":all";
 
 fun genfile ($path) {
     my $path0= path0 $path;
-    my $outpath= path02html($path0);
+    my $outpath= path02outpath($path0);
     mkdir dirname( $outpath);
 
     my $filetitle= path02title $path0;
@@ -303,7 +318,7 @@ fun genfile ($path) {
 				       : A ({class=> "menu",
 					     href=>
 					     File::Spec->abs2rel
-					     (suffix_md2html($file0),
+					     (xsuffix_md2html($file0),
 					      dirname($path0))},
 					    $filetitle)),
 				      " ")
