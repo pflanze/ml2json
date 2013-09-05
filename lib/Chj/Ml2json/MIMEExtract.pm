@@ -379,7 +379,7 @@ sub bodyhandle_decoding_read_all_ref ($$) {
 	   } @$alternative_encodings];
 	local our $sorted_attempts=
 	  array_sort ([@$doneattempts,@$moreattempts],
-		      on (the_method "score",
+		      on (the_method ("score"),
 			  \&number_cmp));
 	@$sorted_attempts or die "hu, no attempted decoding worked at all";
 	local our $best= $$sorted_attempts[-1];
