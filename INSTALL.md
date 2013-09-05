@@ -24,7 +24,10 @@ Or install MIME::Tools, HTML::Tree, MIME::EncWords, Email::Date,
 Mail::Message::Field::Date and Time::Duration::Parse from CPAN (run
 'cpan' or 'perl -MCPAN -e shell' then 'install MIME::Tools' etc.)
 
-There is no further installation mechanism (yet?). The program can be
+If you want to use json2csv, then also install JSON::SL from CPAN (not
+in Debian).
+
+There is no further installation mechanism (yet?). The programs can be
 run directly from the checkout (like `./ml2json` or
 `path/to/ml2json/ml2json`). You could also add the path to the
 checkout directory to your PATH env variable, or you can symlink it to
