@@ -1,0 +1,106 @@
+#!/usr/bin/perl -w
+
+# Copyright 2013 by Christian Jaeger, ch at christianjaeger ch
+# This is free software, offered under the terms of the MIT License.
+# See the file COPYING that came bundled with this file.
+
+(my $email='ch%christianjaeger,ch')=~ tr/%,/@./;
+
+use strict;
+
+
+use Cwd 'abs_path';
+
+our ($mydir, $myname);
+BEGIN {
+    my $location= (-l $0) ? abs_path ($0) : $0;
+    $location=~ /(.*?)([^\/]+?)_?\z/s or die "?";
+    ($mydir, $myname)=($1,$2);
+    $mydir= $ENV{ML2JSON_MYDIR} if $ENV{ML2JSON_MYDIR};
+}
+use lib "$mydir/perllib";
+use lib "$mydir/ftemplate/lib";
+use lib "$mydir/lib";
+
+
+sub usage {
+    print STDERR map{"$_\n"} @_ if @_;
+    print "$myname --in inpath --out outpath  fieldname(s)
+
+  Convert a JSON list of objects into rows in CSV format. fieldname(s)
+  are the names of the JSON fields, in the order in which they should
+  appear in the CSV.
+
+  Options:
+    --tsv  use tab character instead of ';' as column separator
+    --separator c
+           use c as separator character
+    --no-header
+           don't output header row to outfile
+    --missing-value val
+           string to output for missing values; default: empty string
+
+  (Christian Jaeger <$email>)
+";
+exit (@_ ? 1 : 0);
+}
+
+use Chj::Getopt;
+our %opt;
+*opt= getopt
+  (
+   "verbose","help",#"dry-run",
+   "in=s","out=s",
+   "tsv","separator=s","no-header",
+   "missing-value=s",
+  );
+
+usage unless @ARGV;
+usage if $opt{help};
+
+
+
+use Chj::Excel::GenCSV ":all";
+use Chj::xopen ":all";
+use JSON::SL;
+
+our $separator= $opt{separator} || ($opt{tsv} ? "\t" : ";");
+our $missing_value=
+  excel_quote
+  (defined $opt{"missing-value"} ? $opt{"missing-value"} : "");
+
+sub print_row ($$) {
+    my ($fh,$vs)=@_;
+    $fh->xprintln(join($separator,
+		       map {
+			   defined $_ ? excel_quote $_ : $missing_value
+		       }
+		       @$vs));
+}
+
+our $bufsize = 4096;
+
+sub convert {
+    my ($inpath,$outpath)=@_;
+    my $in= xopen_read $inpath;
+    my $out= xopen_write $outpath;
+    print_row($out, \@ARGV)
+      unless $opt{"no-header"};
+    my $json = JSON::SL->new();
+    $json->set_jsonpointer( ["/^"] );
+    my $buf;
+    while ($in->xread($buf,$bufsize)) {
+	for ($json->incr_parse ($buf)) {
+	    #my $path= $$_{Path};
+	    my $v= $$_{Value};
+	    print_row($out,
+		      [map { $$v{$_} } @ARGV]);
+	}
+    }
+    $in->xclose;
+}
+
+convert $opt{in},$opt{out};
+
+#use Chj::ruse;
+#use Chj::Backtrace; use Chj::repl; repl;
