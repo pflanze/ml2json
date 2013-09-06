@@ -253,6 +253,12 @@ TEST{path02title "bugs/wishlist/listserv/index.md"} 'Listserv';
 TEST{path02title "bugs/wishlist/line_wrapping_in_pre-MIME_mails.md"} # even with lcfirst
   'Line wrapping in pre-MIME mails';
 
+
+fun path02bugtype ($path0) {
+    $path0=~ m|\bbugs/([^/]+)/| or die "no match, '$path0'";
+    ucfirst $1
+}
+
 # move to lib
 use File::Spec;
 use Chj::TEST ":all";
@@ -440,12 +446,13 @@ fun genfile ($path,$groupname) {
 	
 	TABLE
 	  ({class=> "costlist"},
-	   THEAD (TH (),TH ("Cost range (USD)")),
+	   THEAD (TH ("Type"), TH ("Title"),TH ("Cost range (USD)")),
 	   map {
 	       my ($title,$p0,$costrange)= @$_;
 	       my $relurl= File::Spec->abs2rel(xsuffix_md2html($p0,0),
 					       basename ($path0));
-	       TR (TD (A({href=>$relurl},$title)),
+	       TR (TD (path02bugtype $p0),
+		   TD (A({href=>$relurl},$title)),
 		   TD ({align=>"center"},$costrange))
 	   } @$bugs
 	  )
