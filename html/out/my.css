@@ -73,3 +73,13 @@ hr {
   font-style: italic;
   font-size: small;
 }
+
+.costlist {
+  border-spacing: 4px;
+}
+.costlist > thead > th {
+  border-bottom: 1px solid #666;
+}
+.costlist > tr > td {
+  padding-right: 0.5em;
+}
