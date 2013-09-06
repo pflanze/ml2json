@@ -18,7 +18,7 @@ Involved work:
    do it?).
  - find ways to match those reliably enough.
 
-Cost analysis: $15
+Cost (analysis): $15
 
 Two variants for implementation:
 
