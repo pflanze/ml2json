@@ -49,8 +49,8 @@ fun is_allcaps ($str) {
     not $str=~ /[a-z]/
 }
 
-fun if_suffix_md2html ($path0,$then,$otherwise) {
-    if ($path0 eq "README.md") {
+fun if_suffix_md2html ($path0,$for_title,$then,$otherwise) {
+    if (!$for_title and $path0 eq "README.md") {
 	@_=("index.xhtml"); goto $then;
     } else {
 	if ($path0=~ s/(.*?)([^\/]*)\.md$/$1$2.xhtml/) {
@@ -62,11 +62,12 @@ fun if_suffix_md2html ($path0,$then,$otherwise) {
 }
 
 use Chj::TEST ":all";
-fun TEST_if_suffix_md2html ($in,$thenotherwise,$out) {
-    TEST{if_suffix_md2html $in, sub {["then",@_]}, sub{["otherwise",@_]}}
+fun TEST_if_suffix_md2html ($in,$thenotherwise,$out,$for_title=0) {
+    TEST{if_suffix_md2html $in, $for_title, sub {["then",@_]}, sub{["otherwise",@_]}}
       [$thenotherwise,$out];
 }
 TEST_if_suffix_md2html "README.md",'then','index.xhtml';
+TEST_if_suffix_md2html "README.md",'then','readme.xhtml',1; # kinda stupid hack.
 TEST_if_suffix_md2html "Foo/index.md",'then','Foo/index.xhtml';
 TEST_if_suffix_md2html "Foo/README.md",'then','Foo/readme.xhtml';
 TEST_if_suffix_md2html "Foo/READMe.md",'then','Foo/READMe.xhtml';
@@ -78,6 +79,7 @@ fun url_md2html ($url) {
     my $path= $u->path;
     if_suffix_md2html
       ($path,
+       0,
        fun ($path) {
 	   $u->path($path);
        },
@@ -86,12 +88,12 @@ fun url_md2html ($url) {
     "$u"
 }
 
-fun xsuffix_md2html ($path0) {
-    if_suffix_md2html($path0,sub{$_[0]},sub{die})
+fun xsuffix_md2html ($path0,$for_title) {
+    if_suffix_md2html($path0, $for_title, sub{$_[0]}, sub{die})
 }
 
 fun path02outpath ($path0) {
-    "$outbase/".xsuffix_md2html($path0)
+    "$outbase/".xsuffix_md2html($path0,0)
 }
 
 fun getfile ($path) {
@@ -239,13 +241,17 @@ fun _path02title_mod ($str) {
 fun path02title ($path0) {
     if (basename ($path0) eq "index.md") {
 	_path02title_mod
-	  basename ( xsuffix_md2html(dirname($path0).".md"), ".xhtml");
+	  basename ( xsuffix_md2html(dirname($path0).".md",1), ".xhtml");
     } else {
 	_path02title_mod
-	  basename( xsuffix_md2html ($path0),".xhtml");
+	  basename( xsuffix_md2html ($path0,1),".xhtml");
     }
 }
 
+TEST{path02title "README.md"} 'Readme';
+TEST{path02title "bugs/wishlist/listserv/index.md"} 'Listserv';
+TEST{path02title "bugs/wishlist/line_wrapping_in_pre-MIME_mails.md"} # even with lcfirst
+  'Line wrapping in pre-MIME mails';
 
 # move to lib
 use File::Spec;
@@ -437,7 +443,7 @@ fun genfile ($path,$groupname) {
 	   THEAD (TH (),TH ("Cost range (USD)")),
 	   map {
 	       my ($title,$p0,$costrange)= @$_;
-	       my $relurl= File::Spec->abs2rel(xsuffix_md2html($p0),
+	       my $relurl= File::Spec->abs2rel(xsuffix_md2html($p0,0),
 					       basename ($path0));
 	       TR (TD (A({href=>$relurl},$title)),
 		   TD ({align=>"center"},$costrange))
@@ -470,7 +476,7 @@ fun genfile ($path,$groupname) {
 				       : A ({class=> "menu",
 					     href=>
 					     File::Spec->abs2rel
-					     (xsuffix_md2html($file0),
+					     (xsuffix_md2html($file0,0),
 					      dirname($path0))},
 					    $filetitle)),
 				      " ")
@@ -494,5 +500,6 @@ for my $groupname (qw(bugs normal buglist)) {
 }
 
 #use Chj::ruse;
-#use Chj::Backtrace; use Chj::repl; repl;
+use Chj::Backtrace;
+#use Chj::repl; repl;
 
