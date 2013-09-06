@@ -72,7 +72,6 @@ TEST_if_suffix_md2html "Foo/README.md",'then','Foo/readme.xhtml';
 TEST_if_suffix_md2html "Foo/READMe.md",'then','Foo/READMe.xhtml';
 TEST_if_suffix_md2html "Foo/MY.css",'otherwise','Foo/MY.css';
 
-#use Chj::repl;repl;exit;
 
 fun url_md2html ($url) {
     my $u= URI->new($url);
@@ -259,6 +258,46 @@ use Chj::FP2::Lazy ":all";
 use Chj::FP2::List ":all";
 use Chj::FP2::Stream ":all";
 
+{
+    package CHJ::Cost;
+    use Chj::FP::ArrayUtil ":all";
+    use Chj::Struct [qw(name is_purchaseable basecosts val)];
+    method cost ($index) {
+	$$self{_cost} ||= do {
+	    add($self->val,
+		map {
+		    $$index{$_}->cost ($index)
+		} @{$self->basecosts}
+	       );
+	}
+    }
+    _END_
+}
+{
+    package CHJ::Totalcost;
+    use Chj::FP::Array_sort ":all";
+    use Chj::Struct [qw(costs)];
+    method range () {
+	@{$$self{costs}} or die "no costs given";#
+	my $index;
+	for (@{$$self{costs}}) {
+	    if (defined (my $name= $_->name)) {
+		$$index{$name}= $_
+	    }
+	}
+	my $purchaseable= [grep { $_->is_purchaseable } @{$$self{costs}}];
+	@$purchaseable or die "no purchaseable costs";#
+	local our $all= array_sort
+	  ( $purchaseable,
+	    on the_method ("cost",$index), \&number_cmp );
+	(@$all == 1
+	 ? $$all[0]->cost ($index)
+	 : $$all[0]->cost ($index)."..".$$all[-1]->cost($index)),
+    }
+    _END_
+}
+
+
 fun genfile ($path) {
     my $path0= path0 $path;
     my $outpath= path02outpath($path0);
@@ -280,6 +319,48 @@ fun genfile ($path) {
 	      $str
 	}e or warn "no match"
     }
+
+    my $maybe_costrange= do {
+	# extract Cost indicators:
+	my $namere= qr/\w+/;
+	my $nameplusre= qr/\(?$namere\)?/;
+	my $perhaps_nameplus2name= fun ($maybe_nameplus) {
+	    if (defined $maybe_nameplus) {
+		my ($name)= $maybe_nameplus=~ qr/($namere)/
+		  or die "bug";
+		$name
+	    } else {
+		undef
+	    }
+	};
+	local our $costs=[];
+	while (#my ($name,$basecosts,$val)=
+	       $str=~ m{\b[Cc]ost
+			# name: parentheses for "library cost"
+			(?:\s+($nameplusre))?
+			:
+			\s*
+			# base costs
+			((?:$nameplusre\s*\+\s*)*)
+			\s*
+			# amount
+			\$\s*(\d+)
+		   }gx) {
+	    my ($nameplus,$basecosts,$val)=($1,$2,$3);# perl.
+	    my $name= &$perhaps_nameplus2name($nameplus);
+	    my @basecosts= map { &$perhaps_nameplus2name($_) }
+	      split /\s*\+\s*/, $basecosts;
+	    push @$costs, new CHJ::Cost ($name,
+					 (not $nameplus
+					  or not($nameplus=~ /^\(/)),
+					 \@basecosts,
+					 $val);
+	}
+	#local our $totalcost=
+	#  CHJ::Totalcost->new($costs);
+	#use Chj::Backtrace; use Chj::repl;repl if @$costs;#exit;
+	@$costs ? CHJ::Totalcost->new($costs)->range : undef
+    };
 
     my $body= htmlparse(markdown ($str), "body");
 
@@ -339,6 +420,8 @@ fun genfile ($path) {
 			   $body1,
 			   BR,
 			   HR,
+			   $maybe_costrange ? P('Cost range: $',
+						$maybe_costrange) : (),
 			   DIV({class=>"footer_date"}, author_date($path)))));
 }
 
