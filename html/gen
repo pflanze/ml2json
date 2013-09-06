@@ -489,7 +489,7 @@ fun genfile ($path,$groupname) {
 			   $maybe_buglist,
 			   BR,
 			   HR,
-			   ($maybe_costrange ? P('Cost range: $',
+			   ($maybe_costrange ? P("\x{21d2} Cost range: \$",
 						 $maybe_costrange) : ()),
 			   DIV({class=>"footer_date"}, author_date($path)))));
 }
