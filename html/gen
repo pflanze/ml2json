@@ -298,7 +298,30 @@ use Chj::FP2::Stream ":all";
 }
 
 
-fun genfile ($path) {
+# group $files, to process them in an order that satisfies dependency
+# on $costranges
+
+fun groupkey ($path) {
+    my $p0= path0 $path;
+    if ($p0=~ m|^bugs/|) {
+	"bugs"
+    } elsif ($p0 eq 'docs/issues.md') {
+	"buglist"
+    } else {
+	"normal"
+    }
+}
+
+our $groupedfiles= array2hash_group_by $files, \&groupkey;
+
+our $nonbugfiles= [@{$$groupedfiles{normal}},
+		   @{$$groupedfiles{buglist}}];
+
+our $costranges={};
+# path0 -> costrange-string; filled when processing non-buglist groups
+
+
+fun genfile ($path,$groupname) {
     my $path0= path0 $path;
     my $outpath= path02outpath($path0);
     mkdir dirname( $outpath);
@@ -361,6 +384,9 @@ fun genfile ($path) {
 	#use Chj::Backtrace; use Chj::repl;repl if @$costs;#exit;
 	@$costs ? CHJ::Totalcost->new($costs)->range : undef
     };
+    if (defined $maybe_costrange) {
+	$$costranges{$path0}= $maybe_costrange;
+    }
 
     my $body= htmlparse(markdown ($str), "body");
 
@@ -383,6 +409,33 @@ fun genfile ($path) {
 	}
     };
 
+    my $maybe_buglist= $groupname eq "buglist" && do {
+	my $bugs=
+	  array_sort
+	    (array_map
+	     (
+	      fun ($path) {
+		  my $path0= path0 $path;
+		  my $title= path02title $path0;
+		  [$title,$path0,$$costranges{$path0}]
+	      },
+	      $$groupedfiles{bugs}),
+	     on sub{$_[0][0]}, \&string_cmp # XX not a good cmp.
+	    );
+	
+	TABLE
+	  ({class=> "costlist"},
+	   THEAD (TH (),TH ("Cost range (USD)")),
+	   map {
+	       my ($title,$p0,$costrange)= @$_;
+	       my $relurl= File::Spec->abs2rel(xsuffix_md2html($p0),
+					       basename ($path0));
+	       TR (TD (A({href=>$relurl},$title)),
+		   TD ({align=>"center"},$costrange))
+	   } @$bugs
+	  )
+    };
+
     puthtmlfile($outpath,
 		HTML (
 		      HEAD (
@@ -400,7 +453,7 @@ fun genfile ($path) {
 			      (
 			       fun ($i,$file0) {
 				   my $filetitle= path02title $file0;
-				   my $is_last= ($i == $#$files);
+				   my $is_last= ($i == $#$nonbugfiles);
 				   LI({class=> ($is_last ? "menu_last" : "menu")},
 				      ($file0 eq $path0 ?
 				       SPAN({class=> "menu_selected"},
@@ -414,18 +467,23 @@ fun genfile ($path) {
 				      " ")
 			       },
 			       array_sort
-			       (array_map( \&path0, $files),
+			       (array_map( \&path0, $nonbugfiles),
 				on $path02sortkey, \&string_cmp))),
 			   $h1,
 			   $body1,
+			   $maybe_buglist,
 			   BR,
 			   HR,
-			   $maybe_costrange ? P('Cost range: $',
-						$maybe_costrange) : (),
+			   ($maybe_costrange ? P('Cost range: $',
+						 $maybe_costrange) : ()),
 			   DIV({class=>"footer_date"}, author_date($path)))));
 }
 
-genfile $_ for @$files;
+
+for my $groupname (qw(bugs normal buglist)) {
+    genfile $_,$groupname for @{$$groupedfiles{$groupname}};
+}
 
 #use Chj::ruse;
 #use Chj::Backtrace; use Chj::repl; repl;
+
