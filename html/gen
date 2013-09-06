@@ -231,10 +231,19 @@ sub helptext {
     }
 }
 
-fun path02title ($path0) {
-    my $str= basename( xsuffix_md2html ($path0),".xhtml");
+fun _path02title_mod ($str) {
     $str=~ s/_/ /sg;
     ucfirst $str
+}
+
+fun path02title ($path0) {
+    if (basename ($path0) eq "index.md") {
+	_path02title_mod
+	  basename ( xsuffix_md2html(dirname($path0).".md"), ".xhtml");
+    } else {
+	_path02title_mod
+	  basename( xsuffix_md2html ($path0),".xhtml");
+    }
 }
 
 
