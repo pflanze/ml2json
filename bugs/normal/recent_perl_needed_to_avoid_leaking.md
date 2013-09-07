@@ -1,5 +1,5 @@
 The use of functional programming idioms as described in
-[hacking](hacking.md) works fine on perl v5.14.2, but some older
+[[hacking]] works fine on perl v5.14.2, but some older
 versions of perl like v5.10.1 have a bug or bugs that lead to leaking
 of memory. ml2json still works on rather big archives, but may require
 a few 100 MB of RAM or so (depending on archive size). This is also
