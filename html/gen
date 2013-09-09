@@ -326,7 +326,7 @@ fun groupkey ($path) {
     my $p0= path0 $path;
     if ($p0=~ m|^bugs/|) {
 	"bugs"
-    } elsif ($p0 eq 'docs/issues.md') {
+    } elsif ($p0 =~ m|^docs/bugs.*\.md$|) {
 	"buglist"
     } else {
 	"normal"
