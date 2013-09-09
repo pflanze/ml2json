@@ -11,7 +11,7 @@ Messages are identified in two ways:
    some non-empty content), or a newly created ID to take its
    place. Meant to identify a particular *post*. Newly created IDs are
    currently using the identify string as described below. See
-   [Todo](../TODO.md) for suggestions to change this.
+   [better_Id_generation](//better_Id_generation.md) for suggestions to change this.
 
  * "identify" string: identification of the mbox and the index of the
    message therein. Can be used to find the original message
@@ -25,4 +25,4 @@ Messages are identified in two ways:
 
    Note that `path_to_the_mbox` is not expanded (made absolute), but
    directly derived from the source path given to ml2json. See
-   [Todo](../TODO.md) for suggestions to change this.
+   [better_Id_generation](//better_Id_generation.md) for suggestions to change this.
