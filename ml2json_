@@ -151,7 +151,7 @@ sub usage {
 
   (Option names can be shortened when given as command arguments (not
   when given in config files) as long as they are unambiguous and that
-  you take the risk for future ambiguity.)
+  you accept the risk for future ambiguity.)
 
   (Christian Jaeger <$email>)
 ";

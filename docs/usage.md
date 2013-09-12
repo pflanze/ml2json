@@ -16,20 +16,27 @@ directory (or directory tree, if you use the `--recurse` option)
 
 2. decide upon a base directory where all the unpacked attachments (as
 well as serialized state--for details see phases.txt) should be
-stored; if you don't care, no problem, some directory under `/tmp` will
-be choosen. ml2json will create a symlink at `~/.ml2json-tmp` which
-points to that generated directory, so that subsequent runs of ml2json
-will find it again and can omit part of the work that was already
-done. If you want to keep the generated attachments, specify the
-`--attachment-basedir` option.
+stored; if you don't care about accessing the attachments, some
+directory under `/tmp` will be choosen. ml2json will create a symlink
+at `~/.ml2json-tmp` which points to that generated directory, so that
+subsequent runs of ml2json will find it again and can omit part of the
+work that was already done. If you *do* care about the generated
+attachments, specify the `--attachment-basedir` option.
 
 3. it's possible to customize what fields are output in the JSON by
-using a config file; see default_config.pl and `./mk2json --help`.
+using a config file. You can also put most commandline parameters into
+a config file, thus if you want to run a particular conversion
+repeatedly and consistently, consider doing that. The file
+`default_config.pl` has the defaults; this file is not meant
+to be edited, instead, create a new file that shadows the config keys
+that you want to set, then pass the path to it to the `--config`
+option. Read about `--config` in `./mk2json --help`.
 
 4. run `./mk2json sourcedir --json-to targetfile`, perhaps with the
 additional options of your choice (in particular you need to use the
 `--mbox-glob` option, if the files are not named according to the
-default mbox glob pattern, `*.mbox`).
+default mbox glob pattern, `*.mbox`; use `*` to make it look at all
+files).
 
 5. the temp / attachments dir is structured as follows:
 
@@ -46,7 +53,7 @@ default mbox glob pattern, `*.mbox`).
 
  `$n` is the natural number of the position of the email in the mbox.
 
- You can run ml2json `--deidentify "$md5_of_mbox_path/$n"` to make it
+ You can run `ml2json --deidentify "$md5_of_mbox_path/$n"` to make it
  print the original message string (as it was cut out of the mbox file).
 
 6. optionally, to clean up the generated temporary / attachments
