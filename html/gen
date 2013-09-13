@@ -15,6 +15,7 @@ use lib "$mydir/../ftemplate/lib";
 use lib "$mydir/../lib";
 
 our $outbase= "$mydir/out";
+our $inbase= "$mydir/..";
 
 mkdir $outbase;
 
@@ -24,10 +25,12 @@ use Chj::xperlfunc ':all';
 use Chj::xopen ":all";
 
 our $c= Chj::IO::Command->new_sender("git","ls-files","-z");
+our $all_files= [$c->xreadline0chop];
+$c->xxfinish;
+
 our $files= [grep {
     /\.md$/
-} $c->xreadline0chop];
-$c->xxfinish;
+} @$all_files];
 
 
 fun author_date ($path) {
@@ -74,26 +77,27 @@ TEST_if_suffix_md2html "Foo/READMe.md",'then','Foo/READMe.xhtml';
 TEST_if_suffix_md2html "Foo/MY.css",'otherwise','Foo/MY.css';
 
 
-fun url_md2html ($url) {
-    my $u= URI->new($url);
-    my $path= $u->path;
+fun perhaps_suffix_md2html ($path,$for_title=0) {
     if_suffix_md2html
       ($path,
-       0,
-       fun ($path) {
-	   $u->path($path);
-       },
-       fun ($path) {
-       });
-    "$u"
+       $for_title,
+       fun ($path) { $path },
+       fun ($path) { $path }
+      )
 }
 
 fun xsuffix_md2html ($path0,$for_title) {
     if_suffix_md2html($path0, $for_title, sub{$_[0]}, sub{die})
 }
 
+fun path02inpath ($path0) {
+    "$inbase/".$path0
+}
+
 fun path02outpath ($path0) {
-    "$outbase/".xsuffix_md2html($path0,0)
+    #"$outbase/".xsuffix_md2html($path0,0)
+    # nope, also used for .pl file copying,
+    "$outbase/".perhaps_suffix_md2html($path0,0)
 }
 
 fun getfile ($path) {
@@ -124,8 +128,26 @@ fun url_is_internal ($str) {
     not defined $u->scheme
 }
 
+our $filename2path0=
+  +{map {
+      basename ($_)=> path0($_)
+  } @$files};
+
+our $all_path0_exists=
+  +{map {
+      path0($_)=>1
+  } @$all_files};
+
+our $path0_exists=
+  +{map {
+      path0($_)=>1
+  } @$files};
+
+our $all_path0_used= {};
+
+
 use Chj::PXML;
-fun htmlmap ($e) {
+fun htmlmap ($e,$selfpath0) {
     my $name= lc($e->tag);
     my $atts=();
     for ($e->all_external_attr_names) {
@@ -136,7 +158,38 @@ fun htmlmap ($e) {
     # fix internal .md links
     if ($name eq "a"
 	and url_is_internal($$atts{href})) {
-	$$atts{href}= url_md2html ($$atts{href});
+
+	# check or find target, then convert to xhtml suffix
+	my $uri= URI->new($$atts{href}); #(h again,see url_is_internal..)
+	my $path= $uri->path;
+	
+	# XX document '//' feature
+	if ($$atts{href} =~ m|^//|s) {
+	    my ($op)= $uri->opaque() =~ m|^//([^/]+)$|s
+	      or die "bug";
+	    if (defined (my $p0= $$filename2path0{$op})) {
+		$path= url_diff ($selfpath0,$p0); # mutation
+	    } else {
+		die "unknown link target '$path'";
+	    }
+	    $uri->opaque(""); # mutation
+	} else {
+	    if (length $path) {
+		#my $p0= File::Spec->rel2abs ($path,dirname $selfpath0);
+		use Chj::Path::Calc qw'AddURL URLDiff Filename FolderOfThisFile';
+		my $p0= AddURL(dirname ($selfpath0), $path);
+		$p0=~ s|^\./||;#hack. grr y
+		defined $$all_path0_exists{$p0}
+		  or do {
+		      warn "link target does not exist: '$p0' ('$path' from '$selfpath0', link '$$atts{href}')";
+		      #use Chj::repl;repl;
+		  };
+		$$all_path0_used{$p0}++;
+	    }
+	}
+	$path= perhaps_suffix_md2html ($path);
+	$uri->path($path);
+	$$atts{href}= "$uri";# mutation.
     }
     my $res= Chj::PXML->new
 	($name,
@@ -146,7 +199,7 @@ fun htmlmap ($e) {
 	      if (ref $_) {
 		  # another HTML::Element
 		  no warnings "recursion";# XX should rather sanitize input?
-		  htmlmap ($_)
+		  htmlmap ($_,$selfpath0)
 	      } else {
 		  # a string
 		  $_
@@ -166,8 +219,8 @@ fun htmlmap ($e) {
     }
 }
 
-fun htmlparse ($str,$whichtag) {
-    htmlmap htmlparse_raw ($str,$whichtag)
+fun htmlparse ($str,$whichtag,$selfpath0) {
+    htmlmap htmlparse_raw ($str,$whichtag), $selfpath0
 }
 
 use Chj::PXML::Serialize 'pxml_xhtml_print_fast';
@@ -409,7 +462,7 @@ fun genfile ($path,$groupname) {
 	$$costranges{$path0}= $maybe_costrange;
     }
 
-    my $body= htmlparse(markdown ($str), "body");
+    my $body= htmlparse(markdown ($str), "body", $path0);
 
     my ($h1,$body1)= do {
 	my $body= $body->body;
@@ -505,6 +558,14 @@ fun genfile ($path,$groupname) {
 for my $groupname (qw(bugs normal buglist)) {
     genfile $_,$groupname for @{$$groupedfiles{$groupname}};
 }
+
+# copy referenced non-.md files:
+
+for my $path0 (keys %$all_path0_used) {
+    next if $$path0_exists{$path0}; # md path
+    putfile (path02outpath($path0), getfile (path02inpath($path0)));
+}
+
 
 #use Chj::ruse;
 use Chj::Backtrace;
