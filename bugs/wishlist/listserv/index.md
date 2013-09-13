@@ -1,8 +1,8 @@
 Handle the format as used by Listserv.[1]
 
-[http://blog.anthonyrthompson.com/2010/06/listserv-to-mailman-converting-listserv-archives-to-mailman/]
+http://blog.anthonyrthompson.com/2010/06/listserv-to-mailman-converting-listserv-archives-to-mailman/
 
-[http://www.hypermail-project.org/archive/99/0520.html] ([copy of script](2.pl))
+http://www.hypermail-project.org/archive/99/0520.html ([copy of script](2.pl))
 
 [This](1.pl) should work, the old Hypermail ls2mail circa 2004.
 
@@ -17,3 +17,9 @@ the code needs to be adapted. Cost A: $20
 detected and handled automatically. Cost B: A+$20
 
 XXX
+
+---
+
+Alternative split script:
+
+http://verify.rwth-aachen.de/psk/ls2mm/lsa2mma.py
