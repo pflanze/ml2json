@@ -16,11 +16,6 @@ Chj::Ml2json::OutputJSON
 
 =head1 DESCRIPTION
 
-This allows for customization of the output. If
-$jsonfields_orig_headers or $jsonfields_top are undef, their defaults
-are taken (see source code for those); if they are given, the values
-are used instead.
-
 $jsonfields_orig_headers is an array of [$fieldname, $n].
 $jsonfields_top is an array of [$fieldname, $methodname, $n].
 
@@ -35,9 +30,6 @@ null) is output, if there is one, the value is given as is, if there
 are multiple, they are given in an array. If $n is 2, then an array is
 always output (holding however many values there are, possibly none).
 
-See source code for the $default_jsonfields_top and
-$default_jsonfields_orig_headers.
-
 (Also see Chj::Ml2json::OutputJSON::Continuous.)
 
 =cut
@@ -46,66 +38,6 @@ $default_jsonfields_orig_headers.
 package Chj::Ml2json::OutputJSON;
 
 use strict;
-
-# List of which fields to output to JSON, at the top level of every
-# message. The first entry is the name of the field in the JSON
-# output, the second is the name of the Chj::Ml2json::OutputJSON
-# method to be called to generate it, the third can be either 0, 1 or
-# 2: 0 means, don't output this field at all (same as if the entry is
-# not present), 1 means, if there is exactly 1 value returned by the
-# method, don't wrap it in an array; 2 means, always wrap in an array
-# (or really, directly output what the method returned).
-
-our $default_jsonfields_top=
-  [
-   ["orig_headers"=> "json_orig_headers", 2],
-   ["parsed_from"=> "json_parsed_from", 2],
-   ["parsed_to"=> "json_parsed_to", 2],
-   ["parsed_cc"=> "json_parsed_cc", 2],
-   ["decoded_subject"=> "json_decoded_subject", 1],
-   ["cooked_subject"=> "json_cooked_subject", 1],
-   ["message-id"=> "json_message_id",1],
-   [replies=> "json_replies", 2],
-   ["in-reply-to"=> "json_in_reply_to", 1],
-   ["threadparent"=> "json_threadparents", 1],
-   [threadleader=> "json_threadleaders", 1],
-   [unixtime=> "json_unixtime", 1],
-   [ctime_UTC=> "json_ctime_UTC", 1],
-   [orig_plain=> "json_orig_plain", 2],
-   [orig_enriched=> "json_orig_enriched", 2],
-   [orig_html_dangerous=> "json_orig_html_dangerous", 2],
-   [html=> "json_html", 2],
-   [attachments=> "json_attachments", 2],
-   [attachments_by_type=> "json_attachments_by_type", 2],
-   [identify=> "json_identify",1],
-  ];
-
-
-# List of which email headers to output to the sub-JSON returned by
-# the json_orig_headers method.  Email headers not present are
-# ignored.  A mapping to 1 means, if there is exactly 1 such header in
-# the email, don't wrap it in an array; 2 means, always wrap in an
-# array.  (0 means, ignore this header, just as if it were not listed
-# here.) The casing as provided here is used as the header names in
-# the JSON output (overriding the casing as provided in the email).
-
-our $default_jsonfields_orig_headers=
-  [
-   ["Return-Path"=> 1],
-   [Received=> 2],
-   [Date=> 1],
-   [From=> 1],
-   [To=> 1],
-   ["Message-ID"=> 1],
-   [Subject=> 1],
-   ["Mime-Version"=> 1],
-   ["Content-Type"=> 1],
-   ["Delivered-To"=> 1],
-   ["Received-SPF"=> 1],
-   ["Authentication-Results"=> 1],
-   ["User-Agent"=> 1],
-  ];
-
 
 use Chj::Ml2json::MIMEExtract ':all';
 use Chj::xperlfunc ':all'; # basename, xstat
@@ -176,17 +108,6 @@ sub _enriched2html {
       (m2h_text_enriched ($str, MIME_Entity_maybe_content_type_lc ($ent)))
 }
 
-
-sub jsonfields_orig_headers {
-    my $s=shift;
-    $$s{jsonfields_orig_headers} || $default_jsonfields_orig_headers
-}
-
-sub jsonfields_top {
-    my $s=shift;
-    $$s{jsonfields_top} || $default_jsonfields_top
-}
-
 sub Jsonheaders_h_extract {
     my $s=shift;
     my ($method)=@_;
@@ -200,7 +121,8 @@ sub Jsonheaders_h_extract {
 
 sub jsonfields_orig_headers_h {
     my $s=shift;
-    $$s{jsonfields_orig_headers_h}||= $s->Jsonheaders_h_extract("jsonfields_orig_headers");
+    $$s{jsonfields_orig_headers_h}||=
+      $s->Jsonheaders_h_extract("jsonfields_orig_headers");
 }
 
 #sub jsonfields_top_h {
