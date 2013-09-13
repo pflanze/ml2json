@@ -24,8 +24,22 @@ package Chj::Ml2json::Debug;
 
 use strict;
 
+sub nondotpathsegmentP ($) {
+    my ($str)=@_;
+    ($str=~ m{^[^/]+$}s and not ($str eq ".." or $str eq "."))
+}
+
 sub deidentify ($$) { # load mail
     my ($str,$tmp)=@_;
+    {
+	my @p= split m|/|, $str;
+	(@p == 2
+	 and
+	 nondotpathsegmentP($p[0])
+	 and
+	 nondotpathsegmentP($p[1]))
+	  or die "invalid deidentify string '$str'";
+    }
     Chj::Ml2json::Ghostable->load("$tmp/$str");
 }
 
