@@ -53,13 +53,26 @@ fun if_suffix_md2html ($path0,$then,$otherwise) {
     if ($path0 eq "README.md") {
 	@_=("index.html"); goto $then;
     } else {
-	if ($path0=~ s/([^\/]*)\.md$/$1.xhtml/) {
-	    @_=(is_allcaps ($1) ? lc $path0 : $path0); goto $then;
+	if ($path0=~ s/(.*?)([^\/]*)\.md$/$1$2.xhtml/) {
+	    @_=(is_allcaps ($2) ? $1.lc($2).".xhtml" : $path0); goto $then;
 	} else {
 	    @_=($path0); goto $otherwise
 	}
     }
 }
+
+use Chj::TEST ":all";
+fun TEST_if_suffix_md2html ($in,$thenotherwise,$out) {
+    TEST{if_suffix_md2html $in, sub {["then",@_]}, sub{["otherwise",@_]}}
+      [$thenotherwise,$out];
+}
+TEST_if_suffix_md2html "README.md",'then','index.html';
+TEST_if_suffix_md2html "Foo/index.md",'then','Foo/index.xhtml';
+TEST_if_suffix_md2html "Foo/README.md",'then','Foo/readme.xhtml';
+TEST_if_suffix_md2html "Foo/READMe.md",'then','Foo/READMe.xhtml';
+TEST_if_suffix_md2html "Foo/MY.css",'otherwise','Foo/MY.css';
+
+#use Chj::repl;repl;exit;
 
 fun url_md2html ($url) {
     my $u= URI->new($url);
