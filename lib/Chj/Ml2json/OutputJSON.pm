@@ -12,7 +12,17 @@ Chj::Ml2json::OutputJSON
 
  use Chj::Ml2json::OutputJSON;
  our $outputjson= Chj::Ml2json::OutputJSON->new
-    ($jsonfields_orig_headers, $jsonfields_top);
+    ($jsonfields_orig_headers,
+     $jsonfields_top,
+     $htmlmapper,
+     $enrichedmapper,
+     $textstripper,
+     "Chj::Ml2json::Parse::HTML",
+     $opt{do_confirm_html});
+
+  #my $fragment= $outputjson->html($m); etc.
+  my $json= Chj::Ml2json::OutputJSON::Continuous->new($o,$outputjson);
+  $json->message_print($m,$index);
 
 =head1 DESCRIPTION
 
