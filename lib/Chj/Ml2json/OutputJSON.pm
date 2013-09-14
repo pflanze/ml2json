@@ -18,7 +18,8 @@ Chj::Ml2json::OutputJSON
      $enrichedmapper,
      $textstripper,
      "Chj::Ml2json::Parse::HTML",
-     $opt{do_confirm_html});
+     $opt{do_confirm_html},
+     $tmpdir);
 
   #my $fragment= $outputjson->html($m); etc.
   my $json= Chj::Ml2json::OutputJSON::Continuous->new($o,$outputjson);
@@ -93,6 +94,7 @@ use Chj::Struct ["jsonfields_orig_headers",
 		 "textstripper",
 		 "textstripper_htmlmapper_class",
 		 "do_confirm_html",
+		 "tmpdir", # attachment-basedir, for json_mboxpath
 		];
 
 
@@ -386,6 +388,16 @@ sub json_identify {
     @_==2 or die;
     my ($m,$index)=@_;
     $m->identify
+}
+
+sub json_mboxpath {
+    my $s=shift;
+    @_==2 or die;
+    my ($m,$index)=@_;
+    my $attbasedir= $s->tmpdir."/".$m->mboxpathhash;
+    my $mbox= Chj::Ml2json::Ghostable->load($attbasedir);
+    # (representator of the parsed state of an mbox)
+    $mbox->path
 }
 
 

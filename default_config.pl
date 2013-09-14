@@ -212,6 +212,9 @@ use Chj::numcores;
    # also, there can be multiple source messages with the same
    # message-id (all but one will be ignored), so 'message-id' doesn't
    # identify the source unambiguously, whereas 'identify' does).
+
+   [mboxpath=> "json_mboxpath", 1],
+   # the path to the mbox the mail was taken from
   ],
 
   # List of matches for text parts that should be removed from the

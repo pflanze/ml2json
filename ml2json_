@@ -385,6 +385,7 @@ our $outputjson= Chj::Ml2json::OutputJSON->new
    $textstripper,
    "Chj::Ml2json::Parse::HTML",
    $opt{do_confirm_html},
+   $tmp
   );
 
 use Chj::PXML::Serialize 'pxml_xhtml_print_fast';
