@@ -265,7 +265,8 @@ sub parse_mbox_ghost {
 	      }, stream_zip2 stream_iota(), $msgs;
 	    my $nonerrormsgghosts=
 	      stream_filter sub{defined $_[0]}, $msgghosts;
-	    Chj::Ml2json::Mailcollection::Mbox->new(stream2array $nonerrormsgghosts)
+	    Chj::Ml2json::Mailcollection::Mbox
+		->new(stream2array($nonerrormsgghosts),$mboxpath)
 		  ->ghost($mboxtargetbase);
 	} $mboxpath;
     };
