@@ -139,6 +139,14 @@ sub usage {
                 when an email was received, could also be when they
                 were copied around.
 
+   --filter-max-age duration[1]
+                Only output messages which have a date/time more
+                recent than the current time minus the given duration.
+                When using this option, the in-reply-to fields, or the
+                links in the generated pages with --html-to, can point
+                to emails that are known but not written to the json
+                stream or html-to directory.
+
     --jobs n
                 use n instead of the default $$config{jobs}\[2] jobs in parallel
 
@@ -185,6 +193,7 @@ GetOptions("verbose"=> \$opt{verbose},
 	   },
 	   "max-thread-duration=s"=> \$opt{max_thread_duration},
 	   "max-date-deviation=s"=> \$opt{max_date_deviation},
+	   "filter-max-age=s"=> \$opt{filter_max_age},
 	   "json-to=s"=> \$opt{json_to},
 	   "html-to=s"=> \$opt{html_to},
 	   "source-to=s"=> \$opt{source_to},
@@ -211,8 +220,11 @@ $opt{sourcepaths}= @ARGV ? [@ARGV] : undef;
 
 $opt{max_date_deviation}&&= parse_duration $opt{max_date_deviation};
 $opt{max_thread_duration}&&= parse_duration $opt{max_thread_duration};
+$opt{filter_max_age}&&= parse_duration $opt{filter_max_age};
 
 lock_hash %opt;
+
+our $start_t= time;
 
 sub have ($) {
     my ($v)=@_;
@@ -734,10 +746,15 @@ sub parse_and_convert {
 	# variables ($json, $index).
 	my $par1= $parallel->instantiate ($par1_tmpdir, [$o ? $o : ()]);
 
-	my $len= $par1->stream_for_each
-	  (PClosure(*do_output_message),
-	   $index->all_messages_threadsorted,
-	   20);
+	my $msgs= $index->all_messages_threadsorted;
+	if (my $td= $opt{filter_max_age}) {
+	    my $cutoff_t = $start_t - $td;
+	    $msgs= stream_filter (sub {
+				      local our ($m)=@_;
+				      $m->unixtime > $cutoff_t
+				  }, $msgs);
+	}
+	my $len= $par1->stream_for_each(PClosure(*do_output_message), $msgs, 20);
 
 	if ($opt{json_to}) {
 	    #$json->set_not_first($len);
