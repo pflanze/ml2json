@@ -25,14 +25,18 @@ use lib "$mydir/lib";
 
 sub usage {
     print STDERR map{"$_\n"} @_ if @_;
-    print "$myname --in inpath --out outpath  fieldname(s)
+    print "$myname --in inpath --out outpath  fieldname-or-jsonpath(s)
 
-  Convert a JSON list of objects into rows in CSV format. fieldname(s)
-  are the names of the JSON fields, in the order in which they should
-  appear in the CSV.
+  Convert a JSON list of objects into rows in CSV
+  format. fieldname-or-jsonpath(s) are the names or, if the --jsonpath
+  option is given, JSONPath strings for the JSON fields, in the order
+  in which they should appear in the CSV.
 
   Options:
-    --tsv  use tab character instead of ';' as column separator
+    --jsonpath
+           interpret the fielddname-or-jsonpath values as JSONPaths
+    --tsv
+           use tab character instead of ';' as column separator
     --separator c
            use c as separator character
     --no-header
@@ -53,16 +57,17 @@ our %opt;
    "in=s","out=s",
    "tsv","separator=s","no-header",
    "missing-value=s",
+   "jsonpath",
   );
 
 usage unless @ARGV;
 usage if $opt{help};
 
 
-
 use Chj::Excel::GenCSV ":all";
 use Chj::xopen ":all";
 use JSON::SL;
+require JSON::Path if $opt{jsonpath};
 
 our $separator= $opt{separator} || ($opt{tsv} ? "\t" : ";");
 our $missing_value=
@@ -86,6 +91,19 @@ sub convert {
     my $out= xopen_write $outpath;
     print_row($out, \@ARGV)
       unless $opt{"no-header"};
+    my @extractors= map {
+	my $k=$_;
+	($opt{jsonpath} ?
+	 do {
+	     my $p= JSON::Path->new($_);
+	     sub {
+		 $p->value($_[0])
+	     }
+	 }
+	 : sub {
+	     $_[0]{$k}
+	 })
+    } @ARGV;
     my $json = JSON::SL->new();
     $json->set_jsonpointer( ["/^"] );
     my $buf;
@@ -94,7 +112,7 @@ sub convert {
 	    #my $path= $$_{Path};
 	    my $v= $$_{Value};
 	    print_row($out,
-		      [map { $$v{$_} } @ARGV]);
+		      [map { scalar $_->($v) } @extractors]);
 	}
     }
     $in->xclose;
