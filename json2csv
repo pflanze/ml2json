@@ -69,7 +69,6 @@ usage unless @ARGV;
 usage if $opt{help};
 
 
-use Chj::Excel::GenCSV ":all";
 use Chj::xopen ":all";
 use JSON::SL;
 require JSON::Path if $opt{jsonpath};
@@ -77,22 +76,18 @@ require JSON if $opt{encodejson};
 
 our $separator= $opt{separator} || ($opt{tsv} ? "\t" : ";");
 our $missing_value=
-  excel_quote
   (defined $opt{"missing-value"} ? $opt{"missing-value"} : "");
+
+use Text::CSV;
+our $csv= Text::CSV->new({ binary => 1,
+			   sep_char=> $separator,
+			   eol=> "\r\n",
+			 });
 
 sub print_row ($$) {
     my ($fh,$vs)=@_;
-    $fh->xprintln(join($separator,
-		       map {
-			   (defined $_ ?
-			    excel_quote(ref $_ ?
-					($opt{encodejson} ?
-					 JSON::encode_json($_)
-					 : $_)
-					:  $_)
-			    : $missing_value)
-		       }
-		       @$vs));
+    $csv->print($fh,$vs)
+      or die $!;
 }
 
 our $bufsize = 4096;
@@ -124,7 +119,17 @@ sub convert {
 	    #my $path= $$_{Path};
 	    my $v= $$_{Value};
 	    print_row($out,
-		      [map { scalar $_->($v) } @extractors]);
+		      [
+		       map {
+			   my $val= $_->($v);
+			   (defined $val ?
+			    ((ref $val and $opt{encodejson}) ?
+			     JSON::encode_json($val)
+			     : $val)
+			    : $missing_value)
+		       }
+		       @extractors
+		      ]);
 	}
     }
     $in->xclose;
