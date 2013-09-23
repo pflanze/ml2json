@@ -1,4 +1,3 @@
-* add JSONPath support for field extraction. Cost: $4
 * add Excel .xls output. Cost: $4
 * handle multiple values: see below.
 
@@ -47,5 +46,5 @@ On how to handle multiple values, there are these 4 possible ways:
 
     but one would only do that if invention of new serialization formats is necessary (like Excel not having functions to parse JSON fragments).
 
-    JSON: Cost: $25. Custom format: Cost: $30.
+    -> see --encodejson
 
