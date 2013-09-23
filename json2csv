@@ -35,6 +35,10 @@ sub usage {
   Options:
     --jsonpath
            interpret the fielddname-or-jsonpath values as JSONPaths
+    --encodejson
+           when a field contains a nested structure (not a string or
+           number or null), output it in JSON encoding (default: show
+           stringification of Perl reference)
     --tsv
            use tab character instead of ';' as column separator
     --separator c
@@ -58,6 +62,7 @@ our %opt;
    "tsv","separator=s","no-header",
    "missing-value=s",
    "jsonpath",
+   "encodejson",
   );
 
 usage unless @ARGV;
@@ -68,6 +73,7 @@ use Chj::Excel::GenCSV ":all";
 use Chj::xopen ":all";
 use JSON::SL;
 require JSON::Path if $opt{jsonpath};
+require JSON if $opt{encodejson};
 
 our $separator= $opt{separator} || ($opt{tsv} ? "\t" : ";");
 our $missing_value=
@@ -78,7 +84,13 @@ sub print_row ($$) {
     my ($fh,$vs)=@_;
     $fh->xprintln(join($separator,
 		       map {
-			   defined $_ ? excel_quote $_ : $missing_value
+			   (defined $_ ?
+			    excel_quote(ref $_ ?
+					($opt{encodejson} ?
+					 JSON::encode_json($_)
+					 : $_)
+					:  $_)
+			    : $missing_value)
 		       }
 		       @$vs));
 }
