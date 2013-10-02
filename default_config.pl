@@ -127,6 +127,10 @@ use Chj::numcores;
    # subject based parent relations and hence is not the reverse of
    # 'replies'.  See 'threadparent' for a variant that is.
 
+   ["references"=> "json_references", 2],
+   # References header values mapped to fixed up message "id"
+   # values (see docs/message_identification.txt).
+
    ["threadparent"=> "json_threadparents", 1],
    # Taken from in-reply-to (or, not yet implemented, references)
    # header, or, if not workable, instead the mail that introduces the
