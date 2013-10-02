@@ -294,13 +294,19 @@ sub all_threadsorted {
     ]
 }
 
-sub all_messages_threadsorted {
+sub id2m {
     my $s=shift;
-    Chj::FP2::Stream::stream_map sub {
+    sub {
 	my ($id)=@_;
 	my ($t,$mg)= @{$$s{ids}{$id}};
 	$mg->resurrect
-    }, Chj::FP2::Stream::array2stream ($s->all_threadsorted)
+    }
+}
+
+sub all_messages_threadsorted {
+    my $s=shift;
+    Chj::FP2::Stream::stream_map $s->id2m,
+	Chj::FP2::Stream::array2stream ($s->all_threadsorted)
 }
 
 
