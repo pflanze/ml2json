@@ -225,6 +225,7 @@ fun htmlparse ($str,$whichtag,$selfpath0) {
 
 use Chj::PXML::Serialize 'pxml_xhtml_print_fast';
 
+# v- is now in Chj::PXML::Serialize, too, except for the xmkdir_p
 fun puthtmlfile ($path,$p) {
     xmkdir_p dirname $path;
     my $out= xopen_write($path);
