@@ -54,6 +54,11 @@ sub usage {
                 create html files in the specified directory
                 (currently meant for debugging only)
 
+    --html-index file
+                create html file with thread 'index'; --html-to should
+                be given, too, so that the link targets (currently
+                assumed to be in the same directory) are available
+
     --source-to dir
                 create files <dir>/<md5hash>/<number>.txt (where
                 <md5hash>/<number> is the same string that
@@ -196,6 +201,7 @@ GetOptions("verbose"=> \$opt{verbose},
 	   "filter-max-age=s"=> \$opt{filter_max_age},
 	   "json-to=s"=> \$opt{json_to},
 	   "html-to=s"=> \$opt{html_to},
+	   "html-index=s"=> \$opt{html_index},
 	   "source-to=s"=> \$opt{source_to},
 	   "deidentify=s"=> sub {
 	       my ($_,$v)=@_;
@@ -400,7 +406,7 @@ our $outputjson= Chj::Ml2json::OutputJSON->new
    $tmp
   );
 
-use Chj::PXML::Serialize 'pxml_xhtml_print_fast';
+use Chj::PXML::Serialize 'puthtmlfile';
 use Chj::PXHTML ':all';
 sub with_wrap_if (&$$){
     my ($fn,$val,$cond)=@_;
@@ -433,7 +439,61 @@ sub phrase_deparentisize {
     }
 }
 
+our $style_css= STYLE ({type=>"text/css"},
+		       (map {
+			   my $col= $textbackgroundcol->shade_exponentially_towards
+			     ($blockquoteendcol, 0.6, $_)->htmlstring;
+			   ".quotelevel_$_ { background-color:$col; }\n"
+		       } 1..15),
+		       ".ref_precise {list-style: disc; }\n",
+		       ".ref_subject {list-style: square; }\n",
+		      );
+
+
 our ($json, $index);
+
+sub id2maybe_mg {
+    my ($id)=@_;
+    if (my $v= $index->ids->{$id}) {
+	$$v[1]
+    } else {
+	()
+    }
+}
+
+sub id_showthread {
+    my ($maybe_selected_id)=@_;
+    my $showthread; $showthread= sub {
+	my ($subthread)=@_;
+	my $_id= $$subthread{id};
+	if (my $mg= id2maybe_mg ($_id)) {
+	    my $m= $mg->resurrect;
+	    my $url= identify2xhtml_basename($m->identify);
+
+	    my ($from)= @{$outputjson->json_parsed_from($m,undef)};
+	    my $fromstr= (phrase_dequote($$from{phrase})
+			  || phrase_deparentisize($$from{comment})
+			  || $$from{address});
+	    my $subject= $outputjson->json_decoded_subject($m,undef);
+
+	    my $cnt= [$subject, " ", I("(",$fromstr,")")];
+	    my $possiblylinkedcnt=
+	      (defined $maybe_selected_id
+	       and $_id eq $maybe_selected_id) ? $cnt : A({href=> $url}, $cnt);
+
+	    DIR({compact=>1},
+		LI({class=> "ref_".$$subthread{ref}},
+		   $possiblylinkedcnt),
+		array_map($showthread, $$subthread{replies}))
+	} else {
+	    WARN "shouldn't happen here?: id '$_id'";
+	    undef
+	}
+    };
+    my $_showthread= $showthread; weaken $showthread;
+    $showthread
+}
+
 sub do_output_message {
     my ($m,$pos)=@_;
     Try {
@@ -468,8 +528,6 @@ sub do_output_message {
 	    my $path= identify2xhtml_path($idn);
 	    # iceweasel ignores encoding in .html files, thus
 	    # needs to be .xhtml suffix
-	    my $out= xopen_write $path;
-	    binmode $out, ":utf8" or die;
 	    my $fragment= $outputjson->html($m);
 	    my $header_hashref_lc= $m->header_hashref_lc;
 	    my $ctime_UTC= $outputjson->json_ctime_UTC($m,$index);
@@ -483,17 +541,9 @@ sub do_output_message {
 	    my $threadparents= $outputjson->json_threadparents($m,$index);
 	    my $maybe_threadparent=
 	      (@$threadparents == 1) ? $$threadparents[0] : undef;
-	    my $id2maybe_mg= sub {
-		my ($id)=@_;
-		if (my $v= $index->ids->{$id}) {
-		    $$v[1]
-		} else {
-		    ()
-		}
-	    };
 	    my $msg_id2maybe_url= sub {
 		my ($id)=@_;
-		if (my $mg= &$id2maybe_mg ($id)) {
+		if (my $mg= id2maybe_mg ($id)) {
 		    my $m= $mg->resurrect; # necessary as $mg->identify is different
 		    identify2xhtml_basename($m->identify);
 		} else {
@@ -504,36 +554,6 @@ sub do_output_message {
 	    my $choice= array_zip2 \@choice, [qw(plain rich html)];
 	    my $choosen= $outputjson->html_choice($m);
 
-	    my $showthread; $showthread= sub {
-		my ($subthread)=@_;
-		my $_id= $$subthread{id};
-		if (my $mg= &$id2maybe_mg ($_id)) {
-		    my $m= $mg->resurrect;
-		    my $url= identify2xhtml_basename($m->identify);
-
-		    my ($from)= @{$outputjson->json_parsed_from($m,undef)};
-		    my $fromstr= (phrase_dequote($$from{phrase})
-				  || phrase_deparentisize($$from{comment})
-				  || $$from{address});
-		    my $subject= $outputjson->json_decoded_subject($m,undef);
-
-		    my $cnt= [$subject, " ", I("(",$fromstr,")")];
-		    my $possiblylinkedcnt=
-		      $_id eq $id ? $cnt : A({href=> $url}, $cnt);
-
-		    DIR({compact=>1},
-			LI({class=> "ref_".$$subthread{ref}},
-			   $possiblylinkedcnt),
-			map {
-			    &$showthread ($_)
-			} @{ $$subthread{replies} }
-		       )
-		} else {
-		    WARN "shouldn't happen here?: id '$_id'";
-		    undef
-		}
-	    };
-	    my $_showthread= $showthread; weaken $showthread;
 
 	    my $perhaps_source_link= $source_path && do {
 		my $rel= File::Spec->abs2rel($source_path, dirname($path));
@@ -568,15 +588,7 @@ sub do_output_message {
 	    my $page=
 	      HTML
 		(HEAD (TITLE ($idn),
-		       STYLE ({type=>"text/css"},
-			      (map {
-				  my $col= $textbackgroundcol->shade_exponentially_towards
-				      ($blockquoteendcol, 0.6, $_)->htmlstring;
-				  ".quotelevel_$_ { background-color:$col; }\n"
-			      } 1..15),
-			      ".ref_precise {list-style: disc; }\n",
-			      ".ref_subject {list-style: square; }\n",
-			     )),
+		       $style_css),
 		 BODY
 		 ({bgcolor=>"#964a2a"},
 		  TABLE ({border=>0,
@@ -678,9 +690,9 @@ sub do_output_message {
 			 TR (TD ({colspan=>2,
 				  bgcolor=> "#f0f8ff"},
 				 ($maybe_threadleader and
-				  &$showthread($index->thread($maybe_threadleader))))))));
-	    pxml_xhtml_print_fast($page, $out, "en");
-	    $out->xclose;
+				  id_showthread($id)
+				  ->($index->thread($maybe_threadleader))))))));
+	    puthtmlfile($path, $page, "en");
 	}
     } $m;
 }
@@ -746,14 +758,43 @@ sub parse_and_convert {
 	# variables ($json, $index).
 	my $par1= $parallel->instantiate ($par1_tmpdir, [$o ? $o : ()]);
 
-	my $msgs= $index->all_messages_threadsorted;
-	if (my $td= $opt{filter_max_age}) {
-	    my $cutoff_t = $start_t - $td;
-	    $msgs= stream_filter (sub {
-				      local our ($m)=@_;
-				      $m->unixtime > $cutoff_t
-				  }, $msgs);
+	my $filter_max_age= sub {
+	    my ($msgs)=@_;
+	    undef $_[0];
+	    if (my $td= $opt{filter_max_age}) {
+		my $cutoff_t = $start_t - $td;
+		stream_filter (sub {
+				   local our ($m)=@_;
+				   $m->unixtime > $cutoff_t
+			       }, $msgs);
+	    } else {
+		$msgs
+	    }
+	};
+
+	if ($opt{html_index}) {
+	    # (XX parallelize how? par stream_map wanted, then do it in do_output_message ?)
+	    my $showthread= id_showthread(undef);
+	    my $threadleader_ids= array2stream $index->all_threadleaders_sorted;
+	    my $threadleaders= stream_map $index->id2m, $threadleader_ids;
+	    $threadleaders= &$filter_max_age ($threadleaders); # XXX is this precise enough (cutoff point vs files)?
+	    my $indexpage=
+	      HTML
+		(HEAD (TITLE ("Thread index"),
+		       $style_css),
+		 BODY
+		 ({bgcolor=>"#e0e0e0"},
+		  stream_map sub {
+		      my ($threadleader)=@_;
+		      &$showthread($index->thread($threadleader->id))
+			# XX stupid. id to m to id; would even have t intermediately for the filter_max_age.
+		  }, $threadleaders));
+	    puthtmlfile ($opt{html_index}, $indexpage);
 	}
+
+	my $msgs = $index->all_messages_threadsorted;
+	$msgs= &$filter_max_age($msgs);
+
 	my $len= $par1->stream_for_each(PClosure(*do_output_message), $msgs, 20);
 
 	if ($opt{json_to}) {
