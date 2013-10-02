@@ -366,9 +366,7 @@ sub json_references {
     my $s=shift;
     @_==2 or die;
     my ($m,$index)=@_;
-    # (XX why is json_in_reply_to relying on $index? Just because
-    # $m->inreplytos is already calculated there?)
-    $m->references
+    $index->references->{$m->id}
 }
 
 sub json_threadparents {
