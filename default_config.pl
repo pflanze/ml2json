@@ -139,6 +139,10 @@ use Chj::numcores;
    # values (see docs/message_identification.txt).  Could be multiple
    # values if a mail has multiple in-reply-to headers!
 
+   ["threadparents"=> "json_threadparents", 2],
+   # same as threadparent, but even single values are provided as a
+   # list.
+
    [threadleader=> "json_threadleaders", 1],
    # Message ID representing the mail that started the thread that
    # this mail is considered to be part of (i.e. following 'replies'
