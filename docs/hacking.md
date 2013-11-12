@@ -32,17 +32,15 @@ source):
  nested structures like linked lists; those can be silenced with `no
  warnings 'recursion';`.
 
- - self tail-calling in strict code (non-lazy code, i.e. code that
- doesn't return closures by using `Chj::FP2::Lazy`'s `Delay`) can be
- expressed with a label like `LP: { ... }` and `redo LP;` instead of
- creating a `$LP` closure. This is faster than the closure and saves one
- from going through the 'weaken' circus. (Of course "while" or
- "do..while" can also be used, but labels are closer to function
- calls: they have a name which can have documentory purposes and also
- allow for calls across nestings of different loops, and can be put
- before picking up arguments from `@_`, which means, `@_=..; redo LP;`
- can be used which is closer to `@_=..; goto $LP;` should code be
- changed to the latter later on.)
+ - tail calls to self can be expressed with a label like `LP: { ... }`
+ and `redo LP;` instead of creating a closure like `$LP`. This is
+ faster than the closure and saves one from going through the 'weaken'
+ circus. (Of course "while" or "do..while" can also be used, but
+ labels are closer to function calls: they have a name which can have
+ documentary purposes and also allow for calls across nestings of
+ different loops, and can be put before picking up arguments from
+ `@_`, which means, `@_=..; redo LP;` can be used which is closer to
+ `@_=..; goto $LP;` should code be changed to the latter later on.)
 
  - when using functions to walk lazy lists (streams as in
  `Chj::FP2::Stream`), the location holding the original reference to the
