@@ -1,4 +1,4 @@
-ml2json is currently aimed to produce JSON. It already can generate
+ml2json is currently aimed at producing JSON. It already can generate
 html files, too (`--html-to` option), but this is meant for debugging,
 and no index files are being produced (html files holding the list of
 all threads).
