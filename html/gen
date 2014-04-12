@@ -163,7 +163,7 @@ fun htmlmap ($e,$selfpath0) {
 	my $uri= URI->new($$atts{href}); #(h again,see url_is_internal..)
 	my $path= $uri->path;
 	
-	# XX document '//' feature
+	# '//' feature (see doc-formatting.txt)
 	if ($$atts{href} =~ m|^//|s) {
 	    my ($op)= $uri->opaque() =~ m|^//([^/]+)$|s
 	      or die "bug";
