@@ -7,4 +7,4 @@ mydir=`dirname "$0"`
 inbase="$mydir/.."
 outbase="$mydir/out"
 
-"$mydir/gen" "$inbase" "$outbase"
+"$mydir/gen" --warn-hint "$inbase" "$outbase"

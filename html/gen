@@ -20,11 +20,23 @@ sub usage {
 
   inbase needs to be a git working directory
 
+  Options:
+    --warn-hint  warn if the website hint (header) is missing in a
+                 .md file
+
   (Christian Jaeger <$email>)
 ";
 exit (@_ ? 1 : 0);
 }
 
+use Getopt::Long;
+our $verbose=0;
+our $opt_warn_hint;
+
+GetOptions("verbose"=> \$verbose,
+	   "help"=> sub{usage},
+	   "warn-hint"=> \$opt_warn_hint,
+	   ) or exit 1;
 usage unless @ARGV==2;
 
 our ($inbase,$outbase)= @ARGV;
@@ -510,8 +522,10 @@ fun genfile ($path,$groupname,$genfilestate) {
 
     my $str= getfile "$inbase/$path";
 
-    $str=~ s/^\(Check the.*?website.*?---\s+//s
-      or $path=~/COPYING|bugs\// or warn "'$path' is missing hint";
+    if ($opt_warn_hint) {
+	$str=~ s/^\(Check the.*?website.*?---\s+//s
+	  or $path=~/COPYING|bugs\// or warn "'$path' is missing hint";
+    }
 
     if ($path0 eq "docs/usage.md") {
 	$str=~ s{\Q$usagehook}{
