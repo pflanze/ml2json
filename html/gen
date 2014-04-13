@@ -27,13 +27,17 @@ use Chj::chompspace;
 
 
 # operating on markdown source string
+# XX should this replace the document name with the document title?
 fun mediawiki_expand ($str) {
     $str=~ s%(?<=[^\\])\[\[(.*?[^\\])\]\]%
 	my $cont= $1;
 	my @parts= map { chompspace $_ } split /(?<=[^\\])\|/, $cont;
 	if (@parts==1) {
 	    my ($docname)= @parts;
-	    "[$docname](//${docname}.md)" # XX escape? XXX get title
+	    # XX get title?
+	    my $text= $docname;
+	    $text=~ tr/_/ /;
+	    "[$text](//${docname}.md)" # XX escape?
 	} elsif (@parts==2) {
 	    my ($loc,$text)= @parts;
 	    "[$text]($loc)" # XX escape url?
