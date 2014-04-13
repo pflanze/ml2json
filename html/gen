@@ -14,8 +14,20 @@ use lib "$mydir/../perllib";
 use lib "$mydir/../ftemplate/lib";
 use lib "$mydir/../lib";
 
-our $outbase= "$mydir/out";
-our $inbase= "$mydir/..";
+sub usage {
+    print STDERR map{"$_\n"} @_ if @_;
+    print "$myname inbase outbase
+
+  inbase needs to be a git working directory
+
+  (Christian Jaeger <$email>)
+";
+exit (@_ ? 1 : 0);
+}
+
+usage unless @ARGV==2;
+
+our ($inbase,$outbase)= @ARGV;
 
 mkdir $outbase;
 
@@ -51,7 +63,10 @@ fun mediawiki_expand ($str) {
 
 fun author_date ($path) {
     my $c= Chj::IO::Command->new_sender
-      ("git", "log", '--pretty=format:%aD', "--", $path);
+      (sub {
+	   xchdir $inbase;
+	   xexec "git", "log", '--pretty=format:%aD', "--", $path
+       });
     my $res= $c->xreadline;
     $c->xfinish;
     chomp $res; $res;
@@ -264,7 +279,11 @@ fun puthtmlfile ($path,$p) {
 }
 
 fun get_filesinfo () {
-    my $c= Chj::IO::Command->new_sender("git","ls-files","-z");
+    my $c= Chj::IO::Command->new_sender
+      (sub {
+	   xchdir $inbase;
+	   xexec "git","ls-files","-z"
+       });
     my $all_files= [$c->xreadline0chop];
     $c->xxfinish;
 
@@ -471,7 +490,7 @@ fun get_genfilestate ($filesinfo) {
     my $groupedfiles= array2hash_group_by $filesinfo->files, \&groupkey;
 
     my $nonbugfiles= [@{$$groupedfiles{normal}},
-		      @{$$groupedfiles{buglist}}];
+		      @{$$groupedfiles{buglist}||[]}];
 
     my $costranges={};
     # path0 -> costrange-string; filled when processing non-buglist groups
@@ -489,7 +508,7 @@ fun genfile ($path,$groupname,$genfilestate) {
 
     my $filetitle= path02title $path0;
 
-    my $str= getfile $path;
+    my $str= getfile "$inbase/$path";
 
     $str=~ s/^\(Check the.*?website.*?---\s+//s
       or $path=~/COPYING|bugs\// or warn "'$path' is missing hint";
