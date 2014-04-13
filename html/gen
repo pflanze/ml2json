@@ -23,6 +23,28 @@ use Text::Markdown 'markdown';
 use Chj::IO::Command;
 use Chj::xperlfunc ':all';
 use Chj::xopen ":all";
+use Chj::chompspace;
+
+
+# operating on markdown source string
+fun mediawiki_expand ($str) {
+    $str=~ s%(?<=[^\\])\[\[(.*?[^\\])\]\]%
+	my $cont= $1;
+	my @parts= map { chompspace $_ } split /(?<=[^\\])\|/, $cont;
+	if (@parts==1) {
+	    my ($docname)= @parts;
+	    "[$docname](//${docname}.md)" # XX escape? XXX get title
+	} elsif (@parts==2) {
+	    my ($loc,$text)= @parts;
+	    "[$text]($loc)" # XX escape url?
+	} else {
+	    # XX location?...
+	    die "more than 2 parts in a wiki style link: '$cont'";
+	}
+    %sge;
+    $str
+}
+
 
 our $c= Chj::IO::Command->new_sender("git","ls-files","-z");
 our $all_files= [$c->xreadline0chop];
@@ -468,7 +490,7 @@ fun genfile ($path,$groupname) {
 	$$costranges{$path0}= $maybe_costrange;
     }
 
-    my $body= htmlparse(markdown ($str), "body", $path0);
+    my $body= htmlparse(markdown (mediawiki_expand $str), "body", $path0);
 
     my ($h1,$body1)= do {
 	my $body= $body->body;

@@ -22,3 +22,13 @@ additions:
 
    or similar.
 
+ - wiki style links like:
+
+    [[better_Id_generation]]
+
+   or
+
+    [[better_Id_generation|better ID generation]]
+
+   are supported.
+
