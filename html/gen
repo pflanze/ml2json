@@ -16,9 +16,12 @@ use lib "$mydir/../lib";
 
 sub usage {
     print STDERR map{"$_\n"} @_ if @_;
-    print "$myname inbase outbase
+    print "$myname config inbase outbase
 
-  inbase needs to be a git working directory
+  config is the path to a Perl file ending in a hash with config
+  values, see gen-ml2json.pl for an example.
+
+  inbase needs to be a git working directory.
 
   Options:
     --warn-hint  warn if the website hint (header) is missing in a
@@ -37,9 +40,11 @@ GetOptions("verbose"=> \$verbose,
 	   "help"=> sub{usage},
 	   "warn-hint"=> \$opt_warn_hint,
 	   ) or exit 1;
-usage unless @ARGV==2;
+usage unless @ARGV==3;
 
-our ($inbase,$outbase)= @ARGV;
+our ($cfgpath, $inbase, $outbase)= @ARGV;
+
+our $cfg= require $cfgpath;
 
 mkdir $outbase;
 
@@ -358,29 +363,6 @@ our $path02sortkey= do {
     }
 };
 
-my $usageanchor= 'Run `./ml2json --help`.';
-use Chj::xpipe;
-sub helptext {
-    my ($path,$path0)=@_;
-    ## (ugly again)
-    my $diff= substr ($path, 0, length ($path) - length( $path0));
-    my ($r,$w)= xpipe;
-    if (xfork) {
-	$w->xclose;
-	my $str=$r->xcontent;
-	xwait;
-	warn "error in subprocess, $?" unless $? == 0;
-	$str
-    } else {
-	#$r->xclose;
-	local $ENV{ML2JSON_MYDIR}=".";
-	open STDOUT, ">&".fileno($w) or die $!;
-	open STDERR, ">&".fileno($w) or die $!;
-	xchdir $diff if length $diff;
-	xexec "./ml2json","--help";
-    }
-}
-
 fun _path02title_mod ($str) {
     $str=~ s/_/ /sg;
     ucfirst $str
@@ -527,14 +509,8 @@ fun genfile ($path,$groupname,$genfilestate) {
 	  or $path=~/COPYING|bugs\// or warn "'$path' is missing hint";
     }
 
-    if ($path0 eq "docs/usage.md") {
-	$str=~ s{\Q$usageanchor}{
-	    my $str= helptext($path,$path0);
-	    $str=~ s/^/    /mg;
-	    "Skip to [instructions](#Instructions) below to see a recipe.\n\n".
-	    "    \$ ./ml2json --help\n".
-	      $str
-	}e or warn "no match"
+    if (my $hdl= $cfg->{path0_handlers}->{$path0}) {
+	$str= $hdl->($path,$path0,$str);
     }
 
     my $maybe_costrange= do {
@@ -635,15 +611,13 @@ fun genfile ($path,$groupname,$genfilestate) {
     puthtmlfile($outpath,
 		HTML (
 		      HEAD (
-			    TITLE ($filetitle, " - ml2json"),
+			    TITLE ($cfg->{title}->($filetitle)),
 			    LINK ({rel=> "stylesheet",
 				   href=> url_diff ($path0, "my.css"),
 				   type=> "text/css"}),
 			   ),
 		      BODY(
-			   DIV ({class=>"header"},
-				SPAN({class=>"logo"}, "ml2json"),
-				" mail archive processor"),
+			   $cfg->{head},
 			   UL({class=> "menu"},
 			      array_map_with_islast
 			      (
