@@ -358,7 +358,7 @@ our $path02sortkey= do {
     }
 };
 
-my $usagehook= 'Run `./ml2json --help`.';
+my $usageanchor= 'Run `./ml2json --help`.';
 use Chj::xpipe;
 sub helptext {
     my ($path,$path0)=@_;
@@ -528,7 +528,7 @@ fun genfile ($path,$groupname,$genfilestate) {
     }
 
     if ($path0 eq "docs/usage.md") {
-	$str=~ s{\Q$usagehook}{
+	$str=~ s{\Q$usageanchor}{
 	    my $str= helptext($path,$path0);
 	    $str=~ s/^/    /mg;
 	    "Skip to [instructions](#Instructions) below to see a recipe.\n\n".
