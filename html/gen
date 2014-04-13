@@ -195,7 +195,7 @@ fun htmlmap ($e,$selfpath0) {
 	    if (defined (my $p0= $$filename2path0{$op})) {
 		$path= url_diff ($selfpath0,$p0); # mutation
 	    } else {
-		die "unknown link target '$path'";
+		die "unknown link target '$op' (from '$$atts{href}')";
 	    }
 	    $uri->opaque(""); # mutation
 	} else {
