@@ -147,6 +147,9 @@ our $all_path0_used= {};
 
 
 use Chj::PXML;
+
+# fix internal links, add anchors, .. in generated HTML, as well as
+# convert it to PXML.
 fun htmlmap ($e,$selfpath0) {
     my $name= lc($e->tag);
     my $atts=();
@@ -219,6 +222,8 @@ fun htmlmap ($e,$selfpath0) {
     }
 }
 
+# parse HTML string to PXML, fixing up stuff at the same time (through
+# htmlmap)
 fun htmlparse ($str,$whichtag,$selfpath0) {
     htmlmap htmlparse_raw ($str,$whichtag), $selfpath0
 }
