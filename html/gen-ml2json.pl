@@ -46,4 +46,17 @@ use Chj::PXHTML ":all";
   head=> DIV ({class=>"header"},
 	      SPAN({class=>"logo"}, "ml2json"),
 	      " mail archive processor"),
+  sortorder=>
+  [qw(
+	 README.md
+	 INSTALL.md
+	 docs/usage.md
+	 docs/phases.md
+	 docs/message_identification.md
+	 docs/warnings.md
+	 TODO.md
+	 docs/hacking.md
+	 docs/mbox.md
+	 COPYING.md
+    )],
  }
