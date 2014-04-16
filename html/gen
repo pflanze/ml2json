@@ -342,7 +342,13 @@ use Chj::FP::Array_sort;
 our $path02sortkey= do {
     my $sortprio= do {
 	my $i=1;
-	+{map { $_=> sprintf('-%04d', $i++) } @{$cfg->{sortorder}||[]}}
+	+{
+	  map {
+	      my $file= $_;
+	      $file.= ".md" unless /\.\w{1,7}\z/;
+	      $file=> sprintf('-%04d', $i++)
+	  } @{$cfg->{sortorder} || []}
+	 }
     };
     fun ($path0) {
 	$$sortprio{$path0} || $path0
