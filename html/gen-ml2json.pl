@@ -62,4 +62,6 @@ use Chj::PXHTML ":all";
 
   warn_hint=> 1, # warn if the website hint (header) is missing in a
                  # .md file
+
+  downcaps=> 1, # whether to downcase all-caps filenames like README -> Readme
  }

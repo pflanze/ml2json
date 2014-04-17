@@ -98,7 +98,8 @@ fun if_suffix_md2html ($path0,$for_title,$then,$otherwise) {
 	@_=("index.xhtml"); goto $then;
     } else {
 	if ($path0=~ s/(.*?)([^\/]*)\.md$/$1$2.xhtml/) {
-	    @_=(is_allcaps ($2) ? $1.lc($2).".xhtml" : $path0); goto $then;
+	    @_=($$cfg{downcaps} && is_allcaps ($2) ? $1.lc($2).".xhtml" : $path0);
+	    goto $then;
 	} else {
 	    @_=($path0); goto $otherwise
 	}
