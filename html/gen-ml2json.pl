@@ -59,4 +59,7 @@ use Chj::PXHTML ":all";
 	 docs/mbox.md
 	 COPYING.md
     )],
+
+  warn_hint=> 1, # warn if the website hint (header) is missing in a
+                 # .md file
  }

@@ -8,4 +8,4 @@ inbase="$mydir/.."
 outbase="$mydir/out"
 configpath="$mydir/gen-ml2json.pl"
 
-"$mydir/gen" --warn-hint "$configpath" "$inbase" "$outbase"
+"$mydir/gen" "$configpath" "$inbase" "$outbase"
