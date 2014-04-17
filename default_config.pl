@@ -6,7 +6,13 @@ use Chj::numcores;
 
 +{
   jobs=> numcores,
+  # which files are understood to be mbox files, according to their
+  # name (other files are ignored; use '*' to process all files):
+  # (XX what about dot files?)
   mbox_glob=> '*.mbox',
+  # whether sourcepaths are all paths to a Maildir, instead of to
+  # directories containing mbox files:
+  maildirs=> 0,
   max_thread_duration=> "1 month",
   good_words_path=> "$mydir/good_words.txt",
 
