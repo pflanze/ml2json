@@ -24,6 +24,8 @@ package Chj::Ml2json::Debug;
 
 use strict;
 
+use Chj::Ml2json::Ghosts; # Chj::Ml2json::Ghostable, Chj::Ml2json::Ghost
+
 sub nondotpathsegmentP ($) {
     my ($str)=@_;
     ($str=~ m{^[^/]+$}s and not ($str eq ".." or $str eq "."))

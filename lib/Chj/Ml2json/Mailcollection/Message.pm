@@ -20,7 +20,8 @@ package Chj::Ml2json::Mailcollection::Message;
 
 use strict;
 
-use Chj::Ml2json::Mailcollection; # 'Chj::Ml2json::Ghostable';
+use Chj::Ml2json::Ghosts; # Chj::Ml2json::Ghostable, Chj::Ml2json::Ghost
+#XX still needed? use Chj::Ml2json::Mailcollection; # 'Chj::Ml2json::Ghostable';
 use Chj::NoteWarn;
 use Chj::MIME::EncWords 'decode_mimewords';
 use Chj::FP::ArrayUtil 'array_hashing_uniq';

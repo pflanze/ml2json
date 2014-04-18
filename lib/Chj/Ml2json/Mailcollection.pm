@@ -22,36 +22,11 @@ package Chj::Ml2json::Mailcollection;
 
 use strict;
 
+use Chj::Ml2json::Ghosts; # Chj::Ml2json::Ghostable, Chj::Ml2json::Ghost
+
+
 # -----------------------------------------------------------------------
 # super and sub classes
-
-{
-    package Chj::Ml2json::Ghost;
-    our @ISA=("Chj::Ghostable::Ghost");
-    sub new {
-	my $s=shift;
-	@_==1 or die;
-	my ($dirpath)=@_;
-	$s->SUPER::new("$dirpath/__meta");
-    }
-}
-
-{
-    package Chj::Ml2json::Ghostable;
-    use base "Chj::Ghostable";
-    sub ghost {
-	my $s=shift;
-	@_==1 or die;
-	my ($dirpath)=@_;
-	$s->SUPER::ghost("$dirpath/__meta");
-    }
-    sub load {
-	my $cl=shift;
-	@_==1 or die;
-	my ($dirpath)=@_;
-	$cl->SUPER::load("$dirpath/__meta");
-    }
-}
 
 {
     package Chj::Ml2json::Mailcollection::Mbox;

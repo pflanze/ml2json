@@ -57,6 +57,7 @@ use Chj::Chomp;
 use URI::file;
 use Chj::FP2::List ':all';
 use Chj::FP::ArrayUtil ':all';
+use Chj::Ml2json::Ghosts; # Chj::Ml2json::Ghostable, Chj::Ml2json::Ghost
 
 
 #XX monkey patching.
