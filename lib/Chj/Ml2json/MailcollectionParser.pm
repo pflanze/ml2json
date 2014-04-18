@@ -69,6 +69,7 @@ use Date::Parse 'str2time';
 use Email::Date 'find_date';
 use Mail::Message::Field::Date;
 
+# fix up pseudo-mbox message heads: turn spaces in header names into '-'
 sub fixup_msg {
     my ($lines)=@_;
     my @head;
@@ -147,6 +148,8 @@ use Chj::Struct "Chj::Ml2json::MailcollectionParser"=>
   ];
 
 
+# parse mbox file,
+# return a ghost of a Chj::Ml2json::Mailcollection::Mbox
 sub parse_mbox_ghost {
     my $s=shift;
     @_==3 or die;
@@ -345,7 +348,10 @@ sub parse_tree {
 sub parse_trees {
     my $s=shift;
     @_==3 or @_==4 or die;
-    my ($paths,$tmp,$maybe_max_date_deviation,$maybe_seen_abspaths)=@_;
+    my ($paths,$tmp,$maybe_max_date_deviation,
+	# optional:
+	$maybe_seen_abspaths)=@_;
+
     my $seen_abspaths= $maybe_seen_abspaths||{};
     Chj::Ml2json::Mailcollection::Tree->new
 	([
