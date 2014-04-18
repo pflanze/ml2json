@@ -2,7 +2,7 @@
 
 set -eu
 
-# Workaround for bug in older Perls that prevent incremental stream
+# Workaround for bug in older Perls that prevents incremental stream
 # release, hence need more stack space for the recursion during the
 # memory freeing phase.
 
