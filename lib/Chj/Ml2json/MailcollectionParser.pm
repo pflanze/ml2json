@@ -140,6 +140,15 @@ TEST{path_simplify "bar/.."} 'bar/..';
 TEST{path_simplify "/./foo//./bar/."} '/foo/bar';
 
 
+{
+    package Chj::Ml2json::MailcollectionParser::MessageFromLines;
+    use Chj::Struct ["lines","maybe_t","cursor"];
+    sub as_string {
+	my $s=shift;
+	join ("", @{$s->lines})
+    }
+    _END_
+}
 
 
 use Chj::Struct "Chj::Ml2json::MailcollectionParser"=>
@@ -147,6 +156,107 @@ use Chj::Struct "Chj::Ml2json::MailcollectionParser"=>
    'mbox_glob', # filename-matching glob string
    'recurse', # bool
   ];
+
+
+
+
+sub parse_email {
+    my $s=shift;
+    my ($msg, $mboxpath, $mboxpathhash, $mboxtargetbase, $i,
+	$maybe_max_date_deviation)=@_;
+    Try {
+	my $targetdir= "$mboxtargetbase/$i";
+	mkdir $targetdir;
+
+	my $parser = new MIME::Parser;
+	$parser->output_dir($targetdir);
+	my $ent= $parser->parse_data($msg->as_string);
+	my $head=$ent->head;
+	my $h_orig= $head->header_hashref;
+	my $h= +{
+	    map {
+		(lc($_)=> $$h_orig{$_})
+	    } keys %$h_orig
+	};
+
+	my $unixtime= do {
+	    my $fallback= sub {
+		# get the oldest of all parseable Date headers:
+		my @unixtimes=
+		  map {
+		      my $v= chompspace $_;
+		      if (my $t= str2time ($v)) {
+			  $t
+		      } elsif ($t= str2time (do {
+			  my $v=$v;
+			  # add space before '+' or '-' in something like:
+			  # '2 Oct 1994 05:27:32+1000'
+			  $v=~ s|([+-])| $1|;
+			  $v
+		      })) {
+			  $t
+		      } elsif (my $t2=Mail::Message::Field::Date->new
+			       ->parse($v)) {
+			  $t2->time;
+		      } else {
+			  NOTE "unparseable Date header '$v' in: "
+			    ."'$mboxpath' $i";
+			  ()
+		      }
+		  } @{$$h{date}||[]};
+		#^ XX should unwrap or decode_mimewords $$h{date} right?
+		if (@unixtimes) {
+		    my $first= shift @unixtimes;
+		    array_fold(\&min, $first, \@unixtimes)
+		} else {
+		    WARN "cannot extract date from: '$mboxpath' $i";
+		    0
+		}
+	    };
+	    my $now= time;
+	    if (my $date= find_date($ent)) {
+		my $t= $date->epoch;
+		my $now2= time;
+		if ($now <= $t and $t <= $now2) {
+		    NOTE "seems Email::Date could not extract date from:"
+		      ." '$mboxpath' $i";
+		    &$fallback
+		} else {
+		    $t
+		}
+	    } else {
+		&$fallback
+	    }
+	};
+
+	if ($unixtime) {
+	    if ($msg->maybe_t and defined $maybe_max_date_deviation) {
+		my $t= $msg->maybe_t;
+		if (abs($unixtime - $t) > $maybe_max_date_deviation) {
+		    WARN "parsed Date (".localtime($unixtime)
+		      .") deviates too much from mbox time record (".
+			localtime($t)."), using the latter instead";
+		    $unixtime= $t;
+		}
+	    }
+	} else {
+	    $unixtime= $msg->maybe_t || 0;
+	}
+
+	$$s{messageclass}->new($ent,
+			       $h,
+			       $unixtime,
+			       $mboxpathhash,
+			       $i,
+			       $msg->cursor)
+	  ->ghost($targetdir);
+    } "'$mboxpath', $mboxpathhash/$i",
+      [["Chj::Ml2json::NoBodyException" => sub {
+	    my ($e)=@_;
+	    WARN "dropping message $i because: ".$e->msg;
+	    undef # filtered out later, see $nonerrormsgghosts
+	}]];
+}
 
 
 # parse mbox file,
@@ -167,105 +277,14 @@ sub parse_mbox_ghost {
 	Try {
 	    my $msgs = mbox_stream_open($mboxpath);
 
-	    my $n=0;
 	    my $msgghosts=
 	      stream_map sub {
 		  my ($i,$v)= @{$_[0]};
 		  my ($maybe_t,$lines,$cursor)=@$v;
-
-		  Try {
-		      my $targetdir= "$mboxtargetbase/$i";
-		      mkdir $targetdir;
-
-		      my $parser = new MIME::Parser;
-		      $parser->output_dir($targetdir);
-		      my $ent= $parser->parse_data
-			(join("",@{fixup_msg $lines}));
-		      my $head=$ent->head;
-		      my $h_orig= $head->header_hashref;
-		      my $h= +{
-			       map {
-				   (lc($_)=> $$h_orig{$_})
-			       } keys %$h_orig
-			      };
-
-		      my $unixtime= do {
-			  my $fallback= sub {
-			      # get the oldest of all parseable Date headers:
-			      my @unixtimes=
-				map {
-				    my $v= chompspace $_;
-				    if (my $t= str2time ($v)) {
-					$t
-				    } elsif ($t= str2time (do {
-					my $v=$v;
-					# add space before '+' or '-' in something like:
-					# '2 Oct 1994 05:27:32+1000'
-					$v=~ s|([+-])| $1|;
-					$v
-				    })) {
-					$t
-				    } elsif (my $t2=Mail::Message::Field::Date->new
-					     ->parse($v)) {
-					$t2->time;
-				    } else {
-					NOTE "unparseable Date header '$v' in: "
-					  ."'$mboxpath' $i";
-					()
-				    }
-				} @{$$h{date}||[]};
-			      #^ XX should unwrap or decode_mimewords $$h{date} right?
-			      if (@unixtimes) {
-				  my $first= shift @unixtimes;
-				  array_fold(\&min, $first, \@unixtimes)
-			      } else {
-				  WARN "cannot extract date from: '$mboxpath' $i";
-				  0
-			      }
-			  };
-			  my $now= time;
-			  if (my $date= find_date($ent)) {
-			      my $t= $date->epoch;
-			      my $now2= time;
-			      if ($now <= $t and $t <= $now2) {
-				  NOTE "seems Email::Date could not extract date from:"
-				    ." '$mboxpath' $i";
-				  &$fallback
-			      } else {
-				  $t
-			      }
-			  } else {
-			      &$fallback
-			  }
-		      };
-
-		      if ($unixtime) {
-			  if ($maybe_t and defined $maybe_max_date_deviation) {
-			      my $t= $maybe_t;
-			      if (abs($unixtime - $t) > $maybe_max_date_deviation) {
-				  WARN "parsed Date (".localtime($unixtime)
-				    .") deviates too much from mbox time record (".
-				      localtime($t)."), using the latter instead";
-				  $unixtime= $t;
-			      }
-			  }
-		      } else {
-			  $unixtime= $maybe_t || 0;
-		      }
-
-		      $$s{messageclass}->new($ent,
-					     $h,
-					     $unixtime,
-					     $mboxpathhash,
-					     $i,
-					     $cursor)
-			->ghost($targetdir);
-		  } "'$mboxpath', $mboxpathhash/$n",
-		    [["Chj::Ml2json::NoBodyException" => sub {
-			  my ($e)=@_;
-			  WARN "dropping message $n because: ".$e->msg;
-			  undef # filtered out later, see $nonerrormsgghosts
-		      }]];
+		  my $msg= new Chj::Ml2json::MailcollectionParser::MessageFromLines
+		    (fixup_msg ($lines), $maybe_t, $cursor);
+		  $s->parse_email($msg, $mboxpath, $mboxpathhash, $mboxtargetbase, $i,
+				  $maybe_max_date_deviation)
 	      }, stream_zip2 stream_iota(), $msgs;
 	    my $nonerrormsgghosts=
 	      stream_filter sub{defined $_[0]}, $msgghosts;
