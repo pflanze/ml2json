@@ -10,6 +10,7 @@ BEGIN {
     $0=~ /(.*?)([^\/]+)\z/s or die "?";
     ($mydir, $myname)=($1,$2);
 }
+use lib "/opt/chj/perllib"; # Chj/IO/Command.pm, Chj/IO/CommandCommon.pm, Chj/Path/Calc.pm
 use lib "$mydir/../perllib";
 use lib "$mydir/../ftemplate/lib";
 use lib "$mydir/../lib";
