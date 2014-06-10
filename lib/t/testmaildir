@@ -1,0 +1,59 @@
+#!/usr/bin/perl -w
+
+# Tue Jun 10 20:43:28 BST 2014
+(my $email='ch%christianjaeger,ch')=~ tr/%,/@./;
+
+use strict;
+
+
+use Cwd 'abs_path';
+
+our ($mydir, $myname);
+BEGIN {
+    my $location= (-l $0) ? abs_path ($0) : $0;
+    $location=~ /(.*?)([^\/]+?)_?\z/s or die "?";
+    ($mydir, $myname)=($1,$2);
+    $mydir= $ENV{ML2JSON_MYDIR} if $ENV{ML2JSON_MYDIR};
+}
+use lib "$mydir/perllib";
+use lib "$mydir/ftemplate/lib";
+use lib "$mydir/lib";
+
+
+sub usage {
+    print STDERR map{"$_\n"} @_ if @_;
+    print "$myname ..
+
+  (Christian Jaeger <$email>)
+";
+exit (@_ ? 1 : 0);
+}
+
+use Getopt::Long;
+our $verbose=0;
+#our $opt_dry;
+GetOptions("verbose"=> \$verbose,
+	   "help"=> sub{usage},
+	   #"dry-run"=> \$opt_dry,
+	   ) or exit 1;
+#usage unless @ARGV;
+
+use Chj::Parse::Maildir 'maildir_open_stream';;
+use Chj::FP2::Stream ":all";
+
+our $b= maildir_open_stream "in/matura91mail-ALLE/archive";
+
+our $stdout= bless *STDOUT{IO}, "Chj::IO::File";
+
+sub showb {
+    stream_for_each sub {
+	my ($v)=@_;
+	my ($a,$b,$cursor)=@$v; # stupid tuple.? XX should the other
+                                # data be made part of the cursor?
+	print "==== ".$cursor->itempath." =====\n";
+	$cursor->xsendfile_to($stdout);
+    }, $b
+}
+
+use Chj::ruse;
+use Chj::Backtrace; use Chj::repl; repl;
