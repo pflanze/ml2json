@@ -70,9 +70,12 @@ use Date::Parse 'str2time';
 use Email::Date 'find_date';
 use Mail::Message::Field::Date;
 
+
 # fix up pseudo-mbox message heads: turn spaces in header names into '-'
 sub fixup_msg {
-    my ($lines)=@_;
+    my ($message)=@_;
+    #$message->isa("Chj::Parse::Mbox::Message") or die;
+    my $lines= $message->lines;
     my @head;
     for (my $i=0; $i< @$lines; $i++) {
 	my $line= $$lines[$i];
@@ -89,7 +92,7 @@ sub fixup_msg {
                 }e;
 		push @newhead, $_
             }
-	    return [ @newhead, @$lines[$i..$#$lines] ]
+	    return $message->lines_set([ @newhead, @$lines[$i..$#$lines] ])
 	} else {
 	    push @head, $line;
 	}
@@ -138,17 +141,6 @@ TEST{path_simplify "../bar"} '../bar';
 TEST{path_simplify "bar/."} 'bar';
 TEST{path_simplify "bar/.."} 'bar/..';
 TEST{path_simplify "/./foo//./bar/."} '/foo/bar';
-
-
-{
-    package Chj::Ml2json::MailcollectionParser::MessageFromLines;
-    use Chj::Struct ["lines","maybe_t","cursor"];
-    sub as_string {
-	my $s=shift;
-	join ("", @{$s->lines})
-    }
-    _END_
-}
 
 
 use Chj::Struct "Chj::Ml2json::MailcollectionParser"=>
@@ -260,51 +252,79 @@ sub parse_email {
 
 
 # parse mbox file,
-# return a ghost of a Chj::Ml2json::Mailcollection::Mbox
-sub parse_mbox_ghost {
-    my $s=shift;
-    @_==3 or die;
-    my ($mboxpath,$tmp, $maybe_max_date_deviation)=@_;
-    # $maybe_max_date_deviation: seconds max allowed deviation between
-    # Date header and mbox time
+# return a ghost of a Chj::Ml2json::Mailcollection::Mbox ##XXX rename ::Mbox to ::Mailbox
+sub make_parse___ghost {
+    my ($xlstat_mailboxpath, $mailbox_open_stream, $fixup_msg)=@_;
+    sub {
+	my $s=shift;
+	@_==3 or die;
+	my ($mboxpath,$tmp, $maybe_max_date_deviation)=@_;
+	# $maybe_max_date_deviation: seconds max allowed deviation between
+	# Date header and mbox time
 
-    my $mboxpathhash= md5_hex(path_simplify $mboxpath);
-    my $mboxtargetbase= "$tmp/$mboxpathhash";
+	my $mboxpathhash= md5_hex(path_simplify $mboxpath);
+	my $mboxtargetbase= "$tmp/$mboxpathhash";
 
-    my $Do= sub {
-	mkdir $mboxtargetbase;
+	my $Do= sub {
+	    mkdir $mboxtargetbase;
 
-	Try {
-	    my $msgs = mbox_stream_open($mboxpath);
+	    Try {
+		my $msgs = &$mailbox_open_stream($mboxpath);
 
-	    my $msgghosts=
-	      stream_map sub {
-		  my ($i,$v)= @{$_[0]};
-		  my ($maybe_t,$lines,$cursor)=@$v;
-		  my $msg= new Chj::Ml2json::MailcollectionParser::MessageFromLines
-		    (fixup_msg ($lines), $maybe_t, $cursor);
-		  $s->parse_email($msg, $mboxpath, $mboxpathhash, $mboxtargetbase, $i,
-				  $maybe_max_date_deviation)
-	      }, stream_zip2 stream_iota(), $msgs;
-	    my $nonerrormsgghosts=
-	      stream_filter sub{defined $_[0]}, $msgghosts;
-	    Chj::Ml2json::Mailcollection::Mbox
-		->new(stream2array($nonerrormsgghosts),$mboxpath)
-		  ->ghost($mboxtargetbase);
-	} $mboxpath;
-    };
+		my $msgghosts=
+		    stream_map sub {
+			my ($i,$message)= @{$_[0]};
+			my $msg= &$fixup_msg ($message);
+			$s->parse_email($msg,
+					$mboxpath,
+					$mboxpathhash,
+					$mboxtargetbase,
+					$i,
+					$maybe_max_date_deviation)
+		}, stream_zip2 stream_iota(), $msgs;
+		my $nonerrormsgghosts=
+		  stream_filter sub{defined $_[0]}, $msgghosts;
+		Chj::Ml2json::Mailcollection::Mbox
+		    ->new(stream2array($nonerrormsgghosts),$mboxpath)
+		      ->ghost($mboxtargetbase);
+	    } $mboxpath;
+	};
 
-    my $mbox_stat= xlstat $mboxpath;
-    if (my $meta_stat= Xlstat "$mboxtargetbase/__meta") {
-	if ($meta_stat->mtime > $mbox_stat->mtime) {
-	    Chj::Ml2json::Ghost->new($mboxtargetbase)
+	my $mbox_stat= &$xlstat_mailboxpath($mboxpath);
+	if (my $meta_stat= Xlstat "$mboxtargetbase/__meta") {
+	    if ($meta_stat->mtime > $mbox_stat->mtime) {
+		Chj::Ml2json::Ghost->new($mboxtargetbase)
+	    } else {
+		&$Do
+	    }
 	} else {
 	    &$Do
 	}
-    } else {
-	&$Do
     }
 }
+
+*parse_mbox_ghost= make_parse___ghost
+  (\&xlstat,
+   \&mbox_stream_open,
+   \&fixup_msg
+  );
+
+use Chj::Parse::Maildir 'maildir_open_stream';
+sub identity {
+    $_[0]
+}
+
+# parse maildir; why is this and parse_mbox_ghost not generics on
+# another type? well, perhaps not necessary.
+*parse_maildir_ghost= make_parse___ghost
+  (\&xlstat,
+   \&maildir_open_stream,
+   # XXX: pass $s->recurse flag down to maildir_open_stream
+   # and extend the latter to handle it? (for nested
+   # maildirs)
+   \&identity,
+  );
+
 
 sub parse_mbox_dir {
     my $s=shift;
@@ -327,12 +347,22 @@ sub parse_mbox_dir {
 	      ]);
 }
 
-sub parse_mbox {
-    my $s=shift;
-    $s->parse_mbox_ghost(@_)->resurrect;
+sub make_resurrector {
+    my ($method)=@_;
+    sub {
+	my $s=shift;
+	$s->$method(@_)->resurrect;
+    }
 }
 
+*parse_mbox= make_resurrector("parse_mbox_ghost");
+*parse_maildir= make_resurrector("parse_maildir_ghost");
+
+
 our $nothing= Chj::Ml2json::Mailcollection::Tree->new([]);
+
+
+use Chj::Parse::Maildir qw(maildirP ezmlm_archiveP);
 
 sub parse_tree {
     my $s=shift;
@@ -342,24 +372,33 @@ sub parse_tree {
     my $st= xstat $path;
     if ($st->is_file) {
 	$s->parse_mbox ($path,$tmp,$maybe_max_date_deviation)
-    } elsif ($st->is_dir) {
-	my $mboxcoll= $s->parse_mbox_dir
-	  ($path,$tmp,$maybe_max_date_deviation,$seen_abspaths);
-	if ($s->recurse) {
-	    my $dircoll=
-	      Chj::Ml2json::Mailcollection::Tree->new
-		  ([
-		    map {
-			unless_seen_path $seen_abspaths, $_, sub {
-			    $s->parse_tree($_, $tmp,$maybe_max_date_deviation)
-			}
-		    } glob quotemeta($path)."/*/"
-		   ]);
-	    Chj::Ml2json::Mailcollection::Tree->new([$mboxcoll, $dircoll])
+    }
+    elsif ($st->is_dir) {
+	if (maildirP $path or ezmlm_archiveP $path) {
+#	    unless_seen_path $seen_abspaths, $path, sub {
+		##XX abspaths? does path need to be absolutified?
+		$s->parse_maildir($path, $tmp, $maybe_max_date_deviation)
+#	    }##XX what else? void?
 	} else {
-	    $mboxcoll
+	    my $mboxcoll= $s->parse_mbox_dir
+	      ($path,$tmp,$maybe_max_date_deviation,$seen_abspaths);
+	    if ($s->recurse) {
+		my $dircoll=
+		  Chj::Ml2json::Mailcollection::Tree->new
+		      ([
+			map {
+			    unless_seen_path $seen_abspaths, $_, sub {
+				$s->parse_tree($_, $tmp,$maybe_max_date_deviation)
+			    }
+			} glob quotemeta($path)."/*/"
+		       ]);
+		Chj::Ml2json::Mailcollection::Tree->new([$mboxcoll, $dircoll])
+	    } else {
+		$mboxcoll
+	    }
 	}
-    } else {
+    }
+    else {
 	WARN "ignoring item '$path' which is not a dir nor file";
 	$nothing
     }

@@ -18,6 +18,10 @@ Chj::Ml2json::Message
 
 package Chj::Ml2json::Message;
 
+# XXX should I call this Chj::Ml2json::Message::Mbox ?  or how does it
+# read the message data?
+
+
 use strict;
 
 use Chj::Ml2json::MIMEExtract ":all"; # MIME_Entity_*

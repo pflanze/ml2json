@@ -42,6 +42,37 @@ use Chj::Ml2json::Ghosts; # Chj::Ml2json::Ghostable, Chj::Ml2json::Ghost
 }
 
 {
+    package Chj::Ml2json::Mailcollection::Maildir;
+
+    {
+	package Chj::Ml2json::Mailcollection::Maildir::FakeGhost; # pseudo ghost
+	use Chj::Struct ["pathXXSOME"];
+	sub resurrect {
+	    shift
+	}
+	_END_
+    }
+
+    use Chj::Parse::Maildir 'maildir_open_stream';
+    use Chj::FP2::Stream ":all";
+
+    use Chj::Struct ["path"], 'Chj::Ml2json::Mailcollection'; ## what does it inherit?
+
+    sub messageghosts {
+	my $s=shift;
+	my ($tail)=@_;
+	my $stream= maildir_open_stream ($s->path);
+	stream_map_with_tail sub {
+	    my ($v)=@_;
+	    my ($a,$b,$cursor)=@$v; # stupid tuple.? XX should the other
+	    ##$cursor->xsendfile_to($stdout);
+	    Chj::Ml2json::Mailcollection::Maildir::FakeGhost->new($cursor)
+	}, $stream, $tail
+    }
+    _END_
+}
+
+{
     package Chj::Ml2json::Mailcollection::Tree;
     use Chj::FP2::Stream ':all';
     use Chj::Struct ["collections" # array of ::Mbox, mbox ghosts, or ::Tree
