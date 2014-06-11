@@ -222,8 +222,8 @@ sub parse_email {
 	};
 
 	if ($unixtime) {
-	    if ($msg->maybe_t and defined $maybe_max_date_deviation) {
-		my $t= $msg->maybe_t;
+	    my $t= $msg->maybe_mailbox_unixtime;
+	    if ($t and defined $maybe_max_date_deviation) {
 		if (abs($unixtime - $t) > $maybe_max_date_deviation) {
 		    WARN "parsed Date (".localtime($unixtime)
 		      .") deviates too much from mbox time record (".
@@ -273,7 +273,8 @@ sub make_parse___ghost {
 
 		my $msgghosts=
 		    stream_map sub {
-			my ($i,$message)= @{$_[0]};
+			my ($message)= @_;
+			my $i= $message->index;
 			my $msg= &$fixup_msg ($message);
 			$s->parse_email($msg,
 					$mboxpath,
@@ -281,7 +282,7 @@ sub make_parse___ghost {
 					$mboxtargetbase,
 					$i,
 					$maybe_max_date_deviation)
-		}, stream_zip2 stream_iota(), $msgs;
+		}, $msgs;
 		my $nonerrormsgghosts=
 		  stream_filter sub{defined $_[0]}, $msgghosts;
 		Chj::Ml2json::Mailcollection::Mbox
