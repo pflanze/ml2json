@@ -612,14 +612,24 @@ sub do_output_message {
 			  array_join
 			    ([
 			      map {
-				  [defined_and_length $$_{phrase}
-				   ? phrase_dequote($$_{phrase})." "
-				   : undef,
-				   TT("<", $opt{link_mail_address}->($$_{address}),
-				      ">"),
-				   defined_and_length $$_{comment}
-				   ? " ".phrase_deparentisize($$_{comment})." "
-				   : undef]
+				  my $phrasepart=
+				      (defined_and_length $$_{phrase}
+				       and
+				       phrase_dequote($$_{phrase}) ne $$_{address})
+				      ? phrase_dequote($$_{phrase})." "
+				      : undef;
+				  my $commentpart=
+				      (defined_and_length $$_{comment}
+				       ? " ".phrase_deparentisize($$_{comment})." "
+				       : undef);
+				  my $link=
+				      $opt{link_mail_address}->($$_{address});
+				  ((!defined $phrasepart
+				    and !defined $commentpart) ?
+				   TT($link)
+				   : [$phrasepart,
+				      TT("<", $link, ">"),
+				      $commentpart])
 			      } @$vs
 			     ],
 			     ", ")
