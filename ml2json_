@@ -488,18 +488,18 @@ sub id_showthread {
 	    my $maybe_date= $opt{archive_date_thread}->
 	      ($m->header_hashref_lc->{date},
 	       $m->unixtime);
-	    my $cnt= [$subject, " ",
-		      ($maybe_date ?
-		       ["(", I($fromstr), ", ", $maybe_date, ")"]
-		       : I("(",$fromstr, ")"))
-		     ];
-	    my $possiblylinkedcnt=
+	    my $cont= [$subject, " ",
+		       ($maybe_date ?
+			["(", I($fromstr), ", ", $maybe_date, ")"]
+			: I("(",$fromstr, ")"))
+		      ];
+	    my $possiblylinkedcont=
 	      (defined $maybe_selected_id
-	       and $_id eq $maybe_selected_id) ? $cnt : A({href=> $url}, $cnt);
+	       and $_id eq $maybe_selected_id) ? $cont : A({href=> $url}, $cont);
 
 	    DIR({compact=>1},
 		LI({class=> "ref_".$$subthread{ref}},
-		   $possiblylinkedcnt),
+		   $possiblylinkedcont),
 		array_map($showthread, $$subthread{replies}))
 	} else {
 	    WARN "shouldn't happen here?: id '$_id'";
