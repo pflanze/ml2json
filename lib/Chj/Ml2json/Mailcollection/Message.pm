@@ -29,9 +29,10 @@ use Chj::TEST;
 
 sub cook_subject {
     local ($_)=@_;
+    $_= lc $_;
     1 while (s/^\s+//
 	     or
-	     s/^(?:Re|Aw|Fwd?)\b//si
+	     s/^(?:re|aw|fwd?)\b//s
 	     or
 	     s/^://
 	     # ^ XX really strip Fw/Fwd ?
