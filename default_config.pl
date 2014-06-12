@@ -277,8 +277,16 @@ our ($mydir,%opt); # 'import' from main
        "$opt{listname}: @$subject ($from_string_hidemail)"
        : $identity)
   },
+  archive_message_change=> sub {
+      my ($head, $body, $m)=@_;
+      ($head, $body)
+  },
   archive_threadindex_title=> sub {
       "$opt{listname}: thread index"
+  },
+  archive_threadindex_change=> sub {
+      my ($head, $body)=@_;
+      ($head, $body)
   },
   time_zone=> "UTC", # anything that DateTime accepts, like "Europe/London"
   archive_date_message=> sub {

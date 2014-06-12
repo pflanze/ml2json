@@ -642,117 +642,119 @@ sub do_output_message {
 				 ->[0]);
 	    my $page=
 	      HTML
-		(HEAD (TITLE ($opt{archive_message_title}->
-			      ($idn, $subject, $fromstr)),
-		       $style_css),
-		 BODY
-		 ({bgcolor=>"#964a2a"},
-		  TABLE ({border=>0,
-			  cellspacing=>3,
-			  cellpadding=>16,
-			  width=>"88%",
-			  align=>"center",
-			 },
-			 TR
-			 (TD
-			  ({colspan=>2,
-			    bgcolor=> "#f0f8ff"},
-			   TABLE
-			   ({border=>0},
-			    (
-			     map {
-				 @$_==2 or die;
-				 my ($key,$val)=@$_;
-				 TR ({valign=>"top"},
-				     TD ({align=>"right"},
-					 "$key:$nbsp"),
-				     TD ($val))
-			     }
-			     ["Subject",
-			      #with_wrap_if {
-			      #	  A({href=> &$msg_id2url ($maybe_threadleader)}, $_)
-			      #} B($$orig_headers{Subject}), $maybe_threadleader
-			      #sigh, more complicated (maybe monad?):
-			      do {
-				  my $V0= B($subject);
-				  if ($maybe_threadparent) {
-				      if (my $V2= &$msg_id2maybe_url ($maybe_threadparent)) {
-					  A({href=> $V2}, $V0)
-				      } else {
-					  $V0
-				      }
-				  } else {
-				      $V0
-				  }
+		($opt{archive_message_change}->
+		 (HEAD (TITLE ($opt{archive_message_title}->
+			       ($idn, $subject, $fromstr)),
+			$style_css),
+		  BODY
+		  ({bgcolor=>"#964a2a"},
+		   TABLE ({border=>0,
+			   cellspacing=>3,
+			   cellpadding=>16,
+			   width=>"88%",
+			   align=>"center",
+			  },
+			  TR
+			  (TD
+			   ({colspan=>2,
+			     bgcolor=> "#f0f8ff"},
+			    TABLE
+			    ({border=>0},
+			     (
+			      map {
+				  @$_==2 or die;
+				  my ($key,$val)=@$_;
+				  TR ({valign=>"top"},
+				      TD ({align=>"right"},
+					  "$key:$nbsp"),
+				      TD ($val))
 			      }
-			     ],
-			     ["From", #$$header_hashref_lc{from}
-			      $addrs{from}],
-			     ["To/Cc",# $$header_hashref_lc{to},
-			      [$addrs{to},
-			       ($addrs{cc} and [", ",$addrs{cc}])]],
-			     ["Date",
-			      $opt{archive_date_message}->
-			      ($$header_hashref_lc{date},
-			       $ctime_UTC,
-			       $m->unixtime)]
-			    ),
-			    ($opt{show_messageid_and_source}->()
-			     ? TR({valign=>"top"},
-				  TD(SMALL("Message-ID:")),
-				  TD(SMALL($id,
-					   " $nbsp ",
-					   nobr
-					   ("Choice:",
-					    (map {
-						my ($used,$msg)=@$_;
-						($used
-						 ? [" ",
-						    ($choosen eq $msg ? B($msg) : $msg)]
-						 : undef)
-					    } @$choice),
-					    $perhaps_source_link))))
-			    : undef)))),
-			 TR (TD ({colspan=>2,
-				  bgcolor=> $textbackgroundcol->htmlstring},
-				 $fragment)),
-			 (@$attachments
-			  ? (map {
-			      my $att=$_;
-			      my $attpath= $$att{path};
-			      my $loc=
-				File::Spec->abs2rel($attpath, dirname($path));
-			      my $name= basename($attpath);
-			      my $formatleft=
-				+{ bgcolor=> $textbackgroundcol->htmlstring,
-				   valign=>"top",
-				   align=> "right"};
-			      my $formatright=
-				+{ bgcolor=> $textbackgroundcol->htmlstring,
-				   valign=>"top",
-				   align=> "left"};
-			      if ($$att{disposition} eq "inline"
-				  and
-				  $$att{content_type} =~ /^image/) {
-				  TR(TD($formatleft,
-					"Image ($$att{content_type}): ", BR,
-					$name),
-				     TD($formatright,
-					IMG ({src=> $loc,
-					      title=> $name})))
-			      } else {
-				  TR(TD($formatleft,
-					"Attachment ($$att{content_type}): "),
-				     TD($formatright,
-					A ({href=> $loc}, $name)))
-			      }
-			  } @$attachments)
-			  :()),
-			 TR (TD ({colspan=>2,
-				  bgcolor=> "#f0f8ff"},
-				 ($maybe_threadleader and
-				  id_showthread($id)
-				  ->($index->thread($maybe_threadleader))))))));
+			      ["Subject",
+			       #with_wrap_if {
+			       #	  A({href=> &$msg_id2url ($maybe_threadleader)}, $_)
+			       #} B($$orig_headers{Subject}), $maybe_threadleader
+			       #sigh, more complicated (maybe monad?):
+			       do {
+				   my $V0= B($subject);
+				   if ($maybe_threadparent) {
+				       if (my $V2= &$msg_id2maybe_url ($maybe_threadparent)) {
+					   A({href=> $V2}, $V0)
+				       } else {
+					   $V0
+				       }
+				   } else {
+				       $V0
+				   }
+			       }
+			      ],
+			      ["From", #$$header_hashref_lc{from}
+			       $addrs{from}],
+			      ["To/Cc",# $$header_hashref_lc{to},
+			       [$addrs{to},
+				($addrs{cc} and [", ",$addrs{cc}])]],
+			      ["Date",
+			       $opt{archive_date_message}->
+			       ($$header_hashref_lc{date},
+				$ctime_UTC,
+				$m->unixtime)]
+			     ),
+			     ($opt{show_messageid_and_source}->()
+			      ? TR({valign=>"top"},
+				   TD(SMALL("Message-ID:")),
+				   TD(SMALL($id,
+					    " $nbsp ",
+					    nobr
+					    ("Choice:",
+					     (map {
+						 my ($used,$msg)=@$_;
+						 ($used
+						  ? [" ",
+						     ($choosen eq $msg ? B($msg) : $msg)]
+						  : undef)
+					     } @$choice),
+					     $perhaps_source_link))))
+			     : undef)))),
+			  TR (TD ({colspan=>2,
+				   bgcolor=> $textbackgroundcol->htmlstring},
+				  $fragment)),
+			  (@$attachments
+			   ? (map {
+			       my $att=$_;
+			       my $attpath= $$att{path};
+			       my $loc=
+				 File::Spec->abs2rel($attpath, dirname($path));
+			       my $name= basename($attpath);
+			       my $formatleft=
+				 +{ bgcolor=> $textbackgroundcol->htmlstring,
+				    valign=>"top",
+				    align=> "right"};
+			       my $formatright=
+				 +{ bgcolor=> $textbackgroundcol->htmlstring,
+				    valign=>"top",
+				    align=> "left"};
+			       if ($$att{disposition} eq "inline"
+				   and
+				   $$att{content_type} =~ /^image/) {
+				   TR(TD($formatleft,
+					 "Image ($$att{content_type}): ", BR,
+					 $name),
+				      TD($formatright,
+					 IMG ({src=> $loc,
+					       title=> $name})))
+			       } else {
+				   TR(TD($formatleft,
+					 "Attachment ($$att{content_type}): "),
+				      TD($formatright,
+					 A ({href=> $loc}, $name)))
+			       }
+			   } @$attachments)
+			   :()),
+			  TR (TD ({colspan=>2,
+				   bgcolor=> "#f0f8ff"},
+				  ($maybe_threadleader and
+				   id_showthread($id)
+				   ->($index->thread($maybe_threadleader))))))),
+		  $m));
 	    puthtmlfile($path, $page, "en");
 	}
     } $m;
@@ -841,17 +843,18 @@ sub parse_and_convert {
 	    $threadleaders= &$filter_max_age ($threadleaders); # XXX is this precise enough (cutoff point vs files)?
 	    my $indexpage=
 	      HTML
-		(HEAD (TITLE ($opt{archive_threadindex_title}->()),
-		       $style_css),
-		 BODY
-		 ({bgcolor=>"#e0e0e0"},
-		  P ({align=>"right"}, SMALL("Times are in ",
-					     verbose_time_zone($opt{time_zone}))),
-		  stream_map sub {
-		      my ($threadleader)=@_;
-		      &$showthread($index->thread($threadleader->id))
-			# XX stupid. id to m to id; would even have t intermediately for the filter_max_age.
-		  }, $threadleaders));
+		($opt{archive_threadindex_change}->
+		 (HEAD (TITLE ($opt{archive_threadindex_title}->()),
+			$style_css),
+		  BODY
+		  ({bgcolor=>"#e0e0e0"},
+		   P ({align=>"right"}, SMALL("Times are in ",
+					      verbose_time_zone($opt{time_zone}))),
+		   stream_map sub {
+		       my ($threadleader)=@_;
+		       &$showthread($index->thread($threadleader->id))
+			 # XX stupid. id to m to id; would even have t intermediately for the filter_max_age.
+		   }, $threadleaders)));
 	    puthtmlfile ($opt{html_index}, $indexpage);
 	}
 
