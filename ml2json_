@@ -501,7 +501,7 @@ sub id_showthread {
 
 	    my $cont = do {
 		my $datecont= $maybe_date &&
-		    [" / ", $maybe_date];
+		    [", ", $maybe_date];
 		if ($maybe_prev_cookedsubject
 		    and $maybe_prev_cookedsubject eq $cookedsubject) {
 		    [ I($fromstr), $datecont ]
