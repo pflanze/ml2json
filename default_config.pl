@@ -277,7 +277,10 @@ our ($mydir,%opt); # 'import' from main
        "$opt{listname}: @$subject ($from_string_hidemail)"
        : $identity)
   },
-  time_zone=> "UTC",
+  archive_threadindex_title=> sub {
+      "$opt{listname}: thread index"
+  },
+  time_zone=> "UTC", # anything that DateTime accepts, like "Europe/London"
   archive_date_message=> sub {
       my ($dateheaderstr, $ctime_UTC, $unixtime)= @_;
       ($opt{archive} ?
@@ -286,7 +289,6 @@ our ($mydir,%opt); # 'import' from main
        # but perhaps you want to format $unixtime according to your
        # time zone instead:
        do {
-       	   require DateTime;
        	   my $dt= DateTime->from_epoch(epoch=> $unixtime);
        	   $dt->set_time_zone($opt{time_zone});
        	   $dt->strftime ('%a %b %d %H:%M:%S %Y %Z')
@@ -297,10 +299,9 @@ our ($mydir,%opt); # 'import' from main
       my ($dateheaderstr, $unixtime)= @_;
       ($opt{archive} ?
        do {
-       	   require DateTime;
        	   my $dt= DateTime->from_epoch(epoch=> $unixtime);
        	   $dt->set_time_zone($opt{time_zone});
-       	   $dt->strftime ('%a %b %d %H:%M:%S %Y %Z')
+       	   $dt->strftime ('%a %b %d %H:%M:%S %Y')
        }
        : undef)
   }

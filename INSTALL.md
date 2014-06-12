@@ -18,11 +18,13 @@ Debian-derived Linux system using:
 
     apt-get install libmime-tools-perl libemail-date-perl \
       libhtml-tree-perl libmime-encwords-perl \
-      libmail-box-perl libtime-duration-parse-perl
+      libmail-box-perl libtime-duration-parse-perl \
+      libdatetime-perl
 
 Or install MIME::Tools, HTML::Tree, MIME::EncWords, Email::Date,
-Mail::Message::Field::Date and Time::Duration::Parse from CPAN (run
-'cpan' or 'perl -MCPAN -e shell' then 'install MIME::Tools' etc.)
+Mail::Message::Field::Date, DateTime and Time::Duration::Parse from
+CPAN (run 'cpan' or 'perl -MCPAN -e shell' then 'install MIME::Tools'
+etc.)
 
 If you want to use json2csv, then also install JSON::SL from CPAN (not
 in Debian).

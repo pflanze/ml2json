@@ -349,6 +349,16 @@ use Chj::chompspace;
 use Chj::Ml2json::Parse::TextStripper;
 use Chj::Ml2json::Ghosts; # Chj::Ml2json::Ghostable, Chj::Ml2json::Ghost
 
+use DateTime;
+# XX move lib
+sub verbose_time_zone ($) {
+    my ($time_zone)=@_;
+    my $dt= DateTime->from_epoch(epoch=> 0);
+    $dt->set_time_zone($time_zone);
+    my $tzshort= $dt->time_zone_short_name;
+    my $tzlong= $dt->time_zone_long_name;
+    ($tzshort eq $tzlong) ? $tzshort : "$tzshort ($tzlong)"
+}
 
 $Chj::Ml2json::MIMEExtract::good_words= # XX hacky way to set
   do {
@@ -818,10 +828,12 @@ sub parse_and_convert {
 	    $threadleaders= &$filter_max_age ($threadleaders); # XXX is this precise enough (cutoff point vs files)?
 	    my $indexpage=
 	      HTML
-		(HEAD (TITLE ("Thread index"),
+		(HEAD (TITLE ($opt{archive_threadindex_title}->()),
 		       $style_css),
 		 BODY
 		 ({bgcolor=>"#e0e0e0"},
+		  P ({align=>"right"}, SMALL("Times are in ",
+					     verbose_time_zone($opt{time_zone}))),
 		  stream_map sub {
 		      my ($threadleader)=@_;
 		      &$showthread($index->thread($threadleader->id))
