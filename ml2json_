@@ -360,6 +360,12 @@ sub verbose_time_zone ($) {
     ($tzshort eq $tzlong) ? $tzshort : "$tzshort ($tzlong)"
 }
 
+# XX move lib
+sub defined_and_length ($) {
+    defined $_[0] and length $_[0]
+}
+
+
 $Chj::Ml2json::MIMEExtract::good_words= # XX hacky way to set
   do {
       my $f= xopen_read $opt{good_words_path};
@@ -611,7 +617,7 @@ sub do_output_message {
 				   : undef,
 				   TT("<", $opt{link_mail_address}->($$_{address}),
 				      ">"),
-				   defined $$_{comment}
+				   defined_and_length $$_{comment}
 				   ? " ".phrase_deparentisize($$_{comment})." "
 				   : undef]
 			      } @$vs
@@ -672,11 +678,9 @@ sub do_output_message {
 			     ],
 			     ["From", #$$header_hashref_lc{from}
 			      $addrs{from}],
-			     ["To",# $$header_hashref_lc{to},
-			      $addrs{to}],
-			     ($addrs{cc} ?
-			      ["Cc",$addrs{cc}]
-			      : ()),
+			     ["To/Cc",# $$header_hashref_lc{to},
+			      [$addrs{to},
+			       ($addrs{cc} and [", ",$addrs{cc}])]],
 			     ["Date",
 			      $opt{archive_date_message}->
 			      ($$header_hashref_lc{date},
