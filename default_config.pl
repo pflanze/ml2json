@@ -264,7 +264,7 @@ our ($mydir,%opt); # 'import' from main
   # Generate HTML archives for public viewing instead of for
   # debugging:
   archive=> 0, # 1
-  listname=> "",
+  listname=> "undefined list name",
   link_mail_address=> sub {
       my ($address)=@_;
       A({href=> "mailto:$address"}, $address)
