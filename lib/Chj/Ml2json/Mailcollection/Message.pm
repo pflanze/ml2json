@@ -47,7 +47,12 @@ sub cook_subject {
 TEST{ cook_subject "[bola] [balf] AW: weef" } 'weef';
 TEST{ cook_subject "RE: [bola] Re [balf] Re: weef" } 'weef';
 TEST{ cook_subject "[bola] [balf] AW: weef [bar]" } 'weef[bar]';
-TEST{ cook_subject "[bola] [balf] AW: weef (was: fluba) bah " } 'weefbah';
+TEST{ cook_subject "[bola] [balf] AW: weef (was: fluba) bah " }
+  'weefbah';
+TEST{ cook_subject "[bola] [balf] AW: weef (was: fluba) bah (Was: flubb) baz" }
+  'weefbahbaz';
+TEST{ cook_subject "[bola] [balf] AW: weef (was: fluba (was: flubi) hm) bah (Was: flubb) baz" }
+  'weefbahbaz';
 TEST{ cook_subject "Re: Re[2]: >Habermas is Habermas, 'nough said." }
   ">habermasishabermas,'noughsaid.";
 TEST{ cook_subject "re revolution" }
