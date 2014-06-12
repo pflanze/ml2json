@@ -37,7 +37,8 @@ sub usage {
   and --open-identify (and --help and --config) can alternatively be
   configured from a config file, see --config. Command line options
   have precedence. Sourcepath(s) can be configured as a 'sourcepaths'
-  config key holding an array.
+  config key holding an array. Some options can *only* be configured
+  in the config file.
 
   Sourcepaths can be files ending in .gz or .bz2, in which case they
   are uncompressed on the fly. (Note that this leads to different
