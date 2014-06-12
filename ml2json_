@@ -673,9 +673,10 @@ sub do_output_message {
 			     ["From", #$$header_hashref_lc{from}
 			      $addrs{from}],
 			     ["To",# $$header_hashref_lc{to},
-			      [$addrs{to},
-			       #$$orig_headers{Cc}..
-			       ($addrs{cc} and [", Cc: ", $addrs{cc}])]],
+			      $addrs{to}],
+			     ($addrs{cc} ?
+			      ["Cc",$addrs{cc}]
+			      : ()),
 			     ["Date",
 			      $opt{archive_date_message}->
 			      ($$header_hashref_lc{date},
