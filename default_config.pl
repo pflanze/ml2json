@@ -265,10 +265,17 @@ our ($mydir,%opt); # 'import' from main
   # debugging:
   archive=> 0, # 1
   listname=> "undefined list name",
+  hide_mail_addressP=> sub {
+      my ($address)=@_;
+      0
+  },
   link_mail_address=> sub {
       my ($address)=@_;
-      A({href=> "mailto:$address"}, $address)
-      # to hide it, return something else
+      if ($opt{hide_mail_addressP}->($address)) {
+	  I("address hidden")
+      } else {
+	  A({href=> "mailto:$address"}, $address)
+      }
   },
   show_messageid_and_source=> sub { not $opt{archive} },
   archive_message_title=> sub {
