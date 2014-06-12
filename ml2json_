@@ -25,11 +25,13 @@ our $config= require $default_config_path;
 
 sub usage {
     print STDERR map{"$_\n"} @_ if @_;
-    print "$myname sourcepath(s) [--json-to targetfile]
+    print "$myname sourcedir-or-file(s) [--json-to targetfile]
 
   sourcedir should be a directory with *.mbox files directly in it
-  ($myname does not currently recurse into subdirectories).
-  If a file is given instead, it is assumed to be an mbox file.
+  (but see --recurse).  If a file is given instead, it is assumed to
+  be an mbox file.  Paths to maildirs (with cur and new
+  subdirectories) or ezmlm archive directories are auto-detected and
+  treated accordingly.
 
   All options and actions except for --deidentify, --open-message-id
   and --open-identify (and --help and --config) can alternatively be
