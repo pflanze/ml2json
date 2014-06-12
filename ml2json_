@@ -848,13 +848,13 @@ sub parse_and_convert {
 			$style_css),
 		  BODY
 		  ({bgcolor=>"#e0e0e0"},
-		   P ({align=>"right"}, SMALL("Times are in ",
-					      verbose_time_zone($opt{time_zone}))),
-		   stream_map sub {
-		       my ($threadleader)=@_;
-		       &$showthread($index->thread($threadleader->id))
-			 # XX stupid. id to m to id; would even have t intermediately for the filter_max_age.
-		   }, $threadleaders)));
+		   $opt{time_zone_notice}->(0),
+		   (stream_map sub {
+			my ($threadleader)=@_;
+			&$showthread($index->thread($threadleader->id))
+			  # XX stupid. id to m to id; would even have t intermediately for the filter_max_age.
+		    }, $threadleaders),
+		   $opt{time_zone_notice}->(1))));
 	    puthtmlfile ($opt{html_index}, $indexpage);
 	}
 

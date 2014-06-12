@@ -289,6 +289,11 @@ our ($mydir,%opt); # 'import' from main
       ($head, $body)
   },
   time_zone=> "UTC", # anything that DateTime accepts, like "Europe/London"
+  time_zone_notice=> sub {
+      my ($position)=@_;
+      P ({align=>"right"}, SMALL("Times are in ",
+				 verbose_time_zone($opt{time_zone})))
+  },
   archive_date_message=> sub {
       my ($dateheaderstr, $ctime_UTC, $unixtime)= @_;
       ($opt{archive} ?
@@ -312,5 +317,5 @@ our ($mydir,%opt); # 'import' from main
        	   $dt->strftime ('%a %b %d %H:%M:%S %Y')
        }
        : undef)
-  }
+  },
  }
