@@ -27,6 +27,7 @@ use Chj::MIME::EncWords 'decode_mimewords';
 use Chj::FP::ArrayUtil 'array_hashing_uniq';
 use Chj::TEST;
 
+# used to find mails belonging to the same thread
 sub cook_subject {
     local ($_)=@_;
     $_= lc $_;
@@ -58,6 +59,44 @@ TEST{ cook_subject "Re: Re[2]: >Habermas is Habermas, 'nough said." }
   ">habermasishabermas,'noughsaid.";
 TEST{ cook_subject "re revolution" }
   "revolution";
+
+# cooking less than cook_subject; used to suppress subjects as long as
+# they don't have any possibly relevant change
+sub sear_subject {
+    local ($_)=@_;
+    $_= lc $_;
+    1 while (s/^\s+//
+	     or
+	     s/^(?:re|aw|fwd?)\b//s
+	     or
+	     s/^://
+	     # ^ XX really strip Fw/Fwd ?
+	     or
+	     s/^\[[^\[\]]*\]\s*//s
+	    );
+    s/\s+//sg;
+    s/[()]//sg;
+    $_
+}
+
+TEST{ sear_subject "[bola] [balf] AW: weef" }
+  'weef';
+TEST{ sear_subject "RE: [bola] Re [balf] Re: weef" }
+  'weef';
+TEST{ sear_subject "[bola] [balf] AW: weef [bar]" }
+  'weef[bar]';
+TEST{ sear_subject "[bola] [balf] AW: weef (was: fluba) bah " }
+  'weefwas:flubabah';
+TEST{ sear_subject "[bola] [balf] AW: weef (was: fluba) bah (Was: flubb) baz" }
+  'weefwas:flubabahwas:flubbbaz';
+TEST{ sear_subject "[bola] [balf] AW: weef (was: fluba (was: flubi) hm) bah (Was: flubb) baz" }
+  'weefwas:flubawas:flubihmbahwas:flubbbaz';
+TEST{ sear_subject "Re: Re[2]: >Habermas is Habermas, 'nough said." }
+  ">habermasishabermas,'noughsaid.";
+TEST{ sear_subject "re revolution" }
+  "revolution";
+TEST{ sear_subject "Re: [Foo-L] Online versions (subject closed)" }
+  "onlineversionssubjectclosed";
 
 
 {
@@ -163,23 +202,28 @@ sub decoded_headers {
     ]
 }
 
-sub maybe_cooked_subject {
-    my $s=shift;
-    my $subj= $s->decoded_headers("subject");
-    if (@$subj) {
-	my @str= map {
-	    cook_subject $_
-	} @$subj;
-	if (@str>1) {
-	    my $u= array_hashing_uniq \@str;
-	    @$u == 1 or WARN "multiple different subjects: @$u";
+sub make_maybe___subject {
+    my ($cooksear_subject)=@_;
+    sub {
+	my $s=shift;
+	my $subj= $s->decoded_headers("subject");
+	if (@$subj) {
+	    my @str= map {
+		&$cooksear_subject ($_)
+	    } @$subj;
+	    if (@str>1) {
+		my $u= array_hashing_uniq \@str;
+		@$u == 1 or WARN "multiple different subjects: @$u";
+	    }
+	    $str[0]
+	} else {
+	    undef
 	}
-	$str[0]
-    } else {
-	undef
     }
 }
 
+*maybe_cooked_subject= make_maybe___subject (\&cook_subject);
+*maybe_seared_subject= make_maybe___subject (\&sear_subject);
 
 sub if_header_anglebracketed {
     my $s=shift;

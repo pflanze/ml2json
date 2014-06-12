@@ -234,6 +234,13 @@ sub json_cooked_subject {
     $m->maybe_cooked_subject
 }
 
+sub json_seared_subject {
+    my $s=shift;
+    @_==2 or die;
+    my ($m,$index)=@_;
+    $m->maybe_seared_subject
+}
+
 
 sub attachment2json {
     my ($att,$m)=@_;

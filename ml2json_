@@ -491,7 +491,7 @@ sub fromstr ($) {
 sub id_showthread {
     my ($maybe_selected_id)=@_;
     my $showthread; $showthread= sub {
-	my ($subthread, $maybe_prev_cookedsubject)=@_;
+	my ($subthread, $maybe_prev_searedsubject)=@_;
 	my $_id= $$subthread{id};
 	if (my $mg= id2maybe_mg ($_id)) {
 	    my $m= $mg->resurrect;
@@ -503,13 +503,13 @@ sub id_showthread {
 	    my $maybe_date= $opt{archive_date_thread}->
 	      ($m->header_hashref_lc->{date},
 	       $m->unixtime);
-	    my $cookedsubject= $outputjson->json_cooked_subject($m,undef);
+	    my $searedsubject= $outputjson->json_seared_subject($m,undef);
 
 	    my $cont = do {
 		my $datecont= $maybe_date &&
 		    [", ", $maybe_date];
-		if ($maybe_prev_cookedsubject
-		    and $maybe_prev_cookedsubject eq $cookedsubject) {
+		if ($maybe_prev_searedsubject
+		    and $maybe_prev_searedsubject eq $searedsubject) {
 		    [ I($fromstr), $datecont ]
 		}
 		else {
@@ -527,7 +527,7 @@ sub id_showthread {
 		LI({class=> "ref_".$$subthread{ref}},
 		   $possiblylinkedcont),
 		array_map(sub {
-			      @_=(@_,$cookedsubject); goto $showthread
+			      @_=(@_,$searedsubject); goto $showthread
 			  }, $$subthread{replies}))
 	} else {
 	    WARN "shouldn't happen here?: id '$_id'";
