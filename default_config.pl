@@ -269,6 +269,14 @@ our ($mydir,%opt); # 'import' from main
       my ($address)=@_;
       0
   },
+  map_mail_address=> sub {
+      my ($address)=@_;
+      if ($opt{hide_mail_addressP}->($address)) {
+	  "address hidden"
+      } else {
+	  $address
+      }
+  },
   link_mail_address=> sub {
       my ($address)=@_;
       if ($opt{hide_mail_addressP}->($address)) {

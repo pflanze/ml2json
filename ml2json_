@@ -485,7 +485,7 @@ sub fromstr ($) {
     my ($from)=@_;
     (phrase_dequote($$from{phrase})
      || phrase_deparentisize($$from{comment})
-     || $opt{link_mail_address}->($$from{address}))
+     || $opt{map_mail_address}->($$from{address}))
 }
 
 sub id_showthread {
