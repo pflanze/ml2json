@@ -500,18 +500,16 @@ sub id_showthread {
 	    my $cookedsubject= $outputjson->json_cooked_subject($m,undef);
 
 	    my $cont = do {
+		my $datecont= $maybe_date &&
+		    [" (", $maybe_date, ")"];
 		if ($maybe_prev_cookedsubject
 		    and $maybe_prev_cookedsubject eq $cookedsubject) {
-		    ($maybe_date ?
-		     [I($fromstr), ", ", $maybe_date]
-		      : I($fromstr))
+		    [ I($fromstr), $datecont ]
 		}
 		else {
 		    my $subject= $outputjson->json_decoded_subject($m,undef);
-		    [$subject, " ",
-		     ($maybe_date ?
-		      ["(", I($fromstr), ", ", $maybe_date, ")"]
-		      : I("(",$fromstr, ")"))]
+		    [$subject, ", ",
+		      I($fromstr), $datecont]
 		}
 	    };
 
