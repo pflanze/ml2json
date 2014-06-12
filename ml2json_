@@ -475,7 +475,7 @@ sub fromstr ($) {
 sub id_showthread {
     my ($maybe_selected_id)=@_;
     my $showthread; $showthread= sub {
-	my ($subthread)=@_;
+	my ($subthread, $maybe_prev_cookedsubject)=@_;
 	my $_id= $$subthread{id};
 	if (my $mg= id2maybe_mg ($_id)) {
 	    my $m= $mg->resurrect;
@@ -483,16 +483,28 @@ sub id_showthread {
 
 	    my ($from)= @{$outputjson->json_parsed_from($m,undef)};
 	    my $fromstr= fromstr($from);
-	    my $subject= $outputjson->json_decoded_subject($m,undef);
 
 	    my $maybe_date= $opt{archive_date_thread}->
 	      ($m->header_hashref_lc->{date},
 	       $m->unixtime);
-	    my $cont= [$subject, " ",
-		       ($maybe_date ?
-			["(", I($fromstr), ", ", $maybe_date, ")"]
-			: I("(",$fromstr, ")"))
-		      ];
+	    my $cookedsubject= $outputjson->json_cooked_subject($m,undef);
+
+	    my $cont = do {
+		if ($maybe_prev_cookedsubject
+		    and $maybe_prev_cookedsubject eq $cookedsubject) {
+		    ($maybe_date ?
+		     [I($fromstr), ", ", $maybe_date]
+		      : I($fromstr))
+		}
+		else {
+		    my $subject= $outputjson->json_decoded_subject($m,undef);
+		    [$subject, " ",
+		     ($maybe_date ?
+		      ["(", I($fromstr), ", ", $maybe_date, ")"]
+		      : I("(",$fromstr, ")"))]
+		}
+	    };
+
 	    my $possiblylinkedcont=
 	      (defined $maybe_selected_id
 	       and $_id eq $maybe_selected_id) ? $cont : A({href=> $url}, $cont);
@@ -500,7 +512,9 @@ sub id_showthread {
 	    DIR({compact=>1},
 		LI({class=> "ref_".$$subthread{ref}},
 		   $possiblylinkedcont),
-		array_map($showthread, $$subthread{replies}))
+		array_map(sub {
+			      @_=(@_,$cookedsubject); goto $showthread
+			  }, $$subthread{replies}))
 	} else {
 	    WARN "shouldn't happen here?: id '$_id'";
 	    undef
