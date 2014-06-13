@@ -381,6 +381,13 @@ $Chj::Ml2json::MIMEExtract::good_words= # XX hacky way to set
       \%w
   };
 
+if (defined $opt{cache_dir}) {
+    mkdir $opt{cache_dir};
+    $Chj::Ml2json::Ghosts::maybe_cache_dir= $opt{cache_dir};
+    # XX hacky dito
+}
+
+
 sub identify2xhtml_basename {
     my ($idn)=@_;
     $idn=~ s|/|-|g;

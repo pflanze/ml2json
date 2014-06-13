@@ -292,7 +292,7 @@ sub make_parse___ghost {
 	};
 
 	my $mbox_stat= &$xlstat_mailboxpath($mboxpath);
-	if (my $meta_stat= Xlstat "$mboxtargetbase/__meta") {
+	if (my $meta_stat= Xlstat ghost_path($mboxtargetbase)) {
 	    if ($meta_stat->mtime > $mbox_stat->mtime) {
 		Chj::Ml2json::Ghost->new($mboxtargetbase)
 	    } else {

@@ -261,6 +261,12 @@ our ($mydir,%opt); # 'import' from main
   ],
 
 
+  # Where to cache items:
+  cache_dir=> undef, # or path string
+  # undef means, scattered in `$attachment_basedir/$md5_of_mbox_path`
+  # and its per-message subdirectories as files named "__meta".
+
+
   # Generate HTML archives for public viewing instead of for
   # debugging:
   archive=> 0, # 1
