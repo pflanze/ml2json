@@ -48,6 +48,10 @@ files).
  hash crackers, and if the `$attachment_basedir/$md5_of_mbox_path/__meta`
  file is still present, it contains the path.
 
+ If the `cache_dir` option is set, then no __meta files will be
+ created within `$attachment_basedir` (making it possible to use it
+ cleanly for serving in public html archives).
+
  If you want to know which mbox path a particular md5 originated from,
  use the ml2json `--show-mbox-path` option.
 
