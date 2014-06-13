@@ -51,7 +51,10 @@ files).
  If you want to know which mbox path a particular md5 originated from,
  use the ml2json `--show-mbox-path` option.
 
- `$n` is the natural number of the position of the email in the mbox.
+ `$n` is the non-negative integer number of the position of the email
+ in the mbox, or `$o-$p` in case of ezmlm archive dirs, where $o is
+ the ezmlm subdir and $p the message file name within the subdir (both
+ being non-negative integers, $p possibly with a leading zero).
 
  You can run `ml2json --deidentify "$md5_of_mbox_path/$n"` to make it
  print the original message string (as it was cut out of the mbox file).
