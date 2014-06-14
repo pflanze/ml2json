@@ -258,18 +258,18 @@ sub make_parse___ghost {
     sub {
 	my $s=shift;
 	@_==3 or die;
-	my ($mboxpath,$tmp, $maybe_max_date_deviation)=@_;
+	my ($mailboxpath,$tmp, $maybe_max_date_deviation)=@_;
 	# $maybe_max_date_deviation: seconds max allowed deviation between
 	# Date header and mbox time
 
-	my $mboxpathhash= md5_hex(path_simplify $mboxpath);
-	my $mboxtargetbase= "$tmp/$mboxpathhash";
+	my $mailboxpathhash= md5_hex(path_simplify $mailboxpath);
+	my $mailboxtargetbase= "$tmp/$mailboxpathhash";
 
 	my $Do= sub {
-	    mkdir $mboxtargetbase;
+	    mkdir $mailboxtargetbase;
 
 	    Try {
-		my $msgs = &$mailbox_open_stream($mboxpath);
+		my $msgs = &$mailbox_open_stream($mailboxpath);
 
 		my $msgghosts=
 		  stream_map sub {
@@ -277,24 +277,24 @@ sub make_parse___ghost {
 		      my $i= $message->index;
 		      my $msg= &$fixup_msg ($message);
 		      $s->parse_email($msg,
-				      $mboxpath,
-				      $mboxpathhash,
-				      $mboxtargetbase,
+				      $mailboxpath,
+				      $mailboxpathhash,
+				      $mailboxtargetbase,
 				      $i,
 				      $maybe_max_date_deviation)
 		  }, $msgs;
 		my $nonerrormsgghosts=
 		  stream_filter sub{defined $_[0]}, $msgghosts;
 		Chj::Ml2json::Mailcollection::Mbox
-		    ->new(stream2array($nonerrormsgghosts),$mboxpath)
-		      ->ghost($mboxtargetbase);
-	    } $mboxpath;
+		    ->new(stream2array($nonerrormsgghosts),$mailboxpath)
+		      ->ghost($mailboxtargetbase);
+	    } $mailboxpath;
 	};
 
-	my $mtime= &$mailboxpath_mtime($mboxpath);
-	if (my $meta_stat= Xlstat ghost_path($mboxtargetbase)) {
+	my $mtime= &$mailboxpath_mtime($mailboxpath);
+	if (my $meta_stat= Xlstat ghost_path($mailboxtargetbase)) {
 	    if ($meta_stat->mtime > $mtime) {
-		Chj::Ml2json::Ghost->new($mboxtargetbase)
+		Chj::Ml2json::Ghost->new($mailboxtargetbase)
 	    } else {
 		&$Do
 	    }
