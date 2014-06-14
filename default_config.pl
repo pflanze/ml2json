@@ -4,7 +4,7 @@
 
 use strict;
 use Chj::numcores;
-our $mydir;
+our ($mydir,%opt); # 'import' from main
 
 +{
   jobs=> numcores,
@@ -260,4 +260,48 @@ our $mydir;
 
   ],
 
+
+  # Generate HTML archives for public viewing instead of for
+  # debugging:
+  archive=> 0, # 1
+  listname=> "",
+  link_mail_address=> sub {
+      my ($address)=@_;
+      A({href=> "mailto:$address"}, $address)
+      # to hide it, return something else
+  },
+  show_messageid_and_source=> sub { not $opt{archive} },
+  archive_message_title=> sub {
+      my ($identity,$subject,$from_string_hidemail)=@_;
+      ($opt{archive} ?
+       "$opt{listname}: @$subject ($from_string_hidemail)"
+       : $identity)
+  },
+  time_zone=> "UTC",
+  archive_date_message=> sub {
+      my ($dateheaderstr, $ctime_UTC, $unixtime)= @_;
+      ($opt{archive} ?
+       # original header string:
+       #$dateheaderstr
+       # but perhaps you want to format $unixtime according to your
+       # time zone instead:
+       do {
+       	   require DateTime;
+       	   my $dt= DateTime->from_epoch(epoch=> $unixtime);
+       	   $dt->set_time_zone($opt{time_zone});
+       	   $dt->strftime ('%a %b %d %H:%M:%S %Y %Z')
+       }
+       : [$dateheaderstr, $nbsp, " (", $ctime_UTC, " UTC)"])
+  },
+  archive_date_thread=> sub {
+      my ($dateheaderstr, $unixtime)= @_;
+      ($opt{archive} ?
+       do {
+       	   require DateTime;
+       	   my $dt= DateTime->from_epoch(epoch=> $unixtime);
+       	   $dt->set_time_zone($opt{time_zone});
+       	   $dt->strftime ('%a %b %d %H:%M:%S %Y %Z')
+       }
+       : undef)
+  }
  }

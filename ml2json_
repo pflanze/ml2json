@@ -465,6 +465,13 @@ sub id2maybe_mg {
     }
 }
 
+sub fromstr ($) {
+    my ($from)=@_;
+    (phrase_dequote($$from{phrase})
+     || phrase_deparentisize($$from{comment})
+     || $opt{link_mail_address}->($$from{address}))
+}
+
 sub id_showthread {
     my ($maybe_selected_id)=@_;
     my $showthread; $showthread= sub {
@@ -475,12 +482,17 @@ sub id_showthread {
 	    my $url= identify2xhtml_basename($m->identify);
 
 	    my ($from)= @{$outputjson->json_parsed_from($m,undef)};
-	    my $fromstr= (phrase_dequote($$from{phrase})
-			  || phrase_deparentisize($$from{comment})
-			  || $$from{address});
+	    my $fromstr= fromstr($from);
 	    my $subject= $outputjson->json_decoded_subject($m,undef);
 
-	    my $cnt= [$subject, " ", I("(",$fromstr,")")];
+	    my $maybe_date= $opt{archive_date_thread}->
+	      ($m->header_hashref_lc->{date},
+	       $m->unixtime);
+	    my $cnt= [$subject, " ",
+		      ($maybe_date ?
+		       ["(", I($fromstr), ", ", $maybe_date, ")"]
+		       : I("(",$fromstr, ")"))
+		     ];
 	    my $possiblylinkedcnt=
 	      (defined $maybe_selected_id
 	       and $_id eq $maybe_selected_id) ? $cnt : A({href=> $url}, $cnt);
@@ -506,7 +518,7 @@ sub do_output_message {
 	      if ($opt{jobs} > 1 and $pos > 0);
 	    $json->message_print($m,$index);
 	}
-	
+
 	my $idn= $m->identify;
 	my $source_path;
 	if ($opt{source_to}) {
@@ -575,8 +587,7 @@ sub do_output_message {
 				  [defined $$_{phrase}
 				   ? phrase_dequote($$_{phrase})." "
 				   : undef,
-				   TT("<", A({href=> "mailto:$$_{address}"},
-					     $$_{address}),
+				   TT("<", $opt{link_mail_address}->($$_{address}),
 				      ">"),
 				   defined $$_{comment}
 				   ? " ".phrase_deparentisize($$_{comment})." "
@@ -588,10 +599,13 @@ sub do_output_message {
 			  undef
 		      }
 		  })
-	       } qw(from to cc);
+	      } qw(from to cc);
+	    my $fromstr= fromstr ($outputjson->_json_mailparsed_header($m,"from")
+				 ->[0]);
 	    my $page=
 	      HTML
-		(HEAD (TITLE ($idn),
+		(HEAD (TITLE ($opt{archive_message_title}->
+			      ($idn, $subject, $fromstr)),
 		       $style_css),
 		 BODY
 		 ({bgcolor=>"#964a2a"},
@@ -609,6 +623,7 @@ sub do_output_message {
 			   ({border=>0},
 			    (
 			     map {
+				 @$_==2 or die;
 				 my ($key,$val)=@$_;
 				 TR ({valign=>"top"},
 				     TD ({align=>"right"},
@@ -636,26 +651,31 @@ sub do_output_message {
 			     ["From", #$$header_hashref_lc{from}
 			      $addrs{from}],
 			     ["To",# $$header_hashref_lc{to},
-			      $addrs{to},
-			      #$$orig_headers{Cc}..
-			      ($addrs{cc} and ", Cc: ", $addrs{cc})],
+			      [$addrs{to},
+			       #$$orig_headers{Cc}..
+			       ($addrs{cc} and [", Cc: ", $addrs{cc}])]],
 			     ["Date",
-			      [$$header_hashref_lc{date}, $nbsp, " (", $ctime_UTC, " UTC)"]]
-			     ),
-			    TR({valign=>"top"},
-			       TD(SMALL("Message-ID:")),
-			       TD(SMALL($id,
-					" $nbsp ",
-					nobr
-					("Choice:",
-					 (map {
-					     my ($used,$msg)=@$_;
-					     ($used
-					      ? [" ",
-						 ($choosen eq $msg ? B($msg) : $msg)]
-					      : undef)
-					 } @$choice),
-					 $perhaps_source_link))))))),
+			      $opt{archive_date_message}->
+			      ($$header_hashref_lc{date},
+			       $ctime_UTC,
+			       $m->unixtime)]
+			    ),
+			    ($opt{show_messageid_and_source}->()
+			     ? TR({valign=>"top"},
+				  TD(SMALL("Message-ID:")),
+				  TD(SMALL($id,
+					   " $nbsp ",
+					   nobr
+					   ("Choice:",
+					    (map {
+						my ($used,$msg)=@$_;
+						($used
+						 ? [" ",
+						    ($choosen eq $msg ? B($msg) : $msg)]
+						 : undef)
+					    } @$choice),
+					    $perhaps_source_link))))
+			    : undef)))),
 			 TR (TD ({colspan=>2,
 				  bgcolor=> $textbackgroundcol->htmlstring},
 				 $fragment)),
