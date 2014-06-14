@@ -292,7 +292,7 @@ sub make_parse___ghost {
 	};
 
 	my $mtime= &$mailboxpath_mtime($mailboxpath);
-	if (my $meta_stat= Xlstat ghost_path($mailboxtargetbase)) {
+	if (my $meta_stat= XLmtimed ghost_path($mailboxtargetbase)) {
 	    if ($meta_stat->mtime > $mtime) {
 		Chj::Ml2json::Ghost->new($mailboxtargetbase)
 	    } else {
@@ -305,7 +305,10 @@ sub make_parse___ghost {
 }
 
 *parse_mbox_ghost= make_parse___ghost
-  (\&xlstat,
+  (sub {
+       my ($path)=@_;
+       xLmtimed ($path)->mtime
+   },
    \&mbox_stream_open,
    \&fixup_msg
   );
