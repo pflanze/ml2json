@@ -254,7 +254,7 @@ sub parse_email {
 # parse mbox file,
 # return a ghost of a Chj::Ml2json::Mailcollection::Mbox ##XXX rename ::Mbox to ::Mailbox
 sub make_parse___ghost {
-    my ($xlstat_mailboxpath, $mailbox_open_stream, $fixup_msg)=@_;
+    my ($mailboxpath_mtime, $mailbox_open_stream, $fixup_msg)=@_;
     sub {
 	my $s=shift;
 	@_==3 or die;
@@ -272,17 +272,17 @@ sub make_parse___ghost {
 		my $msgs = &$mailbox_open_stream($mboxpath);
 
 		my $msgghosts=
-		    stream_map sub {
-			my ($message)= @_;
-			my $i= $message->index;
-			my $msg= &$fixup_msg ($message);
-			$s->parse_email($msg,
-					$mboxpath,
-					$mboxpathhash,
-					$mboxtargetbase,
-					$i,
-					$maybe_max_date_deviation)
-		}, $msgs;
+		  stream_map sub {
+		      my ($message)= @_;
+		      my $i= $message->index;
+		      my $msg= &$fixup_msg ($message);
+		      $s->parse_email($msg,
+				      $mboxpath,
+				      $mboxpathhash,
+				      $mboxtargetbase,
+				      $i,
+				      $maybe_max_date_deviation)
+		  }, $msgs;
 		my $nonerrormsgghosts=
 		  stream_filter sub{defined $_[0]}, $msgghosts;
 		Chj::Ml2json::Mailcollection::Mbox
@@ -291,9 +291,9 @@ sub make_parse___ghost {
 	    } $mboxpath;
 	};
 
-	my $mbox_stat= &$xlstat_mailboxpath($mboxpath);
+	my $mtime= &$mailboxpath_mtime($mboxpath);
 	if (my $meta_stat= Xlstat ghost_path($mboxtargetbase)) {
-	    if ($meta_stat->mtime > $mbox_stat->mtime) {
+	    if ($meta_stat->mtime > $mtime) {
 		Chj::Ml2json::Ghost->new($mboxtargetbase)
 	    } else {
 		&$Do
@@ -310,7 +310,7 @@ sub make_parse___ghost {
    \&fixup_msg
   );
 
-use Chj::Parse::Maildir 'maildir_open_stream';
+use Chj::Parse::Maildir 'maildir_open_stream', 'maildir_mtime';
 sub identity {
     $_[0]
 }
@@ -318,7 +318,7 @@ sub identity {
 # parse maildir; why is this and parse_mbox_ghost not generics on
 # another type? well, perhaps not necessary.
 *parse_maildir_ghost= make_parse___ghost
-  (\&xlstat,
+  (\&maildir_mtime,
    \&maildir_open_stream,
    # XXX: pass $s->recurse flag down to maildir_open_stream
    # and extend the latter to handle it? (for nested
