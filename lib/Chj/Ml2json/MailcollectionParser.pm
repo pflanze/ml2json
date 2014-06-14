@@ -151,13 +151,12 @@ use Chj::Struct "Chj::Ml2json::MailcollectionParser"=>
 
 
 
-
-sub parse_email {
+sub _parse_email {
     my $s=shift;
+    my $args=shift;
     my ($msg, $mboxpath, $mboxpathhash, $mboxtargetbase, $i,
-	$maybe_max_date_deviation)=@_;
+	$maybe_max_date_deviation, $targetdir)=@$args;
     Try {
-	my $targetdir= "$mboxtargetbase/$i";
 	mkdir $targetdir;
 
 	my $parser = new MIME::Parser;
@@ -241,7 +240,6 @@ sub parse_email {
 			       $mboxpathhash,
 			       $i,
 			       $msg->cursor)
-	  ->ghost($targetdir);
     } "'$mboxpath', $mboxpathhash/$i",
       [["Chj::Ml2json::NoBodyException" => sub {
 	    my ($e)=@_;
@@ -250,11 +248,32 @@ sub parse_email {
 	}]];
 }
 
+sub parsed_email_mbox_ghost {
+    my $s=shift;
+    my $args=shift;
+    my ($msg, $mboxpath, $mboxpathhash, $mboxtargetbase, $i,
+	$maybe_max_date_deviation, $targetdir)=@$args;
+    # no way to know which messages in the mbox are unchanged, thus
+    # regenerate all of them
+    $s->_parse_email ($args)->ghost ($targetdir)
+}
+
+sub parsed_email_maildir_ghost {
+    my $s=shift;
+    my $args=shift;
+    my ($msg, $mboxpath, $mboxpathhash, $mboxtargetbase, $i,
+	$maybe_max_date_deviation, $targetdir)=@$args;
+    ghost_make $targetdir, $msg->cursor->itempath,
+      sub {
+	  $s->_parse_email ($args)
+      }, "Chj::Ml2json::Mailcollection::Message_ghost";
+}
+
 
 # parse mbox file,
 # return a ghost of a Chj::Ml2json::Mailcollection::Mbox ##XXX rename ::Mbox to ::Mailbox
 sub make_parse___ghost {
-    my ($mailboxpath_mtime, $mailbox_open_stream, $fixup_msg)=@_;
+    my ($mailboxpath_mtime, $mailbox_open_stream, $fixup_msg, $parse_email)=@_;
     sub {
 	my $s=shift;
 	@_==3 or die;
@@ -265,42 +284,34 @@ sub make_parse___ghost {
 	my $mailboxpathhash= md5_hex(path_simplify $mailboxpath);
 	my $mailboxtargetbase= "$tmp/$mailboxpathhash";
 
-	my $Do= sub {
-	    mkdir $mailboxtargetbase;
+	ghost_make_
+	  ($mailboxtargetbase,
+	   sub { &$mailboxpath_mtime($mailboxpath) },
+	   sub {
+	       mkdir $mailboxtargetbase;
 
-	    Try {
-		my $msgs = &$mailbox_open_stream($mailboxpath);
+	       Try {
+		   my $msgs = &$mailbox_open_stream($mailboxpath);
 
-		my $msgghosts=
-		  stream_map sub {
-		      my ($message)= @_;
-		      my $i= $message->index;
-		      my $msg= &$fixup_msg ($message);
-		      $s->parse_email($msg,
-				      $mailboxpath,
-				      $mailboxpathhash,
-				      $mailboxtargetbase,
-				      $i,
-				      $maybe_max_date_deviation)
-		  }, $msgs;
-		my $nonerrormsgghosts=
-		  stream_filter sub{defined $_[0]}, $msgghosts;
-		Chj::Ml2json::Mailcollection::Mbox
-		    ->new(stream2array($nonerrormsgghosts),$mailboxpath)
-		      ->ghost($mailboxtargetbase);
-	    } $mailboxpath;
-	};
-
-	my $mtime= &$mailboxpath_mtime($mailboxpath);
-	if (my $meta_stat= XLmtimed ghost_path($mailboxtargetbase)) {
-	    if ($meta_stat->mtime > $mtime) {
-		Chj::Ml2json::Ghost->new($mailboxtargetbase)
-	    } else {
-		&$Do
-	    }
-	} else {
-	    &$Do
-	}
+		   my $msgghosts=
+		     stream_map sub {
+			 my ($message)= @_;
+			 my $i= $message->index;
+			 my $msg= &$fixup_msg ($message);
+			 $s->$parse_email([$msg,
+					   $mailboxpath,
+					   $mailboxpathhash,
+					   $mailboxtargetbase,
+					   $i,
+					   $maybe_max_date_deviation,
+					   "$mailboxtargetbase/$i"])
+		     }, $msgs;
+		   my $nonerrormsgghosts=
+		     stream_filter sub{defined $_[0]}, $msgghosts;
+		   Chj::Ml2json::Mailcollection::Mbox
+		       ->new(stream2array($nonerrormsgghosts),$mailboxpath);
+	       } $mailboxpath;
+	   });
     }
 }
 
@@ -310,7 +321,8 @@ sub make_parse___ghost {
        xLmtimed ($path)->mtime
    },
    \&mbox_stream_open,
-   \&fixup_msg
+   \&fixup_msg,
+   "parsed_email_mbox_ghost"
   );
 
 use Chj::Parse::Maildir 'maildir_open_stream', 'maildir_mtime';
@@ -327,7 +339,7 @@ sub identity {
    # and extend the latter to handle it? (for nested
    # maildirs)
    \&identity,
-  );
+   "parsed_email_maildir_ghost");
 
 
 sub parse_mbox_dir {
