@@ -101,9 +101,7 @@ TEST{ sear_subject "Re: [Foo-L] Online versions (subject closed)" }
 
 {
     package Chj::Ml2json::Mailcollection::Message_ghost;
-    our @ISA= "Chj::Ghostable::Ghost";
-    # Chj::Ml2json::Ghost would make it go through its new method
-    # converting path to ghost_path one time too many.
+    our @ISA= "Chj::Ml2json::Ghost";
 
     # read cache, only filled on reading
     our $cachesize= 20;
