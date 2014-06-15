@@ -2,10 +2,12 @@ COPYING
 Chj/Backtrace.pm
 Chj/Browser.pm
 Chj/Chomp.pm
+Chj/Getopt.pm
 Chj/IO/Dir.pm
 Chj/IO/File.pm
 Chj/IO/Pipe.pm
 Chj/IO/Tempdir.pm
+Chj/Shelllike/Rmrf.pm
 Chj/TEST.pm
 Chj/Unix/Exitcode.pm
 Chj/Unix/Signal.pm
@@ -15,6 +17,7 @@ Chj/noTEST.pm
 Chj/opencachefile.pm
 Chj/singlequote.pm
 Chj/xopen.pm
+Chj/xopendir.pm
 Chj/xopengzip.pm
 Chj/xperlfunc.pm
 Chj/xpipe.pm
