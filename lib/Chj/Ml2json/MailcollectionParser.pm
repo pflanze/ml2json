@@ -60,6 +60,7 @@ use Cwd 'abs_path';
 use Chj::Ml2json::Exceptions;
 use Chj::TEST;
 use Chj::Ml2json::Ghosts; # Chj::Ml2json::Ghostable, Chj::Ml2json::Ghost
+use Chj::Shelllike::Rmrf;
 
 # date parsing is complicated matters with there being software not
 # creating standard conform formats, especially if there are emails
@@ -157,7 +158,11 @@ sub _parse_email {
     my ($msg, $mboxpath, $mboxpathhash, $mboxtargetbase, $i,
 	$maybe_max_date_deviation, $targetdir)=@$args;
     Try {
-	mkdir $targetdir;
+	mkdir $targetdir or do {
+	    # delete older version first
+	    Rmrf $targetdir;
+	    xmkdir $targetdir;
+	};
 
 	my $parser = new MIME::Parser;
 	$parser->output_dir($targetdir);
