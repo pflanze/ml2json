@@ -61,6 +61,7 @@ use Chj::Ml2json::Exceptions;
 use Chj::TEST;
 use Chj::Ml2json::Ghosts; # Chj::Ml2json::Ghostable, Chj::Ml2json::Ghost
 use Chj::Shelllike::Rmrf;
+use Chj::xopendir;
 
 # date parsing is complicated matters with there being software not
 # creating standard conform formats, especially if there are emails
@@ -298,23 +299,42 @@ sub make_parse___ghost {
 	       Try {
 		   my $msgs = &$mailbox_open_stream($mailboxpath);
 
+		   my $is= {};
+
 		   my $msgghosts=
 		     stream_map sub {
 			 my ($message)= @_;
 			 my $i= $message->index;
+			 $$is{$i}++;
 			 my $msg= &$fixup_msg ($message);
+			 my $targetdir= "$mailboxtargetbase/$i";
 			 $s->$parse_email([$msg,
 					   $mailboxpath,
 					   $mailboxpathhash,
 					   $mailboxtargetbase,
 					   $i,
 					   $maybe_max_date_deviation,
-					   "$mailboxtargetbase/$i"])
+					   $targetdir])
 		     }, $msgs;
 		   my $nonerrormsgghosts=
 		     stream_filter sub{defined $_[0]}, $msgghosts;
+
+		   my $ghostsarray= stream2array($nonerrormsgghosts);
+		   # now, $is is set, and we can clean up other
+		   # (supposedly stale) subdirs:
+		   {
+		       my $d= xopendir $mailboxtargetbase;
+		       while (defined (my $item= $d->xnread)) {
+			   unless ($$is{$item}) {
+			       my $path= "$mailboxtargetbase/$item";
+			       WARN "Removing stale path '$path'";
+			       Rmrf $path;
+			   }
+		       }
+		   }
+
 		   Chj::Ml2json::Mailcollection::Mbox
-		       ->new(stream2array($nonerrormsgghosts),$mailboxpath);
+		       ->new($ghostsarray,$mailboxpath);
 	       } $mailboxpath;
 	   });
     }
