@@ -66,10 +66,11 @@ sub ghost_make_ ($$$;$) {
     my $Do= sub {
 	&$generate ()->ghost($targetpath)
     };
-    if (defined (my $targetmtime= XLmtime (ghost_path $targetpath))) {
+    my $ghostpath= ghost_path $targetpath;
+    if (defined (my $targetmtime= XLmtime ($ghostpath))) {
 	my $sourcemtime= &$sourcepath_mtime_thunk ();
 	if ($targetmtime > $sourcemtime) {
-	    ($maybe_ghostclass || "Chj::Ml2json::Ghost")->new($targetpath);
+	    ($maybe_ghostclass || "Chj::Ml2json::Ghost")->new($ghostpath);
 	} else {
 	    &$Do
 	}
@@ -91,12 +92,6 @@ sub ghost_make ($$$;$) {
 {
     package Chj::Ml2json::Ghost;
     our @ISA=("Chj::Ghostable::Ghost");
-    sub new {
-	my $s=shift;
-	@_==1 or die;
-	my ($dirpath)=@_;
-	$s->SUPER::new(Chj::Ml2json::Ghosts::ghost_path($dirpath));
-    }
 }
 
 {
