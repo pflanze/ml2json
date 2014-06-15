@@ -20,8 +20,8 @@ Ghosting intermediate classes (above Chj::Ghostable, below Mailcollections).
 package Chj::Ml2json::Ghosts;
 
 @ISA="Exporter"; require Exporter;
-@EXPORT=qw(ghost_path ghost_make_ ghost_make);
-@EXPORT_OK=qw();
+@EXPORT=qw(ghost_make_ ghost_make);
+@EXPORT_OK=qw(ghost_path);
 %EXPORT_TAGS=(all=>[@EXPORT,@EXPORT_OK]);
 
 use strict;
