@@ -11,4 +11,4 @@ into the output if they miss message-id, also avoid giving a warning
 if the message *does* have a message-id and is indeed virtually
 identical.
 
-Cost: $40.
+Cost: $120.

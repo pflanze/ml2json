@@ -7,4 +7,4 @@ Try to detect MIME contents in the body and restore the content-type
 header. (Solve the "email does not have a content-type header" warning
 cases.)
 
-Cost: $30
+Cost: $200

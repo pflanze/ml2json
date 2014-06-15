@@ -13,4 +13,4 @@ separators seem to usually be consistent with the 'Date' headers in
 the emails, and only if they are, use them for the
 `--max-date-deviation` feature.
 
-Cost: $50.
+Cost: $100.

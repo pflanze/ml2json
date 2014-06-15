@@ -6,4 +6,4 @@ parent of parent)?
 
 I've already got a partical implementation of this. Finish it.
 
-Cost: $40.
+Cost: $140.

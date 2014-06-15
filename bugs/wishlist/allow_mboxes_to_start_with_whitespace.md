@@ -1,7 +1,7 @@
 Allow an mbox to start with empty lines before the first '^From '
 separator line.
 
-Cost empty_lines: $8
+Cost empty_lines: $40
 
 Or even any kind of garbage? It seems to be useful to either error out
 or at least warn to detect cases where the file is not actually an
@@ -10,4 +10,4 @@ config file that tells ml2json to ignore the garbage, either giving a
 warning, or a NOTE (i.e. not saying anything at all unless --verbose
 is given).
 
-Cost: empty_lines+$8
+Cost: empty_lines+$30

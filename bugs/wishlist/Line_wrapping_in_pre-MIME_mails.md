@@ -21,4 +21,4 @@ one to turn "> " into nested blockquotes need to be intertwined; but
 the blockquote algorithm also needs to be available separately for use
 in MIME emails (no unwrapping). Also, need to test carefully.
 
-Cost: $40
+Cost: $250

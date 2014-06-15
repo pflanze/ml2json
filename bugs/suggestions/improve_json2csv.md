@@ -1,4 +1,4 @@
-* add Excel .xls output. Cost: $4
+* add Excel .xls output. Cost: $30
 * handle multiple values: see below.
 
 ---
@@ -15,7 +15,7 @@ On how to handle multiple values, there are these 4 possible ways:
 
     (Usually you don't want to denormalize data, as it uses more space and will be a pain to further process correctly, but could be viable in some cases.)
 
-    Cost: $30.
+    Cost: $150.
 
 2. relational data model, using multiple CSV output files.  [{a:"a",b:"b",c:["c1","c2"],d:"d"}] is turned into:
 
@@ -32,7 +32,7 @@ On how to handle multiple values, there are these 4 possible ways:
 
     The json2csv script would probably take options to declare which columns should be split off into their own files. And if there are multiple values for a column for which the option has not been given, give an error.
 
-    Cost: $30.
+    Cost: $150.
 
 3. carry over nesting by encoding into strings; for example, [{a:"a",b:"b",c:["c1","c2"],d:"d"}] is turned into:
 

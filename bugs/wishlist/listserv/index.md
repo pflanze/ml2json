@@ -11,10 +11,10 @@ http://www.hypermail-project.org/archive/99/0520.html ([copy of script](2.pl))
 ---
 
 - Actually the script(s) doesn't split in all the right places. Thus
-the code needs to be adapted. Cost A: $20
+the code needs to be adapted. Cost A: $50
 
 - Add the code to ml2json itself so that Listserv style files are
-detected and handled automatically. Cost B: A+$20
+detected and handled automatically. Cost B: A+$50
 
 XXX
 

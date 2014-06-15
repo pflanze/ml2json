@@ -11,4 +11,4 @@ wrapping that is not unwrapped correctly currently; thus it may be
 useful to implement [Line wrapping in pre-MIME
 mails](//Line_wrapping_in_pre-MIME_mails.md) first / at the same time.
 
-Cost: $40.
+Cost: $200.

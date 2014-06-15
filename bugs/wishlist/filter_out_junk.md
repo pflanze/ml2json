@@ -18,18 +18,18 @@ Involved work:
    do it?).
  - find ways to match those reliably enough.
 
-Cost (analysis): $15
+Cost (analysis): $120
 
 Two variants for implementation:
 
  - if matching can be done reliably in just a few fixed ways, hard
-  code these.  Cost A: analysis+$20
+  code these.  Cost A: analysis+$100
  - otherwise, make matchers extensible through the config file
      - add config section for header matchers that are each tried in turn and give a matching score.
      - config for max score before dropping a message.
      - body matching similar to the body stripping
 
-   Cost B: analysis+$30
+   Cost B: analysis+$150
 
 (XXX: B would be similar to the strip_text feature. Is there some
 shareable functionality?)

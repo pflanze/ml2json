@@ -5,4 +5,4 @@ processing. The first phase, including mbox and MIME parsing, is not
 parallelized currently, and it makes up for only about 1/4 or so of
 the total duration, but it could still be parallelized easily.
 
-Cost: $20
+Cost: $40
