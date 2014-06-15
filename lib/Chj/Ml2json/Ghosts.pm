@@ -31,19 +31,31 @@ use Chj::xperlfunc qw(xLmtime XLmtime);
 our $maybe_cache_dir;
 # either undef or path string to base directory
 
-sub ghost_path {
-    my ($dirpath)=@_;
-    if (defined $maybe_cache_dir) {
-	$dirpath=~ s|/{2,}|/|sg;
-	$dirpath=~ s|%|%1|sg;
-	$dirpath=~ s|/|%2|sg;
-	$dirpath=~ s|\.|%3|sg;
-	"$maybe_cache_dir/$dirpath"
-    } else {
-	"$dirpath/__meta"
+{
+    package Chj::Ml2json::Ghosts::ghost_path;
+    use overload '""'=> "stringify";
+    sub stringify {
+	my $s=shift;
+	$$s
     }
 }
-# tests, proof?
+sub ghost_path {
+    my ($dirpath)=@_;
+    die "reference, thus already a ghost path?: $dirpath"
+	if ref $dirpath;
+    bless \(do {
+	if (defined $maybe_cache_dir) {
+	    $dirpath=~ s|/{2,}|/|sg;
+	    $dirpath=~ s|%|%1|sg;
+	    $dirpath=~ s|/|%2|sg;
+	    $dirpath=~ s|\.|%3|sg;
+	    "$maybe_cache_dir/$dirpath"
+	} else {
+	    "$dirpath/__meta"
+	}
+    }), "Chj::Ml2json::Ghosts::ghost_path"
+}
+# Tests, proof?
 
 # Like "make", expect outputfile, sourcefile, generation code (IO
 # function returning value, not ghost; is turned into a ghost before
