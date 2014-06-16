@@ -294,7 +294,7 @@ our ($mydir,%opt); # 'import' from main
 
   # whether to use "rel=nofollow" in links, to lower the value of the
   # archive / mailing list for spammers:
-  nofollow=> 1,
+  nofollow=> 0,
 
   show_messageid_and_source=> sub { not $opt{archive} },
   archive_message_title=> sub {
