@@ -291,6 +291,13 @@ our ($mydir,%opt); # 'import' from main
 	  A({href=> "mailto:$address"}, $address)
       }
   },
+  # whether to apply the hiding algorithms to mail addresses appearing
+  # as mailto: links or as marked up links in the body (subject to
+  # what link_mail_address or hence hide_mail_addressP does):
+  hide_mail_addresses_in_body=> 1,
+  # whether to scan for mail addresses appearing as text without
+  # 'mailto:':
+  scan_for_mail_addresses_in_body=> 0,
 
   # whether to use "rel=nofollow" in links, to lower the value of the
   # archive / mailing list for spammers:

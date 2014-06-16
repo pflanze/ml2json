@@ -48,7 +48,7 @@ sub possibly_url2html ($$) {
 	#  nofollow,
 	#  hide_mail_addresses_in_body,
 	#  scan_for_mail_addresses_in_body,
-	#  hide_mail_addressP
+	#  link_mail_address
 	$opt)=@_;
     # str does not contain whitespace already. But may contain other
     # stuff at the end especially.
@@ -60,11 +60,16 @@ sub possibly_url2html ($$) {
 	($pre,$prot,$main,$post)= $str=~ m/^([;.,!()]*)(https?|ftp|mailto)(:.*?)([;.,!()]*)\z/si
 	# no need to change . to \S etc., since whitespace cannot be contained here
        ) {
-	my $url= "$prot$main";
 	[$pre,
-	 A({href=> $url,
-	    ($$opt{nofollow} ? (rel=> "nofollow") : ())
-	   }, $url),
+	 (lc($prot) eq "mailto" and $$opt{hide_mail_addresses_in_body}) ? do {
+	     $main=~ s/^://; # only remove one colon, be safe, ok?
+	     $$opt{link_mail_address}->($main)
+	 } : do {
+	     my $url= "$prot$main";
+	     A({href=> $url,
+		($$opt{nofollow} ? (rel=> "nofollow") : ())
+	       }, $url)
+	 },
 	 $post]
     } else {
 	$str
