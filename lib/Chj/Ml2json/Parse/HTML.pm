@@ -46,11 +46,6 @@ BEGIN {
 }
 
 
-sub check_href {
-    #XXXX warn "check_href";
-    @_
-}
-
 use Scalar::Util 'weaken';
 use Chj::FP2::List ":all";
 
@@ -229,7 +224,7 @@ sub html_map ($) {
       #"body/" => DIV { $body },
       p=> _P{ $body },
       div=> _DIV{ $body },##P ?
-      a=> _A{+{href=> check_href($att{href}),
+      a=> _A{+{href=> $att{href},
 	       ($$opt{nofollow} ? (rel=> "nofollow") : ()),
 	      },
 		$body },
