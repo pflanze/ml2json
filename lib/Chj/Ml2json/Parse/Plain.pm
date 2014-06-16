@@ -25,6 +25,7 @@ use Chj::PXHTML ':all';
 use Chj::NoteWarn;
 use Chj::TEST;
 use Chj::Ml2json::Parse::HTMLUtil 'paragraphy';
+use Chj::Ml2json::Parse::Emailfind 'emailfind';
 
 sub _parsequote {
   LP: {
@@ -42,6 +43,7 @@ sub _parsequote {
     }
 }
 
+
 sub possibly_url2html ($$) {
     my ($str,
 	# config: these keys will be accessed:
@@ -53,6 +55,9 @@ sub possibly_url2html ($$) {
     # str does not contain whitespace already. But may contain other
     # stuff at the end especially.
     my ($pre,$prot,$main,$post);
+    my $emailfind= sub {
+	emailfind($_[0],$$opt{link_mail_address})
+    };
     if (
 	($pre,$prot,$main,$post)= $str=~ m/^(.*<)(https?|ftp|mailto)(:.*?)(>.*)/si
 	# XX well, ^ really would ask for /g but not feeling like bothering now.
@@ -60,7 +65,7 @@ sub possibly_url2html ($$) {
 	($pre,$prot,$main,$post)= $str=~ m/^([;.,!()]*)(https?|ftp|mailto)(:.*?)([;.,!()]*)\z/si
 	# no need to change . to \S etc., since whitespace cannot be contained here
        ) {
-	[$pre,
+	[($$opt{scan_for_mail_addresses_in_body} ? &$emailfind($pre) : $pre),
 	 (lc($prot) eq "mailto" and $$opt{hide_mail_addresses_in_body}) ? do {
 	     $main=~ s/^://; # only remove one colon, be safe, ok?
 	     $$opt{link_mail_address}->($main)
@@ -70,9 +75,9 @@ sub possibly_url2html ($$) {
 		($$opt{nofollow} ? (rel=> "nofollow") : ())
 	       }, $url)
 	 },
-	 $post]
+	 ($$opt{scan_for_mail_addresses_in_body} ? &$emailfind($post) : $post)]
     } else {
-	$str
+	($$opt{scan_for_mail_addresses_in_body} ? &$emailfind($str) : $str)
     }
 }
 
@@ -180,4 +185,4 @@ sub parse_map {
 }
 
 
-_END_
+_END__
