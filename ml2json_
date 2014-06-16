@@ -413,7 +413,9 @@ our $collectionparser= Chj::Ml2json::MailcollectionParser->new
 our $htmlmapper= Chj::Ml2json::Parse::HTML->new_
   (content_subtype=> "html",
    do_paragraphy=> $opt{do_paragraphy},
-   do_newline2br=> $opt{do_newline2br});
+   do_newline2br=> $opt{do_newline2br},
+   opt=> \%opt, # yes, joke, see comment at $outputjson
+  );
 our $enrichedmapper= Chj::Ml2json::Parse::HTML->new_
   (content_subtype=> "enriched",
    do_paragraphy=> 1,

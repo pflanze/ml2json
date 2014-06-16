@@ -221,103 +221,108 @@ sub atts ($) {
 
 our $keepbody= sub{$body};
 
-our $map=
-  +{
-    body=> _SPAN{{class=> $content_subtype},
-		   $do_paragraphy ? paragraphy($body) : $body },
-    #"body/" => DIV { $body },
-    p=> _P{ $body },
-    div=> _DIV{ $body },##P ?
-    a=> _A{+{href=> check_href($att{href}),
-	     rel=> "nofollow", # lowering the value for spammers; see also same in Plain.pm
-	    },
-	      $body },
-    i=> _EM{ $body },
-    b=> _STRONG{$body},
-    u=> _U{$body},
-    em=> _EM{$body},
-    strong=> _STRONG{$body},
-    br=> _BR{},
-    blockquote=> _BLOCKQUOTE{
-	my $level= list_fold_right
-	  (sub {
-	       my ($name,$n)=@_;
-	       ($name eq "blockquote") ? $n+1 : $n
-	   },
-	   1,
-	   $parents);
-	{class=> "quotelevel_$level" },$body
-    },
-    small=> _SMALL{$body},
-    big=> _BIG{$body},
-    font=> $keepbody, # XXX
-    #blink
-    sub=> _SUB{$body},
-    sup=> _SUP{$body},
-    span=> $keepbody,
-    style=> sub {
-	#NOTE "relevant?: ".Chj::PXHTML::STYLE(\%att,$body)->fragment2string;
-	undef
-    },
-    center=>_CENTER{$body},
-    img=> sub{
-	my $atts= atts"img";
-	$$atts{src} and IMG($atts,$body)
-    },
-    h1=> _H3{$body}, #ok?
-    h2=> _H3{$body}, #ok?
-    # see what the mail starts with? then add 3?
-    h3=> _H3{$body},
-    h4=> _H4{$body},
-    h5=> _H5{$body},
-    h6=> _H6{$body},
+sub html_map ($) {
+    my ($opt)=@_;
+    +{
+      body=> _SPAN{{class=> $content_subtype},
+		     $do_paragraphy ? paragraphy($body) : $body },
+      #"body/" => DIV { $body },
+      p=> _P{ $body },
+      div=> _DIV{ $body },##P ?
+      a=> _A{+{href=> check_href($att{href}),
+	       ($$opt{nofollow} ? (rel=> "nofollow") : ()),
+	      },
+		$body },
+      i=> _EM{ $body },
+      b=> _STRONG{$body},
+      u=> _U{$body},
+      em=> _EM{$body},
+      strong=> _STRONG{$body},
+      br=> _BR{},
+      blockquote=> _BLOCKQUOTE{
+	  my $level= list_fold_right
+	    (sub {
+		 my ($name,$n)=@_;
+		 ($name eq "blockquote") ? $n+1 : $n
+	     },
+	     1,
+	     $parents);
+	  {class=> "quotelevel_$level" },$body
+      },
+      small=> _SMALL{$body},
+      big=> _BIG{$body},
+      font=> $keepbody, # XXX
+      #blink
+      sub=> _SUB{$body},
+      sup=> _SUP{$body},
+      span=> $keepbody,
+      style=> sub {
+	  #NOTE "relevant?: ".Chj::PXHTML::STYLE(\%att,$body)->fragment2string;
+	  undef
+      },
+      center=>_CENTER{$body},
+      img=> sub{
+	  my $atts= atts"img";
+	  $$atts{src} and IMG($atts,$body)
+      },
+      h1=> _H3{$body}, #ok?
+      h2=> _H3{$body}, #ok?
+      # see what the mail starts with? then add 3?
+      h3=> _H3{$body},
+      h4=> _H4{$body},
+      h5=> _H5{$body},
+      h6=> _H6{$body},
 
-    pre=> _PRE{$body},
-    tt=> _TT{$body},
-    cite=> _CITE{$body},
-    code=> _CODE{$body},
-    samp=> _SAMP{$body},
-    kbd=> _KBD{$body},
-    var=> _VAR{$body},
-    dfn=> _CODE{$body}, #? "DFN: not widely implemented"
-    #q=> _Q{atts"q",$body}, #XXX check security
-    address=> _ADDRESS{$body},
-    #del=> _DEL{$body}, #crazy stuff?
-    #ins=> _INS{$body}, #
+      pre=> _PRE{$body},
+      tt=> _TT{$body},
+      cite=> _CITE{$body},
+      code=> _CODE{$body},
+      samp=> _SAMP{$body},
+      kbd=> _KBD{$body},
+      var=> _VAR{$body},
+      dfn=> _CODE{$body}, #? "DFN: not widely implemented"
+      #q=> _Q{atts"q",$body}, #XXX check security
+      address=> _ADDRESS{$body},
+      #del=> _DEL{$body}, #crazy stuff?
+      #ins=> _INS{$body}, #
 
-    hr=> _HR{},
+      hr=> _HR{},
 
-    ul=> _UL{atts"ul", $body},
-    li=> _LI{atts"li", $body},
-    ol=> _OL{atts"ol", $body},
-    dl=> _DL{atts"dl", $body},
-    dt=> _DT{atts"dt", $body},
-    dd=> _DD{atts"dd", $body},
-    menu=> _MENU{atts"menu", $body}, #hm?
-    dir=> _DIR{atts"dir", $body}, #?
+      ul=> _UL{atts"ul", $body},
+      li=> _LI{atts"li", $body},
+      ol=> _OL{atts"ol", $body},
+      dl=> _DL{atts"dl", $body},
+      dt=> _DT{atts"dt", $body},
+      dd=> _DD{atts"dd", $body},
+      menu=> _MENU{atts"menu", $body}, #hm?
+      dir=> _DIR{atts"dir", $body}, #?
 
-    table=> _TABLE{
-	#NOTE "relevant?: ".Chj::PXHTML::TABLE(\%att,$body)->fragment2string;
-	atts("table"), $body
-    },
-    tr=> _TR{atts("tr"),$body},
-    td=> _TD{atts("td"),$body},
-    tbody=> _TBODY{atts("tbody"),$body},
-    tfoot=> _TFOOT{atts("tfoot"),$body},
-    thead=> _THEAD{atts("thead"), $body},
-    caption=> _CAPTION{atts("caption"), $body},
-    col=> _COL{atts("col"), $body},
-    colgroup=> _COLGROUP{atts("colgroup"), $body},
-   };
+      table=> _TABLE{
+	  #NOTE "relevant?: ".Chj::PXHTML::TABLE(\%att,$body)->fragment2string;
+	  atts("table"), $body
+      },
+      tr=> _TR{atts("tr"),$body},
+      td=> _TD{atts("td"),$body},
+      tbody=> _TBODY{atts("tbody"),$body},
+      tfoot=> _TFOOT{atts("tfoot"),$body},
+      thead=> _THEAD{atts("thead"), $body},
+      caption=> _CAPTION{atts("caption"), $body},
+      col=> _COL{atts("col"), $body},
+      colgroup=> _COLGROUP{atts("colgroup"), $body},
+     }
+}
 
 use HTML::Element;
 use HTML::TreeBuilder;
 
-use Chj::Struct ["content_subtype","do_paragraphy","do_newline2br"];
+use Chj::Struct ["content_subtype","do_paragraphy","do_newline2br",
+		 "opt", # for the same keys as ::Plain's possibly_url2html takes
+		];
 
 sub _map_body {
     my $s=shift;
     my ($e,$unknown)=@_;
+    my $map= $$s{_html_map};
     my $name= lc($e->tag);
 
     if (local our $fn= $$map{$name}) {
@@ -364,6 +369,7 @@ sub map_body {
     my $s=shift;
     my ($e)=@_;
     my $unknown={};
+    $$s{_html_map} ||= html_map ($s->opt);
     my $res= $s->_map_body ($e,$unknown);
     if (my @k= sort keys %$unknown) {
 	#local our $s=$s;local our $e=$e;use Chj::repl;repl;
