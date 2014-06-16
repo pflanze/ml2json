@@ -96,6 +96,10 @@ use Chj::Struct ["jsonfields_orig_headers",
 		 "textstripper_htmlmapper_class",
 		 "do_confirm_html",
 		 "tmpdir", # attachment-basedir, for json_mboxpath
+		 "opt", # passed to possibly_url2html and pendant for
+                        # HTML, which happens to access a subset of
+                        # the same keys as the ml2json main config
+                        # file
 		];
 
 
@@ -106,12 +110,13 @@ sub _cleanuphtml {
 }
 
 
-our $plain= Chj::Ml2json::Parse::Plain->new();
-
 sub _plain2html {
     my $s=shift;
     my ($str,$ent)=@_;
-    $plain->parse_map($str)
+    ($$s{_Plain}||= do {
+	Chj::Ml2json::Parse::Plain->new($s->opt)
+      })
+      ->parse_map($str);
 }
 
 sub _enriched2html {

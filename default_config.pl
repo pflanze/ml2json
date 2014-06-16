@@ -291,6 +291,11 @@ our ($mydir,%opt); # 'import' from main
 	  A({href=> "mailto:$address"}, $address)
       }
   },
+
+  # whether to use "rel=nofollow" in links, to lower the value of the
+  # archive / mailing list for spammers:
+  nofollow=> 1,
+
   show_messageid_and_source=> sub { not $opt{archive} },
   archive_message_title=> sub {
       my ($identity,$subject,$from_string_hidemail)=@_;

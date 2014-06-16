@@ -430,7 +430,9 @@ our $outputjson= Chj::Ml2json::OutputJSON->new
    $textstripper,
    "Chj::Ml2json::Parse::HTML",
    $opt{do_confirm_html},
-   $tmp
+   $tmp,
+   \%opt # for possibly_url2html and pendant for HTML (yes, kinda joke
+	 # considering that other keys are passed separately above)
   );
 
 use Chj::PXML::Serialize 'puthtmlfile';

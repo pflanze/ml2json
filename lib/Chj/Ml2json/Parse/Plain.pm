@@ -42,8 +42,14 @@ sub _parsequote {
     }
 }
 
-sub possibly_url2html {
-    my $str=shift;
+sub possibly_url2html ($$) {
+    my ($str,
+	# config: these keys will be accessed:
+	#  nofollow,
+	#  hide_mail_addresses_in_body,
+	#  scan_for_mail_addresses_in_body,
+	#  hide_mail_addressP
+	$opt)=@_;
     # str does not contain whitespace already. But may contain other
     # stuff at the end especially.
     my ($pre,$prot,$main,$post);
@@ -57,7 +63,7 @@ sub possibly_url2html {
 	my $url= "$prot$main";
 	[$pre,
 	 A({href=> $url,
-	    rel=> "nofollow", # lowering the value for spammers; see also same in HTML.pm
+	    ($$opt{nofollow} ? (rel=> "nofollow") : ())
 	   }, $url),
 	 $post]
     } else {
@@ -66,38 +72,40 @@ sub possibly_url2html {
 }
 
 sub _T_ {
-    my ($src)=@_;
-    P(possibly_url2html($src))->fragment2string
+    my ($src,$opt)=@_;
+    P(possibly_url2html($src,$opt))->fragment2string
 }
-sub _T ($$) {
-    my ($src,$res)=@_;
+sub _T ($$$) {
+    my ($src,$opt,$res)=@_;
     @_=(sub {
-	    _T_($src)
+	    _T_($src,$opt)
 	},
 	$res);
     goto \&Chj::TEST::TEST
 }
-_T "http://www.foo.com/;",
+_T "http://www.foo.com/;",{nofollow=>1},
   '<p><a href="http://www.foo.com/" rel="nofollow">http://www.foo.com/</a>;</p>';
-_T "http://www.foo.com/foo?bar=%20baz.",
-  '<p><a href="http://www.foo.com/foo?bar=%20baz" rel="nofollow">http://www.foo.com/foo?bar=%20baz</a>.</p>';
-_T "(HTTPS://www.com/foo?bar=%20baz).",
-  '<p>(<a href="HTTPS://www.com/foo?bar=%20baz" rel="nofollow">HTTPS://www.com/foo?bar=%20baz</a>).</p>';
-_T "<https://www.com/foo?bar=%20baz>.",
-  '<p>&lt;<a href="https://www.com/foo?bar=%20baz" rel="nofollow">https://www.com/foo?bar=%20baz</a>&gt;.</p>';
-_T "see<https://www.com/foo?bar=%20baz>.",
-  '<p>see&lt;<a href="https://www.com/foo?bar=%20baz" rel="nofollow">https://www.com/foo?bar=%20baz</a>&gt;.</p>';
+_T "http://www.foo.com/;",{nofollow=>0},
+  '<p><a href="http://www.foo.com/">http://www.foo.com/</a>;</p>';
+_T "http://www.foo.com/foo?bar=%20baz.",{},
+  '<p><a href="http://www.foo.com/foo?bar=%20baz">http://www.foo.com/foo?bar=%20baz</a>.</p>';
+_T "(HTTPS://www.com/foo?bar=%20baz).",{},
+  '<p>(<a href="HTTPS://www.com/foo?bar=%20baz">HTTPS://www.com/foo?bar=%20baz</a>).</p>';
+_T "<https://www.com/foo?bar=%20baz>.",{},
+  '<p>&lt;<a href="https://www.com/foo?bar=%20baz">https://www.com/foo?bar=%20baz</a>&gt;.</p>';
+_T "see<https://www.com/foo?bar=%20baz>.",{},
+  '<p>see&lt;<a href="https://www.com/foo?bar=%20baz">https://www.com/foo?bar=%20baz</a>&gt;.</p>';
 
 
 our $tabdistance=8;
 
-sub plainchunk2html {
-    my $str=shift;
+sub plainchunk2html ($$) {
+    my ($str,$opt)=@_;
     # no need for escaping; but use Chj::PXHTML elements where needed
     my @out;
     my $first_iteration=1;
     while ($str=~ /(.*?)(\s+|\z)/sg) {
-	push @out, possibly_url2html($1) if length $1;
+	push @out, possibly_url2html($1,$opt) if length $1;
 	my $ws= $2;
 	if (length $ws) {
 	    # Turn into combination of space and nbsp.  If on the
@@ -133,8 +141,8 @@ sub plainchunk2html {
 
 
 sub _parse_map {
-    @_==2 or die;
-    my ($l,$quotelevel)=@_;
+    @_==3 or die;
+    my ($l,$quotelevel,$opt)=@_;
     no warnings 'recursion';
     $l and do {
 	my $a= car $l;
@@ -143,22 +151,27 @@ sub _parse_map {
 	    my ($rgroup,$l2)= _parsequote (cons($1,undef), $r);
 	    cons (BLOCKQUOTE({class=> "quotelevel_$quotelevel"},
 			     _parse_map (list_reverse ($rgroup),
-					 $quotelevel+1)),
-		  _parse_map ($l2,$quotelevel))
+					 $quotelevel+1,
+					 $opt)),
+		  _parse_map ($l2,$quotelevel,$opt))
 	} else {
-	    cons ([plainchunk2html($a), BR], _parse_map($r,$quotelevel))
+	    cons ([plainchunk2html($a,$opt), BR], _parse_map($r,$quotelevel,$opt))
 	}
     }
 }
 
 
-use Chj::Struct []; # no need for context, *yet*
+use Chj::Struct ["opt", # passed to possibly_url2html and pendant for
+                        # HTML, which happens to access a subset of
+                        # the same keys as the ml2json main config
+                        # file
+		];
 
 sub parse_map {
     my $s=shift;
     my ($str)=@_;
     SPAN({class=> "plain"},
-	 paragraphy(_parse_map (array2list([split /\r?\n/, $str]), 1)))
+	 paragraphy(_parse_map (array2list([split /\r?\n/, $str]), 1, $s->opt)))
 }
 
 
