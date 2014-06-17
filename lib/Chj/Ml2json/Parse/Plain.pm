@@ -171,10 +171,13 @@ sub _parse_map {
 }
 
 
-use Chj::Struct ["opt", # passed to possibly_url2html and pendant for
-                        # HTML, which happens to access a subset of
-                        # the same keys as the ml2json main config
-                        # file
+use Chj::FP::Predicates;
+
+use Chj::Struct [[\&hashP, "opt"],
+		 # ^ passed to possibly_url2html and pendant for
+		 # HTML, which happens to access a subset of
+		 # the same keys as the ml2json main config
+		 # file
 		];
 
 sub parse_map {

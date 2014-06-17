@@ -419,7 +419,9 @@ our $htmlmapper= Chj::Ml2json::Parse::HTML->new_
 our $enrichedmapper= Chj::Ml2json::Parse::HTML->new_
   (content_subtype=> "enriched",
    do_paragraphy=> 1,
-   do_newline2br=> 0);
+   do_newline2br=> 0,
+   opt=> \%opt, # yes, joke, see comment at $outputjson
+  );
 
 our $textstripper= Chj::Ml2json::Parse::TextStripper->new
   ($opt{strip_text});

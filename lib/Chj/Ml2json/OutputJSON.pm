@@ -351,7 +351,9 @@ sub json_html {
     my ($m,$index)=@_;
     $s->textstripper->strip_html2string
       ($s->html($m),
-       $s->textstripper_htmlmapper_class->new($s->html_choice ($m)))
+       $s->textstripper_htmlmapper_class->new_
+       (content_subtype=> $s->html_choice ($m),
+	opt=> $s->opt))
 }
 
 sub json_message_id {

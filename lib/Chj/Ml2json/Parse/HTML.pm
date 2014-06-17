@@ -218,13 +218,28 @@ our $keepbody= sub{$body};
 
 sub html_map ($) {
     my ($opt)=@_;
+    defined $opt or die "BUG";
     +{
       body=> _SPAN{{class=> $content_subtype},
 		     $do_paragraphy ? paragraphy($body) : $body },
       #"body/" => DIV { $body },
       p=> _P{ $body },
       div=> _DIV{ $body },##P ?
-      a=> _A{+{href=> $att{href},
+      a=> _A{+{href=>
+	       do {
+		   # can't use $$opt{link_mail_address} as that
+		   # doesn't (currently) take a body; also, when
+		   # removing a link it should still indicate that
+		   # there was a link somehow; for this reason, output
+		   # a link no matter what.
+		   if (my ($address)= ($$opt{hide_mail_addresses_in_body}
+				       and $att{href}=~ /^mailto:(.*)/i)) {
+		       # XX hm really output an invalid mailto?
+		       "mailto:" . ($$opt{map_mail_address}->($address))
+		   } else {
+		       $att{href}
+		   }
+	       },
 	       ($$opt{nofollow} ? (rel=> "nofollow") : ()),
 	      },
 		$body },
@@ -309,10 +324,14 @@ sub html_map ($) {
 
 use HTML::Element;
 use HTML::TreeBuilder;
+use Chj::FP::Predicates;
 
-use Chj::Struct ["content_subtype","do_paragraphy","do_newline2br",
-		 "opt", # for the same keys as ::Plain's possibly_url2html takes
+use Chj::Struct [[\&stringP, "content_subtype"],
+		 [\&booleanP, "do_paragraphy"],
+		 [\&booleanP, "do_newline2br"],
+		 [\&hashP, "opt"], # for the same keys as ::Plain's possibly_url2html takes
 		];
+
 
 sub _map_body {
     my $s=shift;
