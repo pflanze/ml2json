@@ -13,5 +13,5 @@ make me implement it quickly. Each item that is sponsored, gets the
 sponsor's name and/or link in the commit message, as well as an entry
 on a future sponsors page if desired. Please [contact
 me](http://christianjaeger.ch/contact.html) if interested (payment
-through PayPal, I'll also look into Stripe).
+through PayPal, or perhaps Stripe or Bitcoin if you wish).
 
