@@ -131,20 +131,20 @@ our ($mydir,%opt); # 'import' from main
 
    ["in-reply-to"=> "json_in_reply_to", 1],
    # In-reply-to header value(s) mapped to fixed up message "id"
-   # values (see docs/message_identification.txt). Does not show
+   # values (see docs/message_identification.md). Does not show
    # subject based parent relations and hence is not the reverse of
    # 'replies'.  See 'threadparent' for a variant that is.
 
    ["references"=> "json_references", 2],
    # References header values mapped to fixed up message "id"
-   # values (see docs/message_identification.txt).
+   # values (see docs/message_identification.md).
 
    ["threadparent"=> "json_threadparents", 1],
    # Taken from In-Reply-To (or, not yet implemented, References)
    # email header, or, if not workable, instead the mail that
    # introduces the thread with the subject (respecting
    # --max-thread-duration value). In all cases, the given message ids
-   # are fixed-up "id" values (see docs/message_identification.txt).
+   # are fixed-up "id" values (see docs/message_identification.md).
    # Could be multiple values if a mail has multiple in-reply-to
    # headers!
 
@@ -222,7 +222,7 @@ our ($mydir,%opt); # 'import' from main
    # 'content_type' field, are always in lower case characters.
 
    [identify=> "json_identify",1],
-   # see docs/message_identification.txt about what the "identify"
+   # see docs/message_identification.md about what the "identify"
    # means; this field is meant to be used for debugging only, i.e. to
    # map back log messages to the source (message-id can't be used for
    # that purpose as it may not be available yet during processing;
