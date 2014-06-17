@@ -29,7 +29,7 @@ importance levels:
 
 In all cases after the level indicator there is an indication of the
 context in which the issue has happened, which is either an "identify"
-value (see message_identification.txt) or something other possibly
+value (see [[message_identification]]) or something other possibly
 useful.
 
 

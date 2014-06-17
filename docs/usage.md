@@ -15,7 +15,7 @@ Instructions
 directory (or directory tree, if you use the `--recurse` option)
 
 2. decide upon a base directory where all the unpacked attachments (as
-well as serialized state--for details see phases.txt) should be
+well as serialized state--for details see [[phases]]) should be
 stored; if you don't care about accessing the attachments, some
 directory under `/tmp` will be choosen. ml2json will create a symlink
 at `~/.ml2json-tmp` which points to that generated directory, so that
