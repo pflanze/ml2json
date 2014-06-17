@@ -36,11 +36,11 @@ in Debian).
 (oldstable, 2.095) does not contain Mail::Message::Field::Date. The
 version in Wheezy (2.105) does.)
 
-There is no further installation mechanism (yet?). The programs can be
-run directly from the checkout (like `./ml2json` or
-`path/to/ml2json/ml2json`). You could also add the path to the
-checkout directory to your PATH env variable, or you can symlink it to
-one of the directories in your PATH.
+There is no installation mechanism for the ml2json code itself
+(yet?). The programs can be run directly from the checkout (like
+`./ml2json` or `path/to/ml2json/ml2json`). You could also add the path
+to the checkout directory to your PATH env variable, or you can
+symlink it to one of the directories in your PATH.
 
 For usage information, run `ml2json --help`, and read
 [usage](docs/usage.md) and the other files in the "docs" folder.
