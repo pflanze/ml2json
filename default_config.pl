@@ -296,7 +296,10 @@ our ($mydir,%opt); # 'import' from main
   # what link_mail_address or hence hide_mail_addressP does):
   hide_mail_addresses_in_body=> 1,
   # whether to scan for mail addresses appearing as text without
-  # 'mailto:':
+  # 'mailto:' (turning this on slows processing down about 8%; also
+  # note that what looks like an email address isn't necessarily one,
+  # like iChat/AIM/Jabber addresses, and linking with "mailto:" may be
+  # confusing then or worse, make copy-pasting difficult):
   scan_for_mail_addresses_in_body=> 0,
 
   # whether to use "rel=nofollow" in links, to lower the value of the
