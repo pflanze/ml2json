@@ -32,6 +32,10 @@ libemail-find-perl or Email::Find are only required if the
 If you want to use json2csv, then also install JSON::SL from CPAN (not
 in Debian).
 
+(Note that the version of libmail-box-perl from Debian Squeeze
+(oldstable, 2.095) does not contain Mail::Message::Field::Date. The
+version in Wheezy (2.105) does.)
+
 There is no further installation mechanism (yet?). The programs can be
 run directly from the checkout (like `./ml2json` or
 `path/to/ml2json/ml2json`). You could also add the path to the
