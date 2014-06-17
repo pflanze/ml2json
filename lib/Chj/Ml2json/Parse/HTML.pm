@@ -31,6 +31,7 @@ use Chj::NoteWarn;
 
 use Chj::PXHTML ":all";
 use Chj::Ml2json::Parse::HTMLUtil 'paragraphy';
+use Chj::Ml2json::Parse::Emailfind 'emailfind';
 
 BEGIN {
     for (@$Chj::PXHTML::tags) {
@@ -364,6 +365,12 @@ sub _map_body {
 		     _map_body ($s,$_,$unknown)
 		 } else {
 		     # a string
+		     my $opt= $$s{opt}; # (instead of $s->opt for performance, hack)
+		     if ($$opt{scan_for_mail_addresses_in_body}
+			 # don't link bodies of links again: (XX other linking tags?)
+			 and $name ne "a") {
+			 $_= emailfind($_, $$opt{link_mail_address});
+		     }
 		     $maybe_body_mapper ? do {
 			 local $body= $_; &$maybe_body_mapper
 		     } : $_
