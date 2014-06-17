@@ -1,0 +1,21 @@
+#!/usr/bin/perl -w
+
+use strict;
+
+use lib "./lib";
+use lib "./perllib";
+use lib "./ftemplate/lib";
+
+{
+    package Foo;
+    use Chj::FP::Predicates;
+    use Chj::Struct ["a",
+		     [\&arrayP, "b"]];
+
+    _END_
+}
+
+use Chj::TEST;
+
+#use Chj::ruse;
+use Chj::Backtrace; use Chj::repl; repl;
