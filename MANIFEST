@@ -22,6 +22,7 @@ lib/Chj/FP/ArrayUtil.pm
 lib/Chj/FP/Array_sort.pm
 lib/Chj/FP/Hash.pm
 lib/Chj/FP/HashSet.pm
+lib/Chj/FP/Predicates.pm
 lib/Chj/Format/JSON.pm
 lib/Chj/Ghostable.pm
 lib/Chj/MIME/EncWords.pm
@@ -38,6 +39,7 @@ lib/Chj/Ml2json/Message.pm
 lib/Chj/Ml2json/OutputJSON.pm
 lib/Chj/Ml2json/OutputJSON/Continuous.pm
 lib/Chj/Ml2json/Parse.pm
+lib/Chj/Ml2json/Parse/Emailfind.pm
 lib/Chj/Ml2json/Parse/HTML.pm
 lib/Chj/Ml2json/Parse/HTMLUtil.pm
 lib/Chj/Ml2json/Parse/Plain.pm
@@ -67,7 +69,8 @@ lib/Chj/Transmittable.pm
 lib/Chj/Try.pm
 lib/Chj/numcores.pm
 lib/Chj/tempdir.pm
+lib/t/testmaildir
+lib/t/teststruct
 ml2json
 ml2json_
 t/parallel
-testmaildir
