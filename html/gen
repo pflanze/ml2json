@@ -15,6 +15,8 @@ use lib "$mydir/../perllib";
 use lib "$mydir/../ftemplate/lib";
 use lib "$mydir/../lib";
 
+our $css_path= "my.css";
+
 sub usage {
     print STDERR map{"$_\n"} @_ if @_;
     print "$myname config inbase outbase
@@ -23,6 +25,9 @@ sub usage {
   values, see gen-ml2json.pl for an example.
 
   inbase needs to be a git working directory.
+
+  Assumes that there is a file '$css_path', which is included in the
+  <head/> and copied to outbase.
 
   (Christian Jaeger <$email>)
 ";
@@ -600,7 +605,7 @@ fun genfile ($path,$groupname,$genfilestate) {
 		      HEAD (
 			    TITLE ($cfg->{title}->($filetitle)),
 			    LINK ({rel=> "stylesheet",
-				   href=> url_diff ($path0, "my.css"),
+				   href=> url_diff ($path0, $css_path),
 				   type=> "text/css"}),
 			   ),
 		      BODY(
@@ -645,6 +650,14 @@ fun genfiles ($filesinfo) {
     }
 }
 
+# lib?
+fun existingpath_or (@paths) {
+    for (@paths) {
+	return $_ if -e $_
+    }
+    die "none of the paths exist: @paths";
+}
+
 
 # copy referenced non-.md files:
 fun copyfiles ($filesinfo) {
@@ -652,6 +665,10 @@ fun copyfiles ($filesinfo) {
 	next if $filesinfo->path0_exists($path0); # md path
 	putfile (path02outpath($path0), getfile (path02inpath($path0)));
     }
+    # copy CSS file
+    putfile (path02outpath($css_path),
+	     getfile (existingpath_or (path02inpath($css_path),
+				       path02inpath("html/$css_path"))));
 }
 
 fun main () {
