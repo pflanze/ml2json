@@ -23,11 +23,11 @@ Debian-derived Linux system using:
 
 Or install MIME::Tools, HTML::Tree, MIME::EncWords, Email::Date,
 Mail::Message::Field::Date, DateTime, Time::Duration::Parse and
-Email::Find from CPAN (run 'cpan' or 'perl -MCPAN -e shell' then
-'install MIME::Tools' etc.)
+Email::Find from CPAN (run `cpan` or `perl -MCPAN -e shell` then
+`install MIME::Tools` etc.)
 
 libemail-find-perl or Email::Find are only required if the
-scan_for_mail_addresses_in_body config option is set.
+`scan_for_mail_addresses_in_body` config option is set.
 
 If you want to use json2csv, then also install JSON::SL from CPAN (not
 in Debian).
