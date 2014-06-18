@@ -101,9 +101,16 @@ fun is_allcaps ($str) {
     not $str=~ /[a-z]/
 }
 
+# a path-append that doesn't output leading './'
+fun path_path0_append ($dir,$relpath0) {
+    my $p= "$dir/$relpath0";
+    $p=~ s|^\./||;
+    $p
+}
+
 fun if_suffix_md2html ($path0,$for_title,$then,$otherwise) {
-    if (!$for_title and $path0 eq "README.md") {
-	@_=("index.xhtml"); goto $then;
+    if (!$for_title and $$cfg{indexpath0P}->($path0)) {
+	@_=(path_path0_append (dirname($path0), "index.xhtml")); goto $then;
     } else {
 	if ($path0=~ s/(.*?)([^\/]*)\.md$/$1$2.xhtml/) {
 	    @_=($$cfg{downcaps} && is_allcaps ($2) ? $1.lc($2).".xhtml" : $path0);

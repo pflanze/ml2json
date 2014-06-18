@@ -27,6 +27,11 @@ sub helptext {
 use Chj::PXHTML ":all";
 
 +{
+  indexpath0P=> fun ($path0) {
+      # only handle the toplevel README.md file as index file for its
+      # dir:
+      $path0 eq "README.md"
+  },
   path0_handlers=>
   +{
     "docs/usage.md"=> fun ($path,$path0,$str) {
