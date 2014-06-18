@@ -1,3 +1,4 @@
+.gitignore
 CONTACT.md
 COPYING.md
 INSTALL.md
@@ -16,7 +17,7 @@ html/doc-formatting.txt
 html/gen
 html/gen-ml2json.pl
 html/gendoc
-html/out/my.css
+html/my.css
 json2csv
 lib/Chj/FP/ArrayUtil.pm
 lib/Chj/FP/Array_sort.pm
