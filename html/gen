@@ -196,7 +196,7 @@ fun htmlmap ($e,$selfpath0,$filesinfo) {
 	# check or find target, then convert to xhtml suffix
 	my $uri= URI->new($$atts{href}); #(h again,see url_is_internal..)
 	my $path= $uri->path;
-	
+
 	# '//' feature (see doc-formatting.txt)
 	if ($$atts{href} =~ m|^//|s) {
 	    my ($op)= $uri->opaque() =~ m|^//([^/]+)$|s
@@ -585,7 +585,7 @@ fun genfile ($path,$groupname,$genfilestate) {
 	      $genfilestate->groupedfiles->{bugs}),
 	     on sub{$_[0][0]}, \&string_cmp # XX not a good cmp.
 	    );
-	
+
 	TABLE
 	  ({class=> "costlist"},
 	   THEAD (TH ("Type"), TH ("Title"),TH ("Cost range (USD)")),
