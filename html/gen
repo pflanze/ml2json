@@ -242,10 +242,10 @@ fun htmlmap ($e,$selfpath0,$filesinfo) {
 	 ]);
     # add anchors
     if ($name =~ /^h(\d)$/) {
-	my $bodystr= join("", @{$res->body}); ## should add method, also ~handle subelts
-	$bodystr=~ s/ /_/sg;
+	my $text= $res->text;
+	$text=~ s/ /_/sg;
 	[
-	 A({name=> $bodystr}),
+	 A({name=> $text}),
 	 $res
 	]
     } else {
