@@ -27,7 +27,8 @@ attachments, specify the `--attachment-basedir` option.
 using a config file. You can also put most commandline parameters into
 a config file, thus if you want to run a particular conversion
 repeatedly and consistently, consider doing that. The file
-`default_config.pl` has the defaults; this file is not meant
+[default_config.pl](https://github.com/pflanze/ml2json/blob/master/default_config.pl)
+has the defaults; this file is not meant
 to be edited, instead, create a new file that shadows the config keys
 that you want to set, then pass the path to it to the `--config`
 option. Read about `--config` in `./mk2json --help`.
