@@ -47,12 +47,14 @@ our $cfg= require $cfgpath;
 
 mkdir $outbase;
 
+use Hash::Util 'lock_hash';
 use Text::Markdown 'markdown';
 use Chj::IO::Command;
 use Chj::xperlfunc ':all';
 use Chj::xopen ":all";
 use Chj::chompspace;
 
+lock_hash %$cfg;
 
 # operating on markdown source string
 # XX should this replace the document name with the document title?
