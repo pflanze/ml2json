@@ -678,7 +678,7 @@ fun main () {
 }
 
 #use Chj::ruse;
-use Chj::Backtrace;
+#use Chj::Backtrace;
 #use Chj::repl; repl;
 
 main;
