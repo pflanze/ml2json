@@ -660,7 +660,7 @@ sub do_output_message {
 			       ($idn, $subject, $fromstr)),
 			$style_css),
 		  BODY
-		  ({bgcolor=>"#964a2a"},
+		  (($opt{archive} ? {} : {bgcolor=>"#964a2a"}),
 		   TABLE ({border=>0,
 			   cellspacing=>3,
 			   cellpadding=>16,
@@ -860,7 +860,7 @@ sub parse_and_convert {
 		 (HEAD (TITLE ($opt{archive_threadindex_title}->()),
 			$style_css),
 		  BODY
-		  ({bgcolor=>"#e0e0e0"},
+		  (($opt{archive} ? {} : {bgcolor=>"#e0e0e0"}),
 		   $opt{time_zone_notice}->(0),
 		   (stream_map sub {
 			my ($threadleader)=@_;
