@@ -133,12 +133,14 @@ TEST{ sear_subject "Re: [Foo-L] Online versions (subject closed)" }
     }
 }
 
-use Chj::Struct ["ent",
-		 "h",
-		 "unixtime",
-		 "mailboxpathhash",
-		 "i",
-		 "mailboxcursor"
+use Chj::FP::Predicates;
+
+use Chj::Struct [[(instance_ofP "MIME::Entity"), "ent"],
+		 [\&hashP, "h"],
+		 [\&natural0P, "unixtime"],
+		 [\&stringP, "mailboxpathhash"],
+		 [\&stringP, "i"],
+		 [(instance_ofP "Chj::Parse::MailboxCursor"), "mailboxcursor"]
 		],
   'Chj::Ml2json::Ghostable';
 # cache values: messageids
