@@ -532,7 +532,7 @@ sub id_showthread {
 	    my $cont = do {
 		my $datecont= $maybe_date &&
 		    [", ", $maybe_date];
-		if ($maybe_prev_searedsubject
+		if (defined $maybe_prev_searedsubject
 		    and $maybe_prev_searedsubject eq $searedsubject) {
 		    [ I($fromstr), $datecont ]
 		}
@@ -547,7 +547,8 @@ sub id_showthread {
 	      (defined $maybe_selected_id
 	       and $_id eq $maybe_selected_id) ? $cont : A({href=> $url}, $cont);
 
-	    DIR({compact=>1},
+	    DIR({compact=>1,
+		 class=> (defined $maybe_prev_searedsubject ? "reply" : "top")},
 		LI({class=> "ref_".$$subthread{ref}},
 		   $possiblylinkedcont),
 		array_map(sub {
