@@ -266,14 +266,25 @@ our ($mydir,%opt); # 'import' from main
   # undef means, scattered in `$attachment_basedir/$hash_of_mbox_path`
   # and its per-message subdirectories as files named "__meta".
 
-  # If defined, the function to calculate the string from the mailbox
-  # path that's used for mailbox identification, i.e. as prefix for
-  # the message xhtml files, the last element of the attachment
-  # directory (holding the subdirectories with the unpacked mails),
-  # and in this case is prepended with 'listname' to get identify
-  # values (which is used for missing message-ids).
-  mailbox_path_hash=> undef,
-  # sub { my ($mailbox_path)=@_; Digest::MD5::md5_hex ($mailbox_path) }
+  # If defined, the function to calculate the strings from the mailbox
+  # path that are used for:
+  #    - message identification string (see Mailcollection::Message's
+  #      `identify` method, also [[docs/message_identification.md]])
+  #    - name of subdirectory under $attachment_basedir to hold
+  #      attachments of all messages of the same mailbox
+  #    - HTML archive: prefix for the name of individual message's
+  #      xhtml files (see Mailcollection::Message's
+  #      `identify_pathname` method)
+  #    - source path to "$opt{source_to}/$identify.txt" (hacky, see
+  #      ml2json_)
+  # The value returned by mailbox_path_hash may be undef, in which
+  # case the subdirectory or prefix parts are omitted.
+  #
+  mailbox_path_hash=> do {
+      use Digest::MD5 'md5_hex';
+      \&md5_hex
+  },
+  # (XXX update docs which are currently presuming md5)
 
   # Generate HTML archives for public viewing instead of for
   # debugging:

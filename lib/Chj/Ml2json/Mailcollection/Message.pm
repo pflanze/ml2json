@@ -133,13 +133,80 @@ TEST{ sear_subject "Re: [Foo-L] Online versions (subject closed)" }
     }
 }
 
+
+{
+    package Chj::Ml2json::Mailcollection::Message::Identify;
+    use Chj::FP::Predicates;
+    #XX lib? how many maybe_or, and path_append will I write again?
+    sub maybe_path_append {
+	my @segments= grep { defined $_ } @_;
+	@segments or die "maybe_path_append: no defined segments given";
+	join("/", @segments)
+    }
+    use Chj::Struct [
+		     [maybe(\&filenameP), "mailboxpathhash"],
+		     [maybe(\&filenameP), "i"],
+		    ];
+    use overload '""'=> sub { die "no stringification here!"};
+
+    sub new_from_string {
+	my $cl=shift;
+	@_==1 or die;
+	my ($str)=@_;
+	my @parts= split "/", $str, -1;
+	@parts==2 or die "does not contain exactly one slash: '$str'";
+	$cl->new (@parts)
+    }
+
+    sub string { # with slash
+	my $s=shift;
+	@_==0 or die;
+	(defined $$s{mailboxpathhash} ? "$$s{mailboxpathhash}/$$s{i}"
+	: $$s{i})
+    }
+
+    sub basename {
+	my $s=shift;
+	@_==0 or die;
+	(defined $$s{mailboxpathhash} ? "$$s{mailboxpathhash}-$$s{i}"
+	: $$s{i})
+    }
+
+    sub flat_path {
+	my $s=shift;
+	@_==2 or die;
+	my ($maybe_dirpath,$suffix)=@_;
+	maybe_path_append $maybe_dirpath, $s->basename.$suffix
+    }
+
+    sub deep_path {
+	my $s=shift;
+	@_==2 or die;
+	my ($maybe_dirpath,$suffix)=@_;
+	maybe_path_append $maybe_dirpath, $s->string.$suffix
+    }
+
+    # methods for undefined 'i':
+
+    sub deep_dirpath {
+	my $s=shift;
+	@_==1 or die;
+	my ($maybe_dirpath)=@_;
+	# die "can't give deep_dirpath for identify value with an 'i' value"
+	#   if defined $$s{i};
+	maybe_path_append $maybe_dirpath, $$s{mailboxpathhash}
+    }
+
+    _END_
+}
+
 use Chj::FP::Predicates;
 
 use Chj::Struct [[(instance_ofP "MIME::Entity"), "ent"],
 		 [\&hashP, "h"],
 		 [\&natural0P, "unixtime"],
-		 [\&stringP, "mailboxpathhash"],
-		 [\&stringP, "i"],
+		 [(instance_ofP "Chj::Ml2json::Mailcollection::Message::Identify"),
+		  "identification"],
 		 [(instance_ofP "Chj::Parse::MailboxCursor"), "mailboxcursor"]
 		],
   'Chj::Ml2json::Ghostable';
@@ -153,8 +220,7 @@ use Chj::chompspace ();
 
 sub identify {
     my $s=shift;
-    @_==0 or die;
-    "$$s{mailboxpathhash}/$$s{i}"
+    $s->identification->string
 }
 
 sub headers {

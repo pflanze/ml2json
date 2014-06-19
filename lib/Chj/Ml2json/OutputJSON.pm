@@ -416,7 +416,7 @@ sub json_mboxpath {
     my $s=shift;
     @_==2 or die;
     my ($m,$index)=@_;
-    my $attbasedir= $s->tmpdir."/".$m->mailboxpathhash;
+    my $attbasedir= $m->identification->deep_dirpath ($s->tmpdir);
     my $mbox= Chj::Ml2json::Ghostable->load($attbasedir);
     # (representator of the parsed state of an mbox)
     $mbox->path

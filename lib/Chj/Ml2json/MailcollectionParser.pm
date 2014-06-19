@@ -165,6 +165,12 @@ sub _parse_email {
     my $args=shift;
     my ($msg, $mailboxpath, $mailboxpathhash, $mailboxtargetbase, $i,
 	$maybe_max_date_deviation, $targetdir)=@$args;
+
+    # XX why have $$s{messageclass} when we hard code this?
+    # (Remove the former?)
+    my $idf= Chj::Ml2json::Mailcollection::Message::Identify->new
+      ($mailboxpathhash, $i);
+
     Try {
 	mkdir $targetdir or do {
 	    # delete older version first
@@ -250,10 +256,9 @@ sub _parse_email {
 	$$s{messageclass}->new($ent,
 			       $h,
 			       $unixtime,
-			       $mailboxpathhash,
-			       $i,
+			       $idf,
 			       $msg->cursor)
-    } "'$mailboxpath', $mailboxpathhash/$i",
+    } "'$mailboxpath', ".$idf->string,
       [["Chj::Ml2json::NoBodyException" => sub {
 	    my ($e)=@_;
 	    WARN "dropping message $i because: ".$e->msg;
@@ -300,7 +305,10 @@ sub make_parse___ghost {
 
 	my $mailboxpathhash=
 	  $s->mailbox_path_hash->(path_simplify $mailboxpath);
-	my $mailboxtargetbase= "$tmp/$mailboxpathhash";
+
+	my $mailboxtargetbase=
+	  Chj::Ml2json::Mailcollection::Message::Identify->new
+	      ($mailboxpathhash)->deep_dirpath($tmp);
 
 	ghost_make_
 	  ($mailboxtargetbase,
