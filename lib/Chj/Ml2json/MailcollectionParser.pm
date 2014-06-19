@@ -54,6 +54,8 @@ use Chj::FP::ArrayUtil ':all';
 use Chj::Try;
 use Chj::chompspace;
 use Chj::Parse::Mbox 'mbox_stream_open';
+use Chj::Parse::Maildir qw(maildir_open_stream maildir_mtime
+			   maildirP ezmlm_archiveP);
 use Chj::FP2::Stream ':all';
 use Chj::Ml2json::Mailcollection;
 use Cwd 'abs_path';
@@ -62,6 +64,10 @@ use Chj::TEST;
 use Chj::Ml2json::Ghosts; # Chj::Ml2json::Ghostable, Chj::Ml2json::Ghost
 use Chj::Shelllike::Rmrf;
 use Chj::xopendir;
+
+sub identity {
+    $_[0]
+}
 
 # date parsing is complicated matters with there being software not
 # creating standard conform formats, especially if there are emails
@@ -350,11 +356,6 @@ sub make_parse___ghost {
    "parsed_email_mbox_ghost"
   );
 
-use Chj::Parse::Maildir 'maildir_open_stream', 'maildir_mtime';
-sub identity {
-    $_[0]
-}
-
 # parse maildir; why is this and parse_mbox_ghost not generics on
 # another type? well, perhaps not necessary.
 *parse_maildir_ghost= make_parse___ghost
@@ -402,8 +403,6 @@ sub make_resurrector {
 
 our $nothing= Chj::Ml2json::Mailcollection::Tree->new([]);
 
-
-use Chj::Parse::Maildir qw(maildirP ezmlm_archiveP);
 
 sub parse_tree {
     my $s=shift;
