@@ -348,6 +348,7 @@ use Chj::Browser;
 use Chj::chompspace;
 use Chj::Ml2json::Parse::TextStripper;
 use Chj::Ml2json::Ghosts; # Chj::Ml2json::Ghostable, Chj::Ml2json::Ghost
+use Digest::MD5 'md5_hex';
 
 use DateTime;
 # XX move lib
@@ -406,7 +407,8 @@ our $parallel= Chj::Parallel->new($opt{jobs});
 our $collectionparser= Chj::Ml2json::MailcollectionParser->new
   ('Chj::Ml2json::Message',
    $opt{mbox_glob},
-   $opt{recurse});
+   $opt{recurse},
+   $opt{mbox_path_hash} || \&md5_hex);
 
 
 ## config file input ?

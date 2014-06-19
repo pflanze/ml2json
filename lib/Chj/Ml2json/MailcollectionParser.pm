@@ -49,7 +49,6 @@ use strict;
 use Chj::NoteWarn;
 use Chj::xperlfunc ":all";
 use MIME::Parser;
-use Digest::MD5 'md5_hex';
 use Chj::FP::ArrayUtil ':all';
 use Chj::Try;
 use Chj::chompspace;
@@ -150,11 +149,13 @@ TEST{path_simplify "bar/."} 'bar';
 TEST{path_simplify "bar/.."} 'bar/..';
 TEST{path_simplify "/./foo//./bar/."} '/foo/bar';
 
+use Chj::FP::Predicates;
 
 use Chj::Struct "Chj::Ml2json::MailcollectionParser"=>
-  ['messageclass', # class name
-   'mbox_glob', # filename-matching glob string
-   'recurse', # bool
+  [[\&class_nameP, 'messageclass'],
+   [\&stringP, 'mbox_glob'], # filename-matching glob
+   [\&booleanP, 'recurse'],
+   [\&procedureP, 'mbox_path_hash'],
   ];
 
 
@@ -293,7 +294,8 @@ sub make_parse___ghost {
 	# $maybe_max_date_deviation: seconds max allowed deviation between
 	# Date header and mbox time
 
-	my $mailboxpathhash= md5_hex(path_simplify $mailboxpath);
+	my $mailboxpathhash=
+	  $s->mbox_path_hash->(path_simplify $mailboxpath);
 	my $mailboxtargetbase= "$tmp/$mailboxpathhash";
 
 	ghost_make_

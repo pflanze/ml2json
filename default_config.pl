@@ -263,9 +263,17 @@ our ($mydir,%opt); # 'import' from main
 
   # Where to cache items:
   cache_dir=> undef, # or path string
-  # undef means, scattered in `$attachment_basedir/$md5_of_mbox_path`
+  # undef means, scattered in `$attachment_basedir/$hash_of_mbox_path`
   # and its per-message subdirectories as files named "__meta".
 
+  # If defined, the function to calculate the string from the mailbox
+  # path that's used for mailbox identification, i.e. as prefix for
+  # the message xhtml files, the last element of the attachment
+  # directory (holding the subdirectories with the unpacked mails),
+  # and in this case is prepended with 'listname' to get identify
+  # values (which is used for missing message-ids).
+  mailbox_path_hash=> undef,
+  # sub { my ($mailbox_path)=@_; Digest::MD5::md5_hex ($mailbox_path) }
 
   # Generate HTML archives for public viewing instead of for
   # debugging:

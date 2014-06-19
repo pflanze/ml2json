@@ -538,6 +538,7 @@ sub MIME_Entity_path {
 	$ct=~ s|/|-|g; $ct=~ s|^\.+||;
 	my ($filenamepart)= $ct=~ m|([\w-]+)| or die "no match for ct '$ct'";
 	my $str= $s->as_string;
+	# XXX: do *not* use $opt{mbox_path_hash} here, correct?
 	my $hash= md5_hex($str);
 	my $path= $main::tmp # XXX: how to better pass this around?
 	  . "/" . $m->identify . "/$filenamepart-$hash.txt";
