@@ -408,7 +408,7 @@ our $collectionparser= Chj::Ml2json::MailcollectionParser->new
   ('Chj::Ml2json::Message',
    $opt{mbox_glob},
    $opt{recurse},
-   $opt{mbox_path_hash} || \&md5_hex);
+   $opt{mailbox_path_hash} || \&md5_hex);
 
 
 ## config file input ?
@@ -577,7 +577,7 @@ sub do_output_message {
 		# or re-read the slice of the original mbox
 		# file; XX assumes that the file is still
 		# unchanged!
-		$m->mboxslice->xsendfile_to($out);
+		$m->mailboxcursor->xsendfile_to($out);
 	    }
 	    $out->xclose;
 	    $source_path= $path;

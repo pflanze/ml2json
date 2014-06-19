@@ -133,8 +133,12 @@ TEST{ sear_subject "Re: [Foo-L] Online versions (subject closed)" }
     }
 }
 
-use Chj::Struct ["ent", "h", "unixtime", "mboxpathhash", "n",
-		 "mboxslice"
+use Chj::Struct ["ent",
+		 "h",
+		 "unixtime",
+		 "mailboxpathhash",
+		 "n",
+		 "mailboxcursor"
 		],
   'Chj::Ml2json::Ghostable';
 # cache values: messageids
@@ -148,7 +152,7 @@ use Chj::chompspace ();
 sub identify {
     my $s=shift;
     @_==0 or die;
-    "$$s{mboxpathhash}/$$s{n}"
+    "$$s{mailboxpathhash}/$$s{n}"
 }
 
 sub headers {

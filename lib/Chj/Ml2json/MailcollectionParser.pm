@@ -155,7 +155,7 @@ use Chj::Struct "Chj::Ml2json::MailcollectionParser"=>
   [[\&class_nameP, 'messageclass'],
    [\&stringP, 'mbox_glob'], # filename-matching glob
    [\&booleanP, 'recurse'],
-   [\&procedureP, 'mbox_path_hash'],
+   [\&procedureP, 'mailbox_path_hash'],
   ];
 
 
@@ -163,7 +163,7 @@ use Chj::Struct "Chj::Ml2json::MailcollectionParser"=>
 sub _parse_email {
     my $s=shift;
     my $args=shift;
-    my ($msg, $mboxpath, $mboxpathhash, $mboxtargetbase, $i,
+    my ($msg, $mailboxpath, $mailboxpathhash, $mailboxtargetbase, $i,
 	$maybe_max_date_deviation, $targetdir)=@$args;
     Try {
 	mkdir $targetdir or do {
@@ -204,7 +204,7 @@ sub _parse_email {
 			  $t2->time;
 		      } else {
 			  NOTE "unparseable Date header '$v' in: "
-			    ."'$mboxpath' $i";
+			    ."'$mailboxpath' $i";
 			  ()
 		      }
 		  } @{$$h{date}||[]};
@@ -213,7 +213,7 @@ sub _parse_email {
 		    my $first= shift @unixtimes;
 		    array_fold(\&min, $first, \@unixtimes)
 		} else {
-		    WARN "cannot extract date from: '$mboxpath' $i";
+		    WARN "cannot extract date from: '$mailboxpath' $i";
 		    0
 		}
 	    };
@@ -223,7 +223,7 @@ sub _parse_email {
 		my $now2= time;
 		if ($now <= $t and $t <= $now2) {
 		    NOTE "seems Email::Date could not extract date from:"
-		      ." '$mboxpath' $i";
+		      ." '$mailboxpath' $i";
 		    &$fallback
 		} else {
 		    $t
@@ -250,10 +250,10 @@ sub _parse_email {
 	$$s{messageclass}->new($ent,
 			       $h,
 			       $unixtime,
-			       $mboxpathhash,
+			       $mailboxpathhash,
 			       $i,
 			       $msg->cursor)
-    } "'$mboxpath', $mboxpathhash/$i",
+    } "'$mailboxpath', $mailboxpathhash/$i",
       [["Chj::Ml2json::NoBodyException" => sub {
 	    my ($e)=@_;
 	    WARN "dropping message $i because: ".$e->msg;
@@ -264,7 +264,7 @@ sub _parse_email {
 sub parsed_email_mbox_ghost {
     my $s=shift;
     my $args=shift;
-    my ($msg, $mboxpath, $mboxpathhash, $mboxtargetbase, $i,
+    my ($msg, $mailboxpath, $mailboxpathhash, $mailboxtargetbase, $i,
 	$maybe_max_date_deviation, $targetdir)=@$args;
     # no way to know which messages in the mbox are unchanged, thus
     # regenerate all of them
@@ -274,7 +274,7 @@ sub parsed_email_mbox_ghost {
 sub parsed_email_maildir_ghost {
     my $s=shift;
     my $args=shift;
-    my ($msg, $mboxpath, $mboxpathhash, $mboxtargetbase, $i,
+    my ($msg, $mailboxpath, $mailboxpathhash, $mailboxtargetbase, $i,
 	$maybe_max_date_deviation, $targetdir)=@$args;
     ghost_make $targetdir, $msg->cursor->itempath,
       sub {
@@ -283,7 +283,7 @@ sub parsed_email_maildir_ghost {
 }
 
 
-# parse mbox file,
+# parse mbox file or Maildir directory,
 # return a ghost of a Chj::Ml2json::Mailcollection::Mbox ##XXX rename ::Mbox to ::Mailbox
 sub make_parse___ghost {
     my ($mailboxpath_mtime, $mailbox_open_stream, $fixup_msg, $parse_email)=@_;
@@ -293,9 +293,13 @@ sub make_parse___ghost {
 	my ($mailboxpath,$tmp, $maybe_max_date_deviation)=@_;
 	# $maybe_max_date_deviation: seconds max allowed deviation between
 	# Date header and mbox time
+	# XX: ^ only relevant for MBox, not Maildir, currently, as
+	# Maildir parser doesn't get the mtimes of the individual
+	# files and hence the returned entries don't have that value,
+	# could change that of course.
 
 	my $mailboxpathhash=
-	  $s->mbox_path_hash->(path_simplify $mailboxpath);
+	  $s->mailbox_path_hash->(path_simplify $mailboxpath);
 	my $mailboxtargetbase= "$tmp/$mailboxpathhash";
 
 	ghost_make_
