@@ -24,7 +24,7 @@ package Chj::Ml2json::Ghosts;
 @EXPORT_OK=qw(ghost_path);
 %EXPORT_TAGS=(all=>[@EXPORT,@EXPORT_OK]);
 
-use strict;
+use strict; use warnings FATAL => 'uninitialized';
 
 use Chj::xperlfunc qw(xLmtime XLmtime);
 

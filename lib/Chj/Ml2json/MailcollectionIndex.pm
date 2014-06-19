@@ -18,7 +18,7 @@ Chj::Ml2json::MailcollectionIndex
 
 package Chj::Ml2json::MailcollectionIndex;
 
-use strict;
+use strict; use warnings FATAL => 'uninitialized';
 
 use Scalar::Util 'weaken';
 use Chj::FP::Array_sort;

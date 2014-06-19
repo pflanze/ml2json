@@ -22,7 +22,7 @@ package Chj::Browser;
 @EXPORT_OK=qw();
 %EXPORT_TAGS=(all=>[@EXPORT,@EXPORT_OK]);
 
-use strict;
+use strict; use warnings FATAL => 'uninitialized';
 
 use Chj::xperlfunc ':all';
 use Chj::singlequote 'singlequote_sh';

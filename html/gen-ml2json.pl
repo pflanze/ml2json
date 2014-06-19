@@ -1,4 +1,4 @@
-use strict;
+use strict; use warnings FATAL => 'uninitialized';
 use Function::Parameters qw(:strict);
 
 my $usageanchor= 'Run `./ml2json --help`.';

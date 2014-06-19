@@ -30,7 +30,7 @@ package Chj::Ml2json::MIMEExtract;
 	    );
 %EXPORT_TAGS=(all=>[@EXPORT,@EXPORT_OK]);
 
-use strict;
+use strict; use warnings FATAL => 'uninitialized';
 
 use Chj::NoteWarn;
 use Chj::FP::HashSet ":all";

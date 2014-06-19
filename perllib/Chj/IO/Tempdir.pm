@@ -20,7 +20,7 @@ Chj::IO::Tempdir
 package Chj::IO::Tempdir;
 @ISA="Chj::IO::Dir"; require Chj::IO::Dir;
 
-use strict;
+use strict; use warnings FATAL => 'uninitialized';
 use Carp;
 use Errno qw(EEXIST EINTR);
 use overload

@@ -47,7 +47,7 @@ package Chj::xopengzip;
 @EXPORT_OK=qw(xopengzip_read);
 %EXPORT_TAGS=(all=>[@EXPORT,@EXPORT_OK]);
 
-use strict;
+use strict; use warnings FATAL => 'uninitialized';
 
 use Chj::opencachefile qw(opencachefile if_open_else);
 

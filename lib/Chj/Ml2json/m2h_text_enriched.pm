@@ -44,7 +44,7 @@ package Chj::Ml2json::m2h_text_enriched;
 @EXPORT_OK=qw();
 %EXPORT_TAGS=(all=>[@EXPORT,@EXPORT_OK]);
 
-use strict;
+use strict; use warnings FATAL => 'uninitialized';
 
 
 my %enriched_tags = (

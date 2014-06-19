@@ -21,7 +21,7 @@ See L<Chj::xopendir>.
 
 package Chj::IO::Dir;
 
-use strict;
+use strict; use warnings FATAL => 'uninitialized';
 
 use Symbol;
 use Carp;

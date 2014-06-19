@@ -18,7 +18,7 @@ Chj::Ml2json::Parse::Plain
 
 package Chj::Ml2json::Parse::Plain;
 
-use strict;
+use strict; use warnings FATAL => 'uninitialized';
 
 use Chj::FP2::List ":all";
 use Chj::PXHTML ':all';

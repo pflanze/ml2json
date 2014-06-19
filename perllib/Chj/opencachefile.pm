@@ -42,7 +42,7 @@ package Chj::opencachefile;
 @EXPORT_OK=qw(if_open_else);
 %EXPORT_TAGS=(all=>[@EXPORT,@EXPORT_OK]);
 
-use strict;
+use strict; use warnings FATAL => 'uninitialized';
 
 use POSIX qw(O_CREAT O_EXCL O_RDONLY O_WRONLY ENOENT EEXIST);
 use Chj::xperlfunc;

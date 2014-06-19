@@ -48,7 +48,7 @@ always output (holding however many values there are, possibly none).
 
 package Chj::Ml2json::OutputJSON;
 
-use strict;
+use strict; use warnings FATAL => 'uninitialized';
 
 use Chj::Ml2json::MIMEExtract ':all';
 use Chj::xperlfunc ':all'; # basename, xstat

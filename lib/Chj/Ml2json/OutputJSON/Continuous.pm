@@ -28,7 +28,7 @@ Chj::Ml2json::OutputJSON::Continuous
 
 package Chj::Ml2json::OutputJSON::Continuous;
 
-use strict;
+use strict; use warnings FATAL => 'uninitialized';
 
 use Chj::Format::JSON ();
 use Chj::Struct ["OutputJSON"], "Chj::Format::JSON::Continuous";

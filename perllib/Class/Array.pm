@@ -16,7 +16,7 @@ package Class::Array;
 
 $VERSION = '0.10pre1';
 
-use strict;
+use strict; use warnings FATAL => 'uninitialized';
 use Carp;
 
 #use constant DEBUG=>0;
@@ -638,7 +638,7 @@ Class::Array - array based perl objects
 =head1 SYNOPSIS
 
  package My::BaseClass;
- use strict;
+ use strict; use warnings FATAL => 'uninitialized';
  use Class::Array -fields=> -public=> qw(Name Firstname),
                             -protected=> qw(Age),
                             -private=> qw(Secret);
@@ -660,7 +660,7 @@ Class::Array - array based perl objects
  }
  ----
  package My::DerivedClass;
- use strict;
+ use strict; use warnings FATAL => 'uninitialized';
  use My::BaseClass -extend=> -public=> qw(Nickname),
                              -private=> qw(Fiancee);
 
@@ -686,7 +686,7 @@ Class::Array - array based perl objects
  
  ----
  # package main:
- use strict;
+ use strict; use warnings FATAL => 'uninitialized';
  use My::DerivedClass;
  my $v= new My::DerivedClass;
  $v->[Name]= "Bla";

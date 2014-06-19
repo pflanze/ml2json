@@ -3,7 +3,7 @@
 # Fri Aug  2 00:14:08 BST 2013
 (my $email='ch%christianjaeger,ch')=~ tr/%,/@./;
 
-use strict;
+use strict; use warnings FATAL => 'uninitialized';
 
 my ($mydir, $myname);
 BEGIN {

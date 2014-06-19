@@ -9,7 +9,7 @@
 # Written by David Kilzer <ddkilzer_at_ti.com>
 # Tue, Mar 24, 1998
 #
-use strict;
+use strict; use warnings FATAL => 'uninitialized';
 
 my $first_time = 1;	# marks first time through script
 my $line;		# stores one input line

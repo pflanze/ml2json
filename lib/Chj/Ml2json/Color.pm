@@ -24,7 +24,7 @@ Chj::Ml2json::Color
 
 package Chj::Ml2json::Color;
 
-use strict;
+use strict; use warnings FATAL => 'uninitialized';
 
 use Chj::Struct ["r","g","b"];
 

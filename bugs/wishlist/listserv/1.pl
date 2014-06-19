@@ -24,7 +24,7 @@
 # did help Hypermail (possibly required by the old 1.x versions?) to
 # create its output.
 
-use strict;
+use strict; use warnings FATAL => 'uninitialized';
 
 
 my $first_time = 1;	# marks first time through script

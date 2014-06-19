@@ -25,7 +25,7 @@ handled by Chj::Ml2json::Parse::Plain).
 
 package Chj::Ml2json::Parse::HTML;
 
-use strict;
+use strict; use warnings FATAL => 'uninitialized';
 
 use Chj::NoteWarn;
 

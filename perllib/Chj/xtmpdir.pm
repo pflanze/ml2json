@@ -29,7 +29,7 @@ package Chj::xtmpdir;
 @ISA="Exporter"; require Exporter;
 @EXPORT=qw(xtmpdir);
 
-use strict;
+use strict; use warnings FATAL => 'uninitialized';
 use Chj::IO::Tempdir;
 
 

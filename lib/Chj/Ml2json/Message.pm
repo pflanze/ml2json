@@ -22,7 +22,7 @@ package Chj::Ml2json::Message;
 # read the message data?
 
 
-use strict;
+use strict; use warnings FATAL => 'uninitialized';
 
 use Chj::Ml2json::MIMEExtract ":all"; # MIME_Entity_*
 

@@ -18,5 +18,5 @@ Chj::Ml2json::Parse
 
 package Chj::Ml2json::Parse;
 
-use strict;
+use strict; use warnings FATAL => 'uninitialized';
 

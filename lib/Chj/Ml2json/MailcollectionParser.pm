@@ -44,7 +44,7 @@ $parse is true, it will also parse subdirectories.
 
 package Chj::Ml2json::MailcollectionParser;
 
-use strict;
+use strict; use warnings FATAL => 'uninitialized';
 
 use Chj::NoteWarn;
 use Chj::xperlfunc ":all";

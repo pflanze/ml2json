@@ -18,7 +18,7 @@ Chj::Ml2json::Mailcollection::Message
 
 package Chj::Ml2json::Mailcollection::Message;
 
-use strict;
+use strict; use warnings FATAL => 'uninitialized';
 
 use Chj::Ml2json::Ghosts; # Chj::Ml2json::Ghostable, Chj::Ml2json::Ghost
 #XX still needed? use Chj::Ml2json::Mailcollection; # 'Chj::Ml2json::Ghostable';

@@ -92,7 +92,7 @@ require Exporter;
 	      );
 %EXPORT_TAGS= (all=> [@EXPORT, @EXPORT_OK]);
 
-use strict;
+use strict; use warnings FATAL => 'uninitialized';
 use Carp;
 
 use Chj::IO::File;

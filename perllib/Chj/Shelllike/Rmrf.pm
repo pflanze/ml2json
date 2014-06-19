@@ -22,7 +22,7 @@ package Chj::Shelllike::Rmrf;
 @EXPORT_OK=qw();
 %EXPORT_TAGS=(all=>[@EXPORT,@EXPORT_OK]);
 
-use strict;
+use strict; use warnings FATAL => 'uninitialized';
 
 use Chj::xopendir;
 use Chj::xperlfunc 'Xlstat';

@@ -2,7 +2,7 @@
 # NOTE: the config is Perl code, and it is hence not safe to let
 # entities with lower privileges change it.
 
-use strict;
+use strict; use warnings FATAL => 'uninitialized';
 use Chj::numcores;
 our ($mydir,%opt); # 'import' from main
 

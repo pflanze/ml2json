@@ -3,7 +3,7 @@
 # Thu Jul  4 21:30:42 BST 2013
 (my $email='ch%christianjaeger,ch')=~ tr/%,/@./;
 
-use strict;
+use strict; use warnings FATAL => 'uninitialized';
 
 use Cwd 'abs_path';
 
