@@ -137,7 +137,7 @@ use Chj::Struct ["ent",
 		 "h",
 		 "unixtime",
 		 "mailboxpathhash",
-		 "n",
+		 "i",
 		 "mailboxcursor"
 		],
   'Chj::Ml2json::Ghostable';
@@ -152,7 +152,7 @@ use Chj::chompspace ();
 sub identify {
     my $s=shift;
     @_==0 or die;
-    "$$s{mailboxpathhash}/$$s{n}"
+    "$$s{mailboxpathhash}/$$s{i}"
 }
 
 sub headers {
