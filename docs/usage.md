@@ -45,27 +45,29 @@ files).
 
 5. the temp / attachments dir is structured as follows:
 
-        $attachment_basedir/$md5_of_mailbox_path/$i/<files>
+        $attachment_basedir/$hash_of_mailbox_path/$i/<files>
 
- `$md5_of_mailbox_path` is `md5(mailbox_path)`; this to shorten down the path to
- something that won't ever conflict. This is not to hide the original
- path: it's both possible to determine the original path by using md5
- hash crackers, and if the `$attachment_basedir/$md5_of_mailbox_path/__meta`
- file is still present, it contains the path.
+ `$hash_of_mailbox_path` is the `mailbox_path_hash` config setting
+ applied to the path to the mailbox; this to shorten down the path to
+ something that won't ever conflict. This does not necessarily hide
+ the original path: it's both possible to determine the original path
+ by using MD5 hash crackers if the default hash config setting isn't
+ changed, and if the `$attachment_basedir/$hash_of_mailbox_path/__meta`
+ file is still present, the path can be read from it.
 
  If the `cache_dir` option is set, then no __meta files will be
  created within `$attachment_basedir` (making it possible to use it
  cleanly for serving in public html archives).
 
- If you want to know which mailbox path a particular md5 originated from,
- use the ml2json `--show-mbox-path` option.
+ If you want to know which mailbox path a particular hash originated
+ from, use the ml2json `--show-mbox-path` option.
 
  `$i` is a string indicating the position of the email
  in the mailbox, or `$o-$p` in case of ezmlm archive dirs, where $o is
  the ezmlm subdir and $p the message file name within the subdir (both
  being non-negative integers, $p possibly with a leading zero).
 
- You can run `ml2json --deidentify "$md5_of_mailbox_path/$i"` to make
+ You can run `ml2json --deidentify "$hash_of_mailbox_path/$i"` to make
  it print the original message string (as it was cut out of the mbox
  file, or copied from a Maildir file).
 

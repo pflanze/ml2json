@@ -292,7 +292,6 @@ our ($mydir,%opt); # 'import' from main
       use Digest::MD5 'md5_hex';
       \&md5_hex
   },
-  # (XXX update docs which are currently presuming md5)
 
   # Generate HTML archives for public viewing instead of for
   # debugging:

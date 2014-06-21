@@ -24,6 +24,8 @@ Messages are identified in two ways:
 
         identify = md5(path_to_the_mailbox) + "/" + position_within_the_mailbox
 
+   or whatever else the `mailbox_path_hash` config option is set to.
+
    Note that `path_to_the_mailbox` is not expanded (made absolute),
    but directly derived from the source path given to ml2json. See
    [better_Id_generation](//better_Id_generation.md) for suggestions
