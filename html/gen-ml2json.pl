@@ -1,5 +1,6 @@
 use strict; use warnings FATAL => 'uninitialized';
 use Function::Parameters qw(:strict);
+our $mydir; # 'import' from main
 
 my $usageanchor= 'Run `./ml2json --help`.';
 use Chj::xpipe;
@@ -15,7 +16,7 @@ sub helptext {
 	warn "error in subprocess, $?" unless $? == 0;
 	$str
     } else {
-	#$r->xclose;
+	$r->xclose;
 	local $ENV{ML2JSON_MYDIR}=".";
 	open STDOUT, ">&".fileno($w) or die $!;
 	open STDERR, ">&".fileno($w) or die $!;
@@ -25,6 +26,8 @@ sub helptext {
 }
 
 use Chj::PXHTML ":all";
+
+my $logocfg= require "$mydir/logo.pl";
 
 +{
   indexpath0P=> fun ($path0) {
@@ -48,9 +51,7 @@ use Chj::PXHTML ":all";
   title=> fun ($filetitle) {
       ($filetitle, " - ml2json")
   },
-  head=> DIV ({class=>"header"},
-	      SPAN({class=>"logo"}, "ml2json"),
-	      " mail archive processor"),
+  head=> $$logocfg{logo},
   sortorder=>
   [qw(
 	 README.md
@@ -63,6 +64,8 @@ use Chj::PXHTML ":all";
 	 docs/hacking.md
 	 docs/mbox.md
 	 COPYING.md
+	 CONTACT.md
+	 docs/mailing_list.md
     )],
 
   warn_hint=> 1, # warn if the website hint (header) is missing in a
