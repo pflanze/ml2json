@@ -345,6 +345,12 @@ sub make_parse___ghost {
 		   {
 		       my $d= xopendir $mailboxtargetbase;
 		       while (defined (my $item= $d->xnread)) {
+			   next if $item=~ /\.xhtml$/;
+			   # ^ HACK to avoid issuing the removals
+			   # below (including warnings) if the HTML
+			   # output files are written to the same
+			   # place as the attachments. Assumes that
+			   # mailbox i's don't have that suffix.
 			   unless ($$is{$item}) {
 			       my $path= "$mailboxtargetbase/$item";
 			       WARN "Removing stale path '$path'";
