@@ -8,6 +8,6 @@ listname=ml2json-list
 
 ../ml2json --config config.pl
 
-usync ~/tmp/"$listname.out"/. "/var/www/ml2json.christianjaeger.ch/$listname"/.
+usync --delete ~/tmp/"$listname.out"/. "/var/www/ml2json.christianjaeger.ch/$listname"/.
 
 )
