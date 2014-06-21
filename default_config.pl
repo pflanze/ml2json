@@ -1,5 +1,13 @@
 
-# NOTE: the config is Perl code, and it is hence not safe to let
+# This file is not meant to be changed, but instead, another file that
+# just lists the variables that you want to change should be created
+# and its path given to ml2json with the --config option. Its values
+# will then override those given here.
+
+# An example of such a config file can be found at
+# `ml2json-list-generate/config.pl`.
+
+# WARNING: the config is Perl code, and it is hence not safe to let
 # entities with lower privileges change it.
 
 use strict; use warnings FATAL => 'uninitialized';

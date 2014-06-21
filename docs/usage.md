@@ -31,7 +31,10 @@ repeatedly and consistently, consider doing that. The file
 has the defaults; this file is not meant
 to be edited, instead, create a new file that shadows the config keys
 that you want to set, then pass the path to it to the `--config`
-option. Read about `--config` in `./mk2json --help`.
+option. An example can be found in
+[ml2json-list-generate/config.pl](https://github.com/pflanze/ml2json/blob/master/ml2json-list-generate/config.pl)
+which is used to generate the [list archive](//mailing_list.md).
+Read about `--config` in `./mk2json --help`.
 
 4. run `./mk2json sourcedir --json-to targetfile`, perhaps with the
 additional options of your choice (in particular you need to use the
