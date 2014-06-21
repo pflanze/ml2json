@@ -5,11 +5,11 @@ properly formatted versions of these documents.)
 
 Ml2json has been written by [Christian Jaeger](http://christianjaeger.ch).
 
-Please [contact me](http://christianjaeger.ch/contact.html) if you have
-questions or suggestions.
+Please [contact me](http://christianjaeger.ch/contact.html) or write
+to the [[mailing_list]] if you have questions or suggestions or to
+send bug reports.
 
-Please either send bug reports to my email address on the above
-contact page (preferred) or use the ["issues"
+But reports can alternatively also be sent to the ["issues"
 tracker](https://github.com/pflanze/ml2json/issues) on Github. See
-[bugs and sponsoring](//bugs_and_sponsoring.md) for the current bug
-list.
+[bugs and sponsoring](//bugs_and_sponsoring.md) for the bug list
+concerning the current development version.
