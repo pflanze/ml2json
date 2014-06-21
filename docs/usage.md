@@ -11,8 +11,9 @@ Run `./ml2json --help`.
 Instructions
 ------------
 
-1. collect all mbox files your archive is comprised of into one
-directory (or directory tree, if you use the `--recurse` option)
+1. collect all mbox files or Maildir/ezmlm directories your archive is
+comprised of into one or several directories (or directory tree, if
+you use the `--recurse` option), possibly using symlinks.
 
 2. decide upon a base directory where all the unpacked attachments (as
 well as serialized state--for details see [[phases]]) should be
@@ -44,28 +45,29 @@ files).
 
 5. the temp / attachments dir is structured as follows:
 
-        $attachment_basedir/$md5_of_mbox_path/$n/<files>
+        $attachment_basedir/$md5_of_mailbox_path/$i/<files>
 
- `$md5_of_mbox_path` is `md5(mbox_path)`; this to shorten down the path to
+ `$md5_of_mailbox_path` is `md5(mailbox_path)`; this to shorten down the path to
  something that won't ever conflict. This is not to hide the original
  path: it's both possible to determine the original path by using md5
- hash crackers, and if the `$attachment_basedir/$md5_of_mbox_path/__meta`
+ hash crackers, and if the `$attachment_basedir/$md5_of_mailbox_path/__meta`
  file is still present, it contains the path.
 
  If the `cache_dir` option is set, then no __meta files will be
  created within `$attachment_basedir` (making it possible to use it
  cleanly for serving in public html archives).
 
- If you want to know which mbox path a particular md5 originated from,
+ If you want to know which mailbox path a particular md5 originated from,
  use the ml2json `--show-mbox-path` option.
 
- `$n` is the non-negative integer number of the position of the email
- in the mbox, or `$o-$p` in case of ezmlm archive dirs, where $o is
+ `$i` is a string indicating the position of the email
+ in the mailbox, or `$o-$p` in case of ezmlm archive dirs, where $o is
  the ezmlm subdir and $p the message file name within the subdir (both
  being non-negative integers, $p possibly with a leading zero).
 
- You can run `ml2json --deidentify "$md5_of_mbox_path/$n"` to make it
- print the original message string (as it was cut out of the mbox file).
+ You can run `ml2json --deidentify "$md5_of_mailbox_path/$i"` to make
+ it print the original message string (as it was cut out of the mbox
+ file, or copied from a Maildir file).
 
 6. optionally, to clean up the generated temporary / attachments
 files, run ml2json with the `--cleanup` option; if you gave the

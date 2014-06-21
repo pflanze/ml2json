@@ -13,16 +13,18 @@ Messages are identified in two ways:
    currently using the identify string as described below. See
    [better_Id_generation](//better_Id_generation.md) for suggestions to change this.
 
- * "identify" string: identification of the mbox and the index of the
-   message therein. Can be used to find the original message
-   unambiguously, see the ml2json --deidentify option. In cases where the
-   same post appears multiple times in the same or different mbox
-   files, there will be multiple "identify" values, but only one and
-   the same "id" value; a [warning](warnings.md) will be issued if
-   that happens and all except one instance of the post will be ignored.
+ * "identify" string: identification of the mailbox and the index of
+   the message therein. Can be used to find the original message
+   unambiguously, see the ml2json --deidentify option. In cases where
+   the same post appears multiple times in the same or different
+   mailboxes, there will be multiple "identify" values, but only one
+   and the same "id" value; a [warning](warnings.md) will be issued if
+   that happens and all except one instance of the post will be
+   ignored.
 
-        identify = md5(path_to_the_mbox) + "/" + position_within_the_mbox
+        identify = md5(path_to_the_mailbox) + "/" + position_within_the_mailbox
 
-   Note that `path_to_the_mbox` is not expanded (made absolute), but
-   directly derived from the source path given to ml2json. See
-   [better_Id_generation](//better_Id_generation.md) for suggestions to change this.
+   Note that `path_to_the_mailbox` is not expanded (made absolute),
+   but directly derived from the source path given to ml2json. See
+   [better_Id_generation](//better_Id_generation.md) for suggestions
+   to change this.

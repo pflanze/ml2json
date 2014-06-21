@@ -7,19 +7,21 @@ The basic principle of operation of ml2json is the following:
 
 1. ml2json iterates over all the files in the given directory /
 directories / files (using the mbox_glob setting to filter files found
-in directories), opening each file in turn, iterating over the messages therein,
-parsing each in turn using the MIME parser which creates an object
-plus files in the tmp directory; the code then serializes the object
-to the tmp directory as well, so that the parsed state can be resumed
-multiple times quickly. Each object representing the collection of
-messages of an individual mbox is serialized as well. The path of each
-mbox object is hashed using md5 and used that way as part of the tmp
-path. If there's already a serialized object for a message collection
-object representing an mbox, the mbox isn't parsed again but just the
-object deserialized (that's why subsequent runs of the script will be
-faster, also there will be no warnings about the mbox/mime parsing
-phase then). The whole directory is also represented as a
-messagecollection object (a subclass specific for dirs).
+in directories), opening each mbox file or Maildir or ezmlm archive
+directory in turn, iterating over the messages therein, parsing each
+in turn using the MIME parser which creates an object plus files in
+the tmp directory; the code then serializes the object to the tmp
+directory as well, so that the parsed state can be resumed multiple
+times quickly. Each object representing the collection of messages of
+an individual mailbox is serialized as well. The path of each mailbox
+is hashed using md5 and used that way as part of the tmp path. If
+there's already a serialized object for a message collection object
+representing an mailbox, the mailbox isn't parsed again unless it has
+changed, but just the object deserialized (that's why subsequent runs
+of the script will be faster, also there will be no warnings about the
+mailbox/mime parsing phase then). The whole directory is also
+represented as a messagecollection object (a subclass specific for
+dirs).
 
 2. it then iterates over the messages in the (toplevel, i.e. directory)
 messagecollection object, de-serializing each parsed message object in
