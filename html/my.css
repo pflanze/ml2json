@@ -44,7 +44,7 @@ pre {
 
 pre > code {
   padding: 0px;
-  background-color: none;
+  background-color: transparent;
   border: none;
 }
 
@@ -52,14 +52,17 @@ pre > code {
 .header {
   text-align: center;
 }
-.logo {
+.logo1 {
   font-weight: bold;
   font-size:36px;
 }
 
+a.header, a.header:visited, a.header:active, a.header:hover { color: #000 }
+
 body {
   padding-left: 1.8em;
   padding-right: 1.8em;
+  background-color: #FFF;
 }
 
 hr {
@@ -82,4 +85,25 @@ hr {
 }
 .costlist > tr > td {
   padding-right: 0.5em;
+}
+
+/*
+.ref_top {
+  border-top: 1px solid #666;
+}
+.ref_precise .ref_subject {
+  padding: 0px;
+  margin: 0px;
+}
+*/
+
+
+dir.top {
+  margin: 0.8em;
+  padding: 0px;
+}
+
+dir.reply {
+  margin-top: 0.1em;
+  margin-bottom: 0px;
 }
