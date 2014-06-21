@@ -1,0 +1,13 @@
+#!/bin/bash
+
+set -eu
+
+cd "$(dirname "$0")" && (
+
+listname=ml2json-list
+
+../ml2json --config config.pl
+
+rsync -rl --delete ~/tmp/"$listname.out"/. "/var/www/ml2json.christianjaeger.ch/$listname"/.
+
+)
