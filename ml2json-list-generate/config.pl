@@ -30,11 +30,14 @@ my $header= sub {
 
 my $add_header=sub {
     my ($head,$body, $maybe_m)=@_;
-    ($head->body_set
-     ([LINK ({href=> "/my.css", rel=> "stylesheet", type=> "text/css"}),
-       $head->body]),
-     $body->body_set
-     ([&$header (!$maybe_m), $body->body]))
+    ($head->body_update
+     (sub {
+	  [@_, LINK ({href=> "/my.css", rel=> "stylesheet", type=> "text/css"})]
+      }),
+     $body->body_update
+     (sub {
+	  [&$header (!$maybe_m), @_]
+      }))
 };
 
 +{
