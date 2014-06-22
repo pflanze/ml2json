@@ -28,20 +28,13 @@ my $header= sub {
     ]
 };
 
-use Chj::FP::Hash;
-my $strip_bgcolor= sub {
-    my ($h)=@_;
-    $h and hash_delete $h, "bgcolor"
-};
-###^ remove again, not necessary anymore
-
 my $add_header=sub {
     my ($head,$body, $maybe_m)=@_;
     ($head->body_set
      ([LINK ({href=> "/my.css", rel=> "stylesheet", type=> "text/css"}),
-       $head->body])->attributes_update($strip_bgcolor),
+       $head->body]),
      $body->body_set
-     ([&$header (!$maybe_m), $body->body])->attributes_update($strip_bgcolor))
+     ([&$header (!$maybe_m), $body->body]))
 };
 
 +{
@@ -51,8 +44,8 @@ my $add_header=sub {
   },
 
   # JSON and source contain original email addresses, so don't use them.
-  #  json_to=> "$out/$listname.json",
-  #  source_to=> "$out/html/source",
+  #json_to=> "$out/$listname.json",
+  #source_to=> "$out/html/source",
 
   attachment_basedir=> $htmlout,
   html_to=> $htmlout,
@@ -72,7 +65,7 @@ my $add_header=sub {
   },
   nofollow=> 0,
   scan_for_mail_addresses_in_body=> 1,
-  time_zone=> "Europe/London", # use GMT instead?
+  time_zone=> "Europe/London", # use UTC or GMT instead?
   archive_message_change=> $add_header,
   archive_threadindex_change=> $add_header,
 }
