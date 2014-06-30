@@ -51,7 +51,9 @@ my $logocfg= require "$mydir/logo.pl";
   title=> fun ($filetitle) {
       ($filetitle, " - ml2json")
   },
-  head=> $$logocfg{logo},
+  head=> fun ($path0) {
+      $$logocfg{logo}
+  },
   sortorder=>
   [qw(
 	 README.md
