@@ -52,7 +52,12 @@ my $logocfg= require "$mydir/logo.pl";
       ($filetitle, " - ml2json")
   },
   head=> fun ($path0) {
+      # HTML before navigation
       $$logocfg{logo}
+  },
+  belownav=> fun ($path0) {
+      # HTML between navigation and page content
+      undef
   },
   sortorder=>
   [qw(

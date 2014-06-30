@@ -639,6 +639,7 @@ fun genfile ($path,$groupname,$genfilestate) {
 			       array_sort
 			       (array_map( \&path0, $genfilestate->nonbugfiles),
 				on $path02sortkey, \&string_cmp))),
+			   $cfg->{belownav}->($path0),
 			   $h1,
 			   $body1,
 			   $maybe_buglist,
