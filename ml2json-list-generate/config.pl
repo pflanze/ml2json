@@ -19,7 +19,7 @@ my $logocfg= require "$mydir/html/logo.pl";
 
 my $header= sub {
     my ($is_index)=@_;
-    [P ($$logocfg{logo}),
+    [$$logocfg{logo},
      UL ({class=> "menu"},
 	 &$menuentry ("Readme", "$$logocfg{homeurl}/index.xhtml"), # or just homeurl?
 	 &$menuentry ("Mailing list", "$$logocfg{homeurl}/docs/mailing_list.xhtml"),
