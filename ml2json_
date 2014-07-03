@@ -899,6 +899,7 @@ sub parse_and_convert {
 	}
 
 	$par1->close;
+	rmdir $par1_tmpdir or warn "could not remove '$par1_tmpdir': $!";
     };
 
     &$allout;
