@@ -57,14 +57,19 @@ sub _Addslash ($) {
 sub xtmpdir {
     my $class=shift;
     @_<=2 or croak "xtmpdir expects 0 to 2 arguments";
-    my ($opt_basepath,$opt_mask)=@_;
+    my ($maybe_basepath_or_name,$opt_mask)=@_;
+    my $get_basedir= sub {
+	($ENV{CHJ_TEMPDIR_BASEPATH}
+	 || $ENV{CHJ_TEMPDIR} ?
+	 _Addslash($ENV{CHJ_TEMPDIR})
+	 : "/tmp/")
+    };
     my $basepath=
-      (defined($opt_basepath) ?
-       $opt_basepath
-       : $ENV{CHJ_TEMPDIR_BASEPATH}
-       || $ENV{CHJ_TEMPDIR} ?
-       _Addslash($ENV{CHJ_TEMPDIR})
-       : "/tmp/");
+      (defined($maybe_basepath_or_name) ?
+       ($maybe_basepath_or_name =~ m|/| ?
+	$maybe_basepath_or_name
+	: &$get_basedir.$maybe_basepath_or_name)
+       : &$get_basedir);
     my $mask= defined($opt_mask) ? $opt_mask : 0700; # 0777 would be the perl default
     my $item;
     my $n= $MAXTRIES;
