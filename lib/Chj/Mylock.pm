@@ -26,7 +26,7 @@ use strict; use warnings FATAL => 'uninitialized';
 use Chj::xopen 'xopen_write';
 use Chj::xtmpdir;
 
-our $dir=xtmpdir;
+our $dir=xtmpdir "Chj-Mylock";
 $dir->autoclean(2);
 # don't warn; since used in children, too.  XXX But is it ok to remove
 # there?

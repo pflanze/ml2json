@@ -61,7 +61,7 @@ use Chj::opencachefile qw(opencachefile if_open_else);
     use Fcntl 'SEEK_SET';
     our %seekcache; # xseekpath => time last access
     our $seekcachebase = do {
-	my $t= Chj::xtmpdir::xtmpdir();
+	my $t= Chj::xtmpdir::xtmpdir("ReadGzip");
 	$t->push_on_destruction
 	  (sub {
 	       my ($seekcachebase)=@_;
