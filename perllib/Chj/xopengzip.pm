@@ -61,16 +61,23 @@ use Chj::opencachefile qw(opencachefile if_open_else);
     use Fcntl 'SEEK_SET';
     our %seekcache; # xseekpath => time last access
     our $seekcachebase = do {
+	# XX should we really use a symlink again, so as to have one
+	# dir per program, not per program run?
+
+	# clean up dir only if original process exits
+	my $origpid= $$;
 	my $t= Chj::xtmpdir::xtmpdir("ReadGzip");
+	my $tpath= "$t"; # because $t will be undef during global destruction
 	$t->push_on_destruction
 	  (sub {
 	       my ($seekcachebase)=@_;
 	       unlink $_ for keys %seekcache;
+	       if ($$ == $origpid) {
+		   rmdir $tpath or warn "could not rmdir '$tpath': $!";
+	       }
 	   });
-	# removing dir itself won't work with forked processes; sigh.
-	# XX should we really use a symlink again, so as to have one
-	# dir per program, not per program run?
 	$t->autoclean(0);
+
 	$t
     };
     our $seekcache_maxsize= 4;
