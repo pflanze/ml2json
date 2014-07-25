@@ -11,5 +11,5 @@ send bug reports.
 
 But reports can alternatively also be sent to the ["issues"
 tracker](https://github.com/pflanze/ml2json/issues) on Github. See
-[bugs and sponsoring](//bugs_and_sponsoring.md) for the bug list
-concerning the current development version.
+[bugs](//bugs.md) for the bug list concerning the current development
+version.
