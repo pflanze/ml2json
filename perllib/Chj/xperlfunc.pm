@@ -1051,12 +1051,12 @@ sub basename ($ ; $ ) {
 	# path ending in slash--or empty from the start.
 	if ($path=~ s|/+\z||s) {
 	    $path=~ s|.*/||s;
-	    #^this is necessary since we did it on $copy only, before!
+	    # ^ this is necessary since we did it on $copy only,
+	    #   before!
 	    if (length $path) {
 		$path
 	    } else {
-		# "/" ?
-		"/"  # or croak? no.
+		"/"  # or die? no.
 	    }
 	} else {
 	    croak "basename(".singlequote_many(@_)
@@ -1070,7 +1070,7 @@ sub basename ($ ; $ ) {
     }
     $res
 }
-# well some fun to do?:
+
 # main> :d basename  "/fun/."
 #  $VAR1 = '.';
 # but the shell util acts the same way.
