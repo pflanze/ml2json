@@ -53,6 +53,7 @@ use Chj::IO::Command;
 use Chj::xperlfunc ':all';
 use Chj::xopen ":all";
 use Chj::chompspace;
+use Chj::xIO qw(xputfile_utf8 xgetfile_utf8);
 
 lock_hash %$cfg;
 
@@ -155,19 +156,6 @@ fun path02outpath ($path0) {
     #"$outbase/".xsuffix_md2html($path0,0)
     # nope, also used for .pl file copying,
     "$outbase/".perhaps_suffix_md2html($path0,0)
-}
-
-fun getfile ($path) {
-    my $in= xopen_read ($path);
-    binmode $in, ":utf8" or die;
-    $in->xcontent
-}
-
-fun putfile ($path,$str) {
-    my $out= xopen_write($path);
-    binmode $out, ":utf8" or die;
-    $out->xprint($str);
-    $out->xclose;
 }
 
 use HTML::TreeBuilder;
@@ -503,7 +491,7 @@ fun genfile ($path,$groupname,$genfilestate) {
 
     my $filetitle= path02title $path0;
 
-    my $str= getfile "$inbase/$path";
+    my $str= xgetfile_utf8 "$inbase/$path";
 
     if ($$cfg{warn_hint}) {
 	$str=~ s/^\(Check the.*?website.*?---\s+//s
@@ -673,12 +661,12 @@ fun existingpath_or (@paths) {
 fun copyfiles ($filesinfo) {
     for my $path0 (keys %{$filesinfo->all_path0_used}) {
 	next if $filesinfo->path0_exists($path0); # md path
-	putfile (path02outpath($path0), getfile (path02inpath($path0)));
+	xputfile_utf8 (path02outpath($path0), xgetfile_utf8 (path02inpath($path0)));
     }
     # copy CSS file
-    putfile (path02outpath($css_path),
-	     getfile (existingpath_or (path02inpath($css_path),
-				       path02inpath("html/$css_path"))));
+    xputfile_utf8 (path02outpath($css_path),
+		   xgetfile_utf8 (existingpath_or (path02inpath($css_path),
+						   path02inpath("html/$css_path"))));
 }
 
 fun main () {
