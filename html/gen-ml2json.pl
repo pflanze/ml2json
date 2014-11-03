@@ -13,7 +13,8 @@ sub helptext {
 	$w->xclose;
 	my $str=$r->xcontent;
 	xwait;
-	warn "error in subprocess, $?" unless $? == 0;
+	warn "error in subprocess, exit code $?, output: $str "
+	    unless $? == 0;
 	$str
     } else {
 	$r->xclose;
