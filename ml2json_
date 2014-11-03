@@ -501,6 +501,14 @@ our $css_code=
      chompspace "
 .ref_precise {list-style: disc; }
 .ref_subject {list-style: square; }
+dir.top {
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+dir.reply {
+  margin-top: 0.2em;
+  margin-bottom: 0.2em;
+}
 "];
 
 our $css_url= "ml2json.css";
