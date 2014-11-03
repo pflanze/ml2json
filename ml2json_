@@ -348,6 +348,7 @@ use Chj::Browser;
 use Chj::chompspace;
 use Chj::Ml2json::Parse::TextStripper;
 use Chj::Ml2json::Ghosts; # Chj::Ml2json::Ghostable, Chj::Ml2json::Ghost
+use Chj::xIO "xputfile_utf8";
 
 use DateTime;
 # XX move lib
@@ -483,16 +484,29 @@ sub phrase_deparentisize {
     }
 }
 
-our $style_css= STYLE ({type=>"text/css"},
-		       (map {
-			   my $col= $textbackgroundcol->shade_exponentially_towards
-			     ($blockquoteendcol, 0.6, $_)->htmlstring;
-			   ".quotelevel_$_ { background-color:$col; }\n"
-		       } 1..15),
-		       ".ref_precise {list-style: disc; }\n",
-		       ".ref_subject {list-style: square; }\n",
-		      );
+sub css_link ($) {
+    my ($urlstring)=@_;
+    LINK ({rel=> "stylesheet",
+	   type=> "text/css",
+	   href=> $urlstring });
+}
 
+our $css_code=
+    [
+     (map {
+	 my $col= $textbackgroundcol->shade_exponentially_towards
+	     ($blockquoteendcol, 0.6, $_)->htmlstring;
+	 ".quotelevel_$_ { background-color:$col; }\n"
+      } 1..15),
+     chompspace "
+.ref_precise {list-style: disc; }
+.ref_subject {list-style: square; }
+"];
+
+our $css_url= "ml2json.css";
+# This location is relative from $opt{html_to} in the filesystem, and
+# directly used as relative url in the html pages that are saved
+# there.
 
 our ($json, $index);
 
@@ -674,7 +688,7 @@ sub do_output_message {
 		($opt{archive_message_change}->
 		 (HEAD (TITLE ($opt{archive_message_title}->
 			       ($identify, $subject, $fromstr)),
-			$style_css),
+			css_link $css_url),
 		  BODY
 		  (($opt{archive} ? {} : {bgcolor=>"#964a2a"}),
 		   TABLE ({border=>0,
@@ -864,6 +878,11 @@ sub parse_and_convert {
 	    }
 	};
 
+	if ($opt{html_to}) {
+	    # generate the CSS page used by the HTML pages
+	    xputfile_utf8 "$opt{html_to}/$css_url", $css_code;
+	}
+
 	if ($opt{html_index}) {
 	    # (XX parallelize how? par stream_map wanted, then do it in do_output_message ?)
 	    my $showthread= id_showthread(undef);
@@ -874,7 +893,7 @@ sub parse_and_convert {
 	      HTML
 		($opt{archive_threadindex_change}->
 		 (HEAD (TITLE ($opt{archive_threadindex_title}->()),
-			$style_css),
+			css_link $css_url),
 		  BODY
 		  (($opt{archive} ? {} : {bgcolor=>"#e0e0e0"}),
 		   $opt{time_zone_notice}->(0),
