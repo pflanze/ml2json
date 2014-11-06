@@ -20,7 +20,6 @@ package Chj::Ml2json::MailcollectionIndex;
 
 use strict; use warnings FATAL => 'uninitialized';
 
-use Scalar::Util 'weaken';
 use Chj::FP::Array_sort;
 use Chj::FP::ArrayUtil ":all";
 use Chj::FP2::List ":all";
