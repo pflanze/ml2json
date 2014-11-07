@@ -534,6 +534,9 @@ table.after_arrows {
     left: 65px;
     width: 83%;
 }
+.inactive_arrow {
+    color: #ccc;
+}
 "];
 
 our $css_url= "ml2json.css";
@@ -631,8 +634,7 @@ sub indexlink {
 	A({href=> $maybe_url,
 	   title=> $title}, $text)
 	:
-	# $text, no, make it disappear?
-	$nbsp;
+	SPAN ({class=> "inactive_arrow"}, $text);
 }
 
 # index -> id -> HTML -> HTML
