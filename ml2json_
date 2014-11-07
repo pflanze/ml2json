@@ -631,7 +631,8 @@ sub indexlink {
 	A({href=> $maybe_url,
 	   title=> $title}, $text)
 	:
-	$text;
+	# $text, no, make it disappear?
+	$nbsp;
 }
 
 # index -> id -> HTML -> HTML
