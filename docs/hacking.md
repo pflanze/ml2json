@@ -115,3 +115,14 @@ so as to force it to run everything in the same process.
  using :l or :d).
 
  [1]: https://github.com/pflanze/chj-perllib
+
+* Naming conventions:
+
+  - A `maybe_` prefix is used for routines that return undef to
+    indicate failure.
+
+  - A `perhaps_` prefix is used for routines that return () to
+    indicate failure. This is e.g. used where undef is a valid return
+    value (like the linked list end marker). XXX: check older code for
+    consistency!
+
