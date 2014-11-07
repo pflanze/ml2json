@@ -296,6 +296,7 @@ our ($mydir,%opt); # 'import' from main
   # Generate HTML archives for public viewing instead of for
   # debugging:
   archive=> 0, # 1
+  html_add_arrows=> 1, # whether to add navigation arrows to HTML pages
   listname=> "undefined list name",
   hide_mail_addressP=> sub {
       my ($address)=@_;

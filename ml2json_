@@ -3,7 +3,7 @@
 # Thu Jul  4 21:30:42 BST 2013
 (my $email='ch%christianjaeger,ch')=~ tr/%,/@./;
 
-use strict; use warnings FATAL => 'uninitialized';
+use strict; use warnings FATAL => 'uninitialized'; use utf8;
 
 use Cwd 'abs_path';
 
@@ -349,6 +349,9 @@ use Chj::chompspace;
 use Chj::Ml2json::Parse::TextStripper;
 use Chj::Ml2json::Ghosts; # Chj::Ml2json::Ghostable, Chj::Ml2json::Ghost
 use Chj::xIO "xputfile_utf8";
+use Chj::FP::Div "identity";
+use Chj::FP::url_;
+use Chj::FP::OrderedCollection;
 
 use DateTime;
 # XX move lib
@@ -500,15 +503,36 @@ our $css_code=
 	 ".quotelevel_$_ { background-color:$col; }\n"
       } 1..15),
      chompspace "
+a {
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
 .ref_precise {list-style: disc; }
 .ref_subject {list-style: square; }
 dir.top {
-  margin-top: 1em;
-  margin-bottom: 1em;
+    margin-top: 1em;
+    margin-bottom: 1em;
 }
 dir.reply {
-  margin-top: 0.2em;
-  margin-bottom: 0.2em;
+    margin-top: 0.2em;
+    margin-bottom: 0.2em;
+}
+div.arrows {
+    position: fixed;
+    top: 75px;
+    left: 10px;
+    font-size: 50px;
+    font-family: sans-serif;
+}
+div.arrows > a:hover {
+  text-decoration: none;
+}
+table.after_arrows {
+    position: relative;
+    left: 65px;
+    width: 83%;
 }
 "];
 
@@ -535,6 +559,7 @@ sub fromstr ($) {
      || $opt{map_mail_address}->($$from{address}))
 }
 
+# id -> thread-datastructure -> HTML
 sub id_showthread {
     my ($maybe_selected_id)=@_;
     my $showthread; $showthread= sub {
@@ -568,7 +593,13 @@ sub id_showthread {
 
 	    my $possiblylinkedcont=
 	      (defined $maybe_selected_id
-	       and $_id eq $maybe_selected_id) ? $cont : A({href=> $url}, $cont);
+	       and $_id eq $maybe_selected_id) ?
+	       $cont
+	       : A({href=> $url,
+		    (!defined $maybe_selected_id and $opt{html_add_arrows}) ?
+			(name=> $_id)
+			: ()},
+		   $cont);
 
 	    DIR({compact=>1,
 		 class=> (defined $maybe_prev_searedsubject ? "reply" : "top")},
@@ -585,6 +616,66 @@ sub id_showthread {
     my $_showthread= $showthread; weaken $showthread;
     $showthread
 }
+
+# thread -> id...
+sub thread_messageids {
+    my ($th)=@_;
+    ($$th{id},
+     map { thread_messageids ($_) } @{$$th{replies}})
+}
+
+
+sub indexlink {
+    my ($title, $text, $maybe_url)=@_;
+    defined $maybe_url ?
+	A({href=> $maybe_url,
+	   title=> $title}, $text)
+	:
+	$text;
+}
+
+# index -> id -> HTML -> HTML
+sub make_html_arrows_for {
+    my ($index)=@_;
+    my $ordered= Chj::FP::OrderedCollection->new_from_values
+	(map {
+	   my ($id)=$_;
+	   my $th= $index->thread($id);
+	   $$th{id} eq $id or die;
+	   thread_messageids($th)
+	 } @{$index->all_threadleaders_sorted});
+    sub {
+	my ($id)=@_;
+	sub {
+	    my ($content)=@_;
+	    my $arrowlink= sub {
+		my ($title, $text, $maybe_id)=@_;
+		my $maybe_url= (defined $maybe_id) ? do {
+		    my $id= $maybe_id;
+		    # XX should provide a method
+		    my $t_mg= $$index{ids}{$id}
+		    or die "unknown message id '$id'";
+		    my ($t,$mg)=@$t_mg;
+		    # /method
+		    m2xhtml_basename($mg->resurrect)
+		    # ^ XX wrong for cross-mailbox links?
+		} : undef;
+		indexlink ($title,$text, $maybe_url)
+	    };
+	    [
+	     DIV({class=> "arrows"},
+		 &$arrowlink ("previous message", "▲", $ordered->maybe_prev($id)),BR,
+		 indexlink ("message list", "⇦",
+			    url_(path=> "index.xhtml", fragment=> $id)), BR,
+		 &$arrowlink ("next message", "▼", $ordered->maybe_next($id))),
+	     $content
+	    ]
+	}
+    }
+}
+
+# (ugly? Want to generate it only once, that's why not defined in do_output_message)
+our $html_arrows_for;
 
 sub do_output_message {
     my ($m,$pos)=@_;
@@ -691,7 +782,13 @@ sub do_output_message {
 		  })
 	      } qw(from to cc);
 	    my $fromstr= fromstr ($outputjson->_json_mailparsed_header($m,"from")
-				 ->[0]);
+				  ->[0]);
+
+	    my $perhaps_arrows=
+		$opt{html_add_arrows} ?
+		&$html_arrows_for ($id)
+		: \&identity;
+
 	    my $page=
 	      HTML
 		($opt{archive_message_change}->
@@ -700,12 +797,15 @@ sub do_output_message {
 			css_link $css_url),
 		  BODY
 		  (($opt{archive} ? {} : {bgcolor=>"#964a2a"}),
-		   TABLE ({border=>0,
-			   cellspacing=>3,
-			   cellpadding=>16,
-			   width=>"88%",
-			   align=>"center",
-			  },
+		   &$perhaps_arrows
+		   (TABLE ({border=>0,
+			    cellspacing=>3,
+			    cellpadding=>16,
+			    ($opt{html_add_arrows} ?
+			     (class=> "after_arrows")
+			     : (width=>"88%",
+				align=>"center")),
+			   },
 			  TR
 			  (TD
 			   ({colspan=>2,
@@ -805,7 +905,7 @@ sub do_output_message {
 				   bgcolor=> "#f0f8ff"},
 				  ($maybe_threadleader and
 				   id_showthread($id)
-				   ->($index->thread($maybe_threadleader))))))),
+				   ->($index->thread($maybe_threadleader)))))))),
 		  $m));
 	    puthtmlfile($path, $page, "en");
 	}
@@ -817,6 +917,8 @@ sub parse_and_convert {
       ($opt{sourcepaths}, $tmp, $opt{max_date_deviation});
 
     local $index= $coll->index ($opt{max_thread_duration});
+    local $html_arrows_for= make_html_arrows_for($index)
+	if ($opt{html_add_arrows} and $opt{html_to});
 
     if ($opt{repl}) {
 	Chj::repl::repl();
