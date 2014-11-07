@@ -403,6 +403,7 @@ sub m2xhtml_path {
     idf2flat_path ($m->identification, $opt{html_to})
 }
 
+# for parsing from (user-given) string
 sub identify2xhtml_path {
     my ($identify)=@_;
     my $idf= Chj::Ml2json::Mailcollection::Message::Identify->
