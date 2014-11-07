@@ -1,0 +1,5 @@
+- m2xhtml_basename is bad right. when would that be correct really?
+  i.e.:
+  - how is concept for cross-mailbox positioning for HTML, what for other output files?
+    Need to write down fail path concept something !
+
