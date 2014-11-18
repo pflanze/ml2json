@@ -589,7 +589,7 @@ sub id_showthread {
 		}
 		else {
 		    my $subject= $outputjson->json_decoded_subject($m,undef);
-		    [$subject, ", ",
+		    [B($subject), ", ",
 		      I($fromstr), $datecont]
 		}
 	    };
