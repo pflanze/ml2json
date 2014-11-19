@@ -333,6 +333,15 @@ our ($mydir,%opt); # 'import' from main
   # archive / mailing list for spammers:
   nofollow=> 0,
 
+  # address -> maybe string: optionally specify alternative full name
+  # for the given address; independent from
+  # hide_mail_addressP(address), the latter will just determine how
+  # the fullname is going to be used
+  map_mail_address_maybe_fullname=> sub {
+      my ($address)=@_;
+      undef
+  },
+
   show_messageid_and_source=> sub { not $opt{archive} },
   archive_message_title=> sub {
       my ($identity,$subject,$from_string_hidemail)=@_;

@@ -557,9 +557,10 @@ sub id2maybe_mg {
 
 sub fromstr ($) {
     my ($from)=@_;
-    (phrase_dequote($$from{phrase})
-     || phrase_deparentisize($$from{comment})
-     || $opt{map_mail_address}->($$from{address}))
+    ($opt{map_mail_address_maybe_fullname}->($$from{address})
+     // (phrase_dequote($$from{phrase})
+	 || phrase_deparentisize($$from{comment})
+	 || $opt{map_mail_address}->($$from{address})))
 }
 
 # id -> thread-datastructure -> HTML
