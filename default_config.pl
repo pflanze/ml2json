@@ -315,6 +315,8 @@ our ($mydir,%opt); # 'import' from main
       if ($opt{hide_mail_addressP}->($address)) {
 	  I("address hidden")
       } else {
+	  # XX: is embedding $address in a URL string really safe? (It
+	  # was passed through the mail address parser, 'at least'.)
 	  A({href=> "mailto:$address"}, $address)
       }
   },
