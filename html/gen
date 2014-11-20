@@ -53,7 +53,7 @@ use Chj::IO::Command;
 use Chj::xperlfunc ':all';
 use Chj::xopen ":all";
 use Chj::chompspace;
-use Chj::xIO qw(xputfile_utf8 xgetfile_utf8);
+use Chj::xIO qw(xputfile_utf8 xgetfile_utf8 xcopyfile_utf8);
 
 lock_hash %$cfg;
 
@@ -661,12 +661,12 @@ fun existingpath_or (@paths) {
 fun copyfiles ($filesinfo) {
     for my $path0 (keys %{$filesinfo->all_path0_used}) {
 	next if $filesinfo->path0_exists($path0); # md path
-	xputfile_utf8 (path02outpath($path0), xgetfile_utf8 (path02inpath($path0)));
+	xcopyfile_utf8 (path02inpath($path0), path02outpath($path0));
     }
     # copy CSS file
-    xputfile_utf8 (path02outpath($css_path),
-		   xgetfile_utf8 (existingpath_or (path02inpath($css_path),
-						   path02inpath("html/$css_path"))));
+    xcopyfile_utf8 (existingpath_or (path02inpath($css_path),
+				     path02inpath("html/$css_path")),
+		    path02outpath($css_path));
 }
 
 fun main () {
