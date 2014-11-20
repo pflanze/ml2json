@@ -863,7 +863,8 @@ sub do_output_message {
 				   my $V0= B($subject);
 				   if ($maybe_threadparent) {
 				       if (my $V2= &$msg_id2maybe_url ($maybe_threadparent)) {
-					   A({href=> $V2}, $V0)
+					   A({href=> $V2, title=> "original message"},
+					     $V0)
 				       } else {
 					   $V0
 				       }
