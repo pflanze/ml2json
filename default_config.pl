@@ -311,13 +311,13 @@ our ($mydir,%opt); # 'import' from main
       }
   },
   link_mail_address=> sub {
-      my ($address)=@_;
+      my ($address, $maybe_text)=@_;
       if ($opt{hide_mail_addressP}->($address)) {
-	  I("address hidden")
+	  $maybe_text // I("address hidden")
       } else {
 	  # XX: is embedding $address in a URL string really safe? (It
 	  # was passed through the mail address parser, 'at least'.)
-	  A({href=> "mailto:$address"}, $address)
+	  A({href=> "mailto:$address"}, $maybe_text // $address)
       }
   },
   # whether to apply the hiding algorithms to mail addresses appearing
@@ -336,13 +336,14 @@ our ($mydir,%opt); # 'import' from main
   nofollow=> 0,
 
   # address -> maybe string: optionally specify alternative full name
-  # for the given address; independent from
-  # hide_mail_addressP(address), the latter will just determine how
-  # the fullname is going to be used
+  # for the given address. By default used in thread lists only.
   map_mail_address_maybe_fullname=> sub {
       my ($address)=@_;
       undef
   },
+  # Whether to use map_mail_address_maybe_fullname for From and To/Cc
+  # fields, too
+  map_fullname_addressfieldsP=> 0,
 
   show_messageid_and_source=> sub { not $opt{archive} },
   archive_message_title=> sub {

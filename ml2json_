@@ -555,6 +555,9 @@ sub id2maybe_mg {
     }
 }
 
+# fromstr: address to shortish string for window titles and showthread
+# (don't use email part unless it's the only part)
+
 sub fromstr ($) {
     my ($from)=@_;
     ($opt{map_mail_address_maybe_fullname}->($$from{address})
@@ -562,6 +565,55 @@ sub fromstr ($) {
 	 || phrase_deparentisize($$from{comment})
 	 || $opt{map_mail_address}->($$from{address})))
 }
+
+# addr2html: address to html for From and To/Cc fields
+
+sub addr2html_nofullnamemapping {
+    my ($addr)=@_;
+    my $phrasepart=
+	(defined_and_length $$addr{phrase}
+	 and
+	 phrase_dequote($$addr{phrase}) ne $$addr{address})
+	? phrase_dequote($$addr{phrase})." "
+	: undef;
+    my $commentpart=
+	(defined_and_length $$addr{comment}
+	 ? " ".phrase_deparentisize($$addr{comment})." "
+	 : undef);
+    my $link=
+	$opt{link_mail_address}->($$addr{address});
+    ((!defined $phrasepart
+      and !defined $commentpart) ?
+     TT($link)
+     :
+     # use SPAN instead of just an array so that the ->text call in
+     # addr2html succeeds
+     SPAN($phrasepart,
+	  TT("<", $link, ">"),
+	  $commentpart))
+}
+
+sub addr2html {
+    my ($addr)=@_;
+    if ($opt{map_fullname_addressfieldsP}) {
+	if (defined (my $fullname=
+		     $opt{map_mail_address_maybe_fullname}
+		     ->($$addr{address}))) {
+	    # Use the original fullname and address as popup string
+	    # (unlinked); but still link $fullname.
+
+	    # Wrap with SPAN instead of modifying A since
+	    # link_mail_address is not obliged to return an A element.
+	    SPAN({title=> addr2html_nofullnamemapping($addr)->text},
+		 $opt{link_mail_address}->($$addr{address}, $fullname))
+	} else {
+	    addr2html_nofullnamemapping $addr
+	}
+    } else {
+	addr2html_nofullnamemapping $addr
+    }
+}
+
 
 # id -> thread-datastructure -> HTML
 sub id_showthread {
@@ -756,30 +808,7 @@ sub do_output_message {
 		  my $vs= $outputjson->_json_mailparsed_header($m,$_);
 		  ($_=> do {
 		      if (@$vs) {
-			  array_join
-			    ([
-			      map {
-				  my $phrasepart=
-				      (defined_and_length $$_{phrase}
-				       and
-				       phrase_dequote($$_{phrase}) ne $$_{address})
-				      ? phrase_dequote($$_{phrase})." "
-				      : undef;
-				  my $commentpart=
-				      (defined_and_length $$_{comment}
-				       ? " ".phrase_deparentisize($$_{comment})." "
-				       : undef);
-				  my $link=
-				      $opt{link_mail_address}->($$_{address});
-				  ((!defined $phrasepart
-				    and !defined $commentpart) ?
-				   TT($link)
-				   : [$phrasepart,
-				      TT("<", $link, ">"),
-				      $commentpart])
-			      } @$vs
-			     ],
-			     ", ")
+			  array_join (array_map (\&addr2html,$vs), ", ")
 		      } else {
 			  undef
 		      }
