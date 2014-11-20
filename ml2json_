@@ -348,7 +348,7 @@ use Chj::Browser;
 use Chj::chompspace;
 use Chj::Ml2json::Parse::TextStripper;
 use Chj::Ml2json::Ghosts; # Chj::Ml2json::Ghostable, Chj::Ml2json::Ghost
-use Chj::xIO "xputfile_utf8";
+use Chj::xIO qw(xputfile_utf8 xcopyfile_utf8);
 use Chj::FP::Div "identity";
 use Chj::FP::url_;
 use Chj::FP::OrderedCollection;
@@ -539,10 +539,13 @@ table.after_arrows {
 }
 "];
 
-our $css_url= "ml2json.css";
-# This location is relative from $opt{html_to} in the filesystem, and
-# directly used as relative url in the html pages that are saved
+# These locations are relative from $opt{html_to} in the filesystem,
+# and directly used as relative url in the html pages that are saved
 # there.
+our $css_url= "ml2json.css";
+our $svg_url_base= "";
+# (^ used simply as a string prefix; see "XX bad usage" below)
+
 
 our ($json, $index);
 
@@ -690,6 +693,25 @@ sub indexlink {
 	SPAN ({class=> "inactive_arrow"}, $text);
 }
 
+our $icons=
+    [
+     # $name,$alt
+     ["up", "^"],
+     ["doubleup", "^^"],
+     ["down", "v"],
+     ["left", "<"]
+    ];
+our $iconnames= array_map sub{$_[0][0]}, $icons;
+sub mkimg {
+    my ($name,$alt)=@_;
+    # XX eliminate alt since indexlink adds a title to the A element, too?
+    IMG {src=> "$svg_url_base$name.svg", alt=> $alt}
+}
+our %iconshtml= map {
+    ($$_[0], mkimg @$_)
+} @$icons;
+
+
 # index -> id -> HTML -> HTML
 sub make_html_arrows_for {
     my ($index)=@_;
@@ -720,10 +742,15 @@ sub make_html_arrows_for {
 	    };
 	    [
 	     DIV({class=> "arrows"},
-		 &$arrowlink ("previous message", "▲", $ordered->maybe_prev($id)),BR,
-		 indexlink ("message list", "⇦",
+		 &$arrowlink ("previous message",
+			      $iconshtml{up},
+			      $ordered->maybe_prev($id)),BR,
+		 indexlink ("message list",
+			    $iconshtml{left},
 			    url_(path=> "index.xhtml", fragment=> $id)), BR,
-		 &$arrowlink ("next message", "▼", $ordered->maybe_next($id))),
+		 &$arrowlink ("next message",
+			      $iconshtml{down},
+			      $ordered->maybe_next($id))),
 	     $content
 	    ]
 	}
@@ -1026,6 +1053,12 @@ sub parse_and_convert {
 	if ($opt{html_to}) {
 	    # generate the CSS page used by the HTML pages
 	    xputfile_utf8 "$opt{html_to}/$css_url", $css_code;
+	    # and the SVG files
+	    for my $name (@$iconnames) {
+		my $filename= "$name.svg";
+		# XX bad usage of $svg_url_base, should really use path ops.
+		xcopyfile_utf8 "icons/$filename", "$opt{html_to}/$svg_url_base$filename";
+	    }
 	}
 
 	if ($opt{html_index}) {
