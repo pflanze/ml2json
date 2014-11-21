@@ -12,6 +12,7 @@
 
 use strict; use warnings FATAL => 'uninitialized';
 use Chj::numcores;
+use Chj::Ml2json::l10n; # for '__'
 our ($mydir,%opt); # 'import' from main
 
 +{
@@ -295,6 +296,7 @@ our ($mydir,%opt); # 'import' from main
 
   # Generate HTML archives for public viewing instead of for
   # debugging:
+  lang=> "en", # language to use for field names etc.
   archive=> 0, # 1
   html_add_arrows=> 1, # whether to add navigation arrows to HTML pages
   listname=> "undefined list name",
@@ -366,7 +368,7 @@ our ($mydir,%opt); # 'import' from main
   time_zone=> "UTC", # anything that DateTime accepts, like "Europe/London"
   time_zone_notice=> sub {
       my ($position)=@_;
-      P ({align=>"right"}, SMALL("Times are in ",
+      P ({align=>"right"}, SMALL(__"Times are in ",
 				 verbose_time_zone($opt{time_zone})))
   },
   archive_date_message=> sub {
