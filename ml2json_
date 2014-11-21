@@ -843,8 +843,8 @@ sub do_output_message {
 		      }
 		  })
 	      } qw(from to cc);
-	    my $fromstr= fromstr ($outputjson->_json_mailparsed_header($m,"from")
-				  ->[0]);
+	    my $from= $outputjson->_json_mailparsed_header($m,"from")->[0];
+	    my $fromstr= fromstr ($from);
 
 	    my $perhaps_arrows=
 		$opt{html_add_arrows} ?
@@ -872,6 +872,9 @@ sub do_output_message {
 			  (TD
 			   ({colspan=>2,
 			     bgcolor=> "#f0f8ff"},
+
+			    $opt{map_mail_address_maybe_avatar}->($$from{address}),
+			    
 			    TABLE
 			    ({border=>0},
 			     (

@@ -347,6 +347,13 @@ our ($mydir,%opt); # 'import' from main
   # fields, too
   map_fullname_addressfieldsP=> 0,
 
+  # address -> maybe html: provide html code to display avatar
+  map_mail_address_maybe_avatar=> sub {
+      my ($address)=@_;
+      undef
+	# IMG({width=>.., height=>.., src=>.., alt=>.., align=>"right"})
+  },
+
   show_messageid_and_source=> sub { not $opt{archive} },
   archive_message_title=> sub {
       my ($identity,$subject,$from_string_hidemail)=@_;
