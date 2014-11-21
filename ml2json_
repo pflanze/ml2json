@@ -539,6 +539,13 @@ table.after_arrows {
 .inactive_arrow {
     color: #ccc;
 }
+.avatar {
+    float: right;
+    margin-top: -16px;
+    margin-right: -16px;
+    margin-bottom: -16px;
+    margin-left: 12px;
+}
 "];
 
 # These locations are relative from $opt{html_to} in the filesystem,

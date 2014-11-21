@@ -351,7 +351,7 @@ our ($mydir,%opt); # 'import' from main
   map_mail_address_maybe_avatar=> sub {
       my ($address)=@_;
       undef
-	# IMG({width=>.., height=>.., src=>.., alt=>.., align=>"right"})
+	# IMG({width=>.., height=>.., src=>.., alt=>.., class=>"avatar"})
   },
 
   show_messageid_and_source=> sub { not $opt{archive} },
