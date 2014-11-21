@@ -694,20 +694,22 @@ sub thread_messageids {
 
 
 sub indexlink {
-    my ($title, $text, $maybe_url)=@_;
+    my ($title, $body, $body_inactive, $maybe_url)=@_;
     defined $maybe_url ?
 	A({href=> $maybe_url,
-	   title=> $title}, $text)
+	   title=> $title}, $body)
 	:
-	SPAN ({class=> "inactive_arrow"}, $text);
+	SPAN ({class=> "inactive_arrow"}, $body_inactive);
 }
 
 our $icons=
     [
      # $name,$alt
+     ["up_inactive", ""],
      ["up", "^"],
      ["doubleup", "^^"],
      ["down", "v"],
+     ["down_inactive", ""],
      ["left", "<"]
     ];
 our $iconnames= array_map sub{$_[0][0]}, $icons;
@@ -736,7 +738,7 @@ sub make_html_arrows_for {
 	sub {
 	    my ($content)=@_;
 	    my $arrowlink= sub {
-		my ($title, $text, $maybe_id)=@_;
+		my ($title, $body, $body_inactive, $maybe_id)=@_;
 		my $maybe_url= (defined $maybe_id) ? do {
 		    my $id= $maybe_id;
 		    # XX should provide a method
@@ -747,18 +749,21 @@ sub make_html_arrows_for {
 		    m2xhtml_basename($mg->resurrect)
 		    # ^ XX wrong for cross-mailbox links?
 		} : undef;
-		indexlink ($title,$text, $maybe_url)
+		indexlink ($title,$body,$body_inactive, $maybe_url)
 	    };
 	    [
 	     DIV({class=> "arrows"},
 		 &$arrowlink (__"previous message",
 			      $iconshtml{up},
+			      $iconshtml{up_inactive},
 			      $ordered->maybe_prev($id)),BR,
 		 indexlink (__"message list",
 			    $iconshtml{left},
+			    undef, # never used
 			    url_(path=> "index.xhtml", fragment=> $id)), BR,
 		 &$arrowlink (__"next message",
 			      $iconshtml{down},
+			      $iconshtml{down_inactive},
 			      $ordered->maybe_next($id))),
 	     $content
 	    ]
