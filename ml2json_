@@ -551,6 +551,9 @@ table.after_arrows {
     float: right;
     font-family: sans-serif;
 }
+.threaditem_active {
+    background-color: #ddf;
+}
 
 /* opt{css_addition} */
 $opt{css_addition}
@@ -702,19 +705,22 @@ sub id_showthread {
 		}
 	    };
 
+	    my $is_active= (defined $maybe_selected_id
+			    and $_id eq $maybe_selected_id);
+
 	    my $possiblylinkedcont=
-	      (defined $maybe_selected_id
-	       and $_id eq $maybe_selected_id) ?
+	      ($is_active ?
 	       $content
 	       : A({href=> $url,
 		    (!defined $maybe_selected_id and $opt{html_add_arrows}) ?
 			(name=> $_id)
 			: ()},
-		   $content);
+		   $content));
 
 	    DIR({compact=>1,
 		 class=> (defined $maybe_prev_searedsubject ? "reply" : "top")},
-		LI({class=> "ref_".$$subthread{ref}},
+		LI({class=> "ref_".$$subthread{ref},
+		    $is_active ? (class=> "threaditem_active") : ()},
 		   $possiblylinkedcont),
 		array_map(sub {
 			      @_=(@_,$searedsubject); goto $showthread
