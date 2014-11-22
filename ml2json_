@@ -645,29 +645,28 @@ sub id_showthread {
 	       $m->unixtime);
 	    my $searedsubject= $outputjson->json_seared_subject($m,undef);
 
-	    my $cont = do {
-		my $datecont= $maybe_date &&
-		    [", ", $maybe_date];
+	    my $content = do {
+		my $datecontent= $maybe_date && [", ", $maybe_date];
 		if (defined $maybe_prev_searedsubject
 		    and $maybe_prev_searedsubject eq $searedsubject) {
-		    [ I($fromstr), $datecont ]
+		    [ I($fromstr), $datecontent ]
 		}
 		else {
 		    my $subject= $outputjson->json_decoded_subject($m,undef);
 		    [B($subject), ", ",
-		      I($fromstr), $datecont]
+		      I($fromstr), $datecontent]
 		}
 	    };
 
 	    my $possiblylinkedcont=
 	      (defined $maybe_selected_id
 	       and $_id eq $maybe_selected_id) ?
-	       $cont
+	       $content
 	       : A({href=> $url,
 		    (!defined $maybe_selected_id and $opt{html_add_arrows}) ?
 			(name=> $_id)
 			: ()},
-		   $cont);
+		   $content);
 
 	    DIR({compact=>1,
 		 class=> (defined $maybe_prev_searedsubject ? "reply" : "top")},
