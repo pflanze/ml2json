@@ -547,6 +547,9 @@ table.after_arrows {
     margin-bottom: -16px;
     margin-left: 12px;
 }
+
+/* opt{css_addition} */
+$opt{css_addition}
 "];
 
 # These locations are relative from $opt{html_to} in the filesystem,

@@ -354,6 +354,9 @@ our ($mydir,%opt); # 'import' from main
 	# IMG({width=>.., height=>.., src=>.., alt=>.., class=>"avatar"})
   },
 
+  # string to be appended to the CSS defitions
+  css_addition=> "",
+
   show_messageid_and_source=> sub { not $opt{archive} },
   archive_message_title=> sub {
       my ($identity,$subject,$from_string_hidemail)=@_;
