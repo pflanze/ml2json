@@ -719,8 +719,8 @@ sub id_showthread {
 
 	    DIR({compact=>1,
 		 class=> (defined $maybe_prev_searedsubject ? "reply" : "top")},
-		LI({class=> "ref_".$$subthread{ref},
-		    $is_active ? (class=> "threaditem_active") : ()},
+		LI({class=> "ref_$$subthread{ref}".
+			($is_active ? " threaditem_active" : "")},
 		   $possiblylinkedcont),
 		array_map(sub {
 			      @_=(@_,$searedsubject); goto $showthread
