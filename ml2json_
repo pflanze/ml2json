@@ -556,6 +556,31 @@ our $svg_url_base= "";
 # (^ used simply as a string prefix; see "XX bad usage" below)
 
 
+our $icons=
+    [
+     # $name,$alt
+     ["up_inactive", ""],
+     ["up", "^"],
+     ["doubleup", "^^"],
+     ["down", "v"],
+     ["down_inactive", ""],
+     ["left", "<"],
+     ["paper-clip", sub {__"(attachments)"}],
+     # ^ delay __ until $l10n_lang is set (will be called in PXML
+     # serializer)
+    ];
+our $iconnames= array_map sub{$_[0][0]}, $icons;
+sub mkimg {
+    my ($name,$alt)=@_;
+    # XX eliminate alt since indexlink adds a title to the A element, too?
+    IMG {src=> "$svg_url_base$name.svg", alt=> $alt}
+}
+our %iconshtml= map {
+    ($$_[0], mkimg @$_)
+} @$icons;
+
+
+
 our ($json, $index);
 
 sub id2maybe_mg {
@@ -647,14 +672,17 @@ sub id_showthread {
 
 	    my $content = do {
 		my $datecontent= $maybe_date && [", ", $maybe_date];
+		my $attachments= $outputjson->json_attachments($m,undef);
+		my $maybe_clip= @$attachments ?
+		    [" ", $iconshtml{"paper-clip"}] : undef;
 		if (defined $maybe_prev_searedsubject
 		    and $maybe_prev_searedsubject eq $searedsubject) {
-		    [ I($fromstr), $datecontent ]
+		    [ I($fromstr), $datecontent, $maybe_clip ]
 		}
 		else {
 		    my $subject= $outputjson->json_decoded_subject($m,undef);
-		    [B($subject), ", ",
-		      I($fromstr), $datecontent]
+		    [ B($subject), ", ",
+		      I($fromstr), $datecontent, $maybe_clip ]
 		}
 	    };
 
@@ -700,27 +728,6 @@ sub indexlink {
 	:
 	SPAN ({class=> "inactive_arrow"}, $body_inactive);
 }
-
-our $icons=
-    [
-     # $name,$alt
-     ["up_inactive", ""],
-     ["up", "^"],
-     ["doubleup", "^^"],
-     ["down", "v"],
-     ["down_inactive", ""],
-     ["left", "<"]
-    ];
-our $iconnames= array_map sub{$_[0][0]}, $icons;
-sub mkimg {
-    my ($name,$alt)=@_;
-    # XX eliminate alt since indexlink adds a title to the A element, too?
-    IMG {src=> "$svg_url_base$name.svg", alt=> $alt}
-}
-our %iconshtml= map {
-    ($$_[0], mkimg @$_)
-} @$icons;
-
 
 # index -> id -> HTML -> HTML
 sub make_html_arrows_for {

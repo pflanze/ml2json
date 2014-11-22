@@ -49,6 +49,7 @@ our $translations=
     "message list"=> {de=> "zur Liste"}, # 'zur' is assumed here
     "original message"=> {de=> "ursprüngliche Nachricht"},
     "Times are in "=> {de=> "Zeiten sind in "},
+    "(attachments)"=> {de=> "(Anhänge)"},
    };
 
 sub __ ($) {
