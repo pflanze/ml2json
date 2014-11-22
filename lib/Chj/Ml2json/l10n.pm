@@ -50,6 +50,7 @@ our $translations=
     "original message"=> {de=> "ursprüngliche Nachricht"},
     "Times are in "=> {de=> "Zeiten sind in "},
     "(attachments)"=> {de=> "(Anhänge)"},
+    "has attachments"=> {de=> "hat Anhänge"},
    };
 
 sub __ ($) {
