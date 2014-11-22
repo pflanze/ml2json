@@ -559,7 +559,7 @@ our $svg_url_base= "";
 
 our $icons=
     [
-     # $name, $alt, $maybe_title
+     # $name, $alt, $maybe_title, $maybe_scale
      # (most are wrapped with a SPAN with title, so don't have it here)
      ["up_inactive", ""],
      ["up", "^"],
@@ -567,18 +567,21 @@ our $icons=
      ["down", "v"],
      ["down_inactive", ""],
      ["left", "<"],
-     ["paper-clip", sub {__"(attachments)"}, sub{__"has attachments"}],
+     ["paper-clip", sub {__"(attachments)"}, sub{__"has attachments"}, 0.8],
      # ^ delay __ until $l10n_lang is set (will be called in PXML
      # serializer)
     ];
 our $iconnames= array_map sub{$_[0][0]}, $icons;
 sub mkimg {
-    my ($name, $alt, $maybe_title)=@_;
+    my ($name, $alt, $maybe_title, $maybe_scale)=@_;
     my $filename= "$name.svg";
     my $info= Chj::Ml2json::Svginfo->new_from_path ("icons/$filename");
     # XX eliminate alt since indexlink adds a title to the A element, too?
     IMG {src=> "$svg_url_base$filename", alt=> $alt,
-	 (map { ($_=> $info->$_) } qw(width height)),
+	 (map {
+	     my $v= $info->$_;
+	     ($_=> defined ($maybe_scale) ? $maybe_scale * $v : $v)
+	  } qw(width height)),
 	 $maybe_title ? (title=> $maybe_title) : ()}
 }
 our %iconshtml= map {
