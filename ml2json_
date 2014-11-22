@@ -547,6 +547,10 @@ table.after_arrows {
     margin-bottom: -16px;
     margin-left: 12px;
 }
+.fieldkey {
+    float: right;
+    font-family: sans-serif;
+}
 
 /* opt{css_addition} */
 $opt{css_addition}
@@ -912,7 +916,7 @@ sub do_output_message {
 				  @$_==2 or die;
 				  my ($key,$val)=@$_;
 				  TR ({valign=>"top"},
-				      TD ({align=>"right"},
+				      TD ({class=> "fieldkey"},
 					  "$key:$nbsp"),
 				      TD ($val))
 			      }
