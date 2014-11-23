@@ -1014,7 +1014,7 @@ sub do_output_message {
 				   id_showthread($id)
 				   ->($index->thread($maybe_threadleader)))))))),
 		  $m));
-	    puthtmlfile($path, $page, "en");
+	    puthtmlfile($path, $page, $l10n_lang);
 	}
     } $m;
 }
