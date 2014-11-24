@@ -620,7 +620,8 @@ sub svg_path ($$;$) {
     my ($maybe_url, $d, $maybe_title)=@_;
     my $content=
 	Chj::PSVG::PATH({d=> $d,
-			 (defined $maybe_title ? (title=> $maybe_title) : ()),
+			 ((defined $maybe_title and defined $maybe_url) ?
+			  (title=> $maybe_title) : ()),
 			 stroke=> "white",
 			 "stroke-width"=> "1.5",
 			 fill=> defined $maybe_url ? "black" : "#aaa"});
