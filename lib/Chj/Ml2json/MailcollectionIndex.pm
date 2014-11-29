@@ -58,36 +58,48 @@ sub all_t_sorted { # -> [ [t,mg].. ]
 }
 
 
-
-sub sorted_replies {
-    # array of +{ id=>$id, ref=> 'precise'|'subject' } sorted by unixtime
+sub sort_ids_by_t {
     my $s=shift;
-    @_==1 or die;
-    my ($id)=@_;
-
-    my $replies=
-      [
-       (
-	map {
-	    +{ id=> $_, ref=> "precise" }
-	} @{($$s{replies}{$id}||[])}
-       ),
-       (
-	map {
-	    (exists array2hashset($s->threadleaders_precise($_))->{$id}
-	     ? ()
-	     : +{ id=> $_, ref=> "subject" })
-	} @{($$s{possiblereplies}{$id}||[])}
-       ),
-      ];
-
-    array_sort( $replies,
+    my ($ids)=@_;
+    array_sort( $ids,
 		on sub {
 		    my ($v)=@_;
 		    my ($t,$mg)= @{$$s{ids}{$v->{id}}};
 		    $t
 		}, \&number_cmp );
 }
+
+
+sub replies {
+    # array of +{ id=>$id, ref=> 'precise'|'subject' }, ~unsorted
+    my $s=shift;
+    @_==1 or die;
+    my ($id)=@_;
+
+    [
+     (
+      map {
+	  +{ id=> $_, ref=> "precise" }
+      } @{($$s{replies}{$id}||[])}
+     ),
+     (
+      map {
+	  (exists array2hashset($s->threadleaders_precise($_))->{$id}
+	   ? ()
+	   : +{ id=> $_, ref=> "subject" })
+      } @{($$s{possiblereplies}{$id}||[])}
+     ),
+    ]
+}
+
+sub sorted_replies {
+    # array of +{ id=>$id, ref=> 'precise'|'subject' } sorted by unixtime
+    my $s=shift;
+    @_==1 or die;
+    my ($id)=@_;
+    $s->sort_ids_by_t($s->replies($id))
+}
+
 
 
 # meant for debugging only
@@ -112,13 +124,14 @@ sub thread_separate {
      }
 }
 
-sub thread {
+
+sub _thread_with_sortedreplies {
     my $s=shift;
-    my ($id,$maybe_ref,$maybe_seen)= @_;
-    my $seen= $maybe_seen||{};
+    @_==4 or die;
+    my ($id, $ref, $seen, $sortedreplies)= @_;
     +{
       id=> $id,
-      ref=> $maybe_ref||"top",
+      ref=> $ref,
       replies=>
       array_map sub {
 	  my ($th)=@_; # $th for thread or thing
@@ -133,8 +146,48 @@ sub thread {
 	  } else {
 	      $s->thread ($th->{id}, $th->{ref}, $seen)
 	  }
-      }, $s->sorted_replies ($id)
+      }, $sortedreplies
      }
+}
+
+# only returns the subthread starting at $id
+# XX: is it not a problem that it returns 'top' as the ref even for
+# subthreads?
+sub thread {
+    my $s=shift;
+    my ($id,$maybe_ref,$maybe_seen)= @_;
+    my $seen= $maybe_seen||{};
+    my $ref= $maybe_ref||"top";
+    $s->_thread_with_sortedreplies ($id, $ref, $seen, $s->sorted_replies ($id))
+}
+
+# unlike 'thread', returns the whole thread containing $id
+sub wholethread  {
+    # (XX why so complicated? and) XXX is this really consistent with
+    # how threads are built (in the case of multiple
+    # threadleaders_precise or threadleaders)? Well, no, because this
+    # is the only place where a single threadleader is chosen from
+    # multiple, right? So the question is rather, is this always
+    # *compatible* with all the other code? No, too, right?, since
+    # here the other threadleaders turn up as reply to the first,
+    # unlike in other code.
+    my $s=shift;
+    @_==1 or die;
+    my ($id)= @_;
+
+    # decide on a single threadleader.
+    my $leaders= $s->threadleaders_sorted($id);
+    my $leader= shift @$leaders;
+
+    my $sorted_replies=
+      $s->sort_ids_by_t
+	(array_hashing_uniq [
+	 @{ $s->replies ($leader) },
+	 @$leaders
+	]);
+
+    my $seen= {};
+    $s->_thread_with_sortedreplies ($leader, "top", $seen, $sorted_replies)
 }
 
 
@@ -252,6 +305,16 @@ sub threadleaders {
     my $res= array_hashing_uniq list2array &$up($id,undef);
     undef $up;
     $res;
+}
+
+# XX necessary? Is 'threadleaders' not sorted already?
+sub threadleaders_sorted {
+    # returns *time-sorted* array of ids, contains $id if threadleader
+    # itself
+    my $s=shift;
+    @_==1 or die;
+    my ($id)=@_;
+    $s->sort_ids_by_t($s->threadleaders($id))
 }
 
 
