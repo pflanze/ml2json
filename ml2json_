@@ -785,6 +785,7 @@ sub id_showthread {
 
 
 # Get flat list of all ids in a thread.
+# XX: is this the same as Chj::Ml2json::MailcollectionIndex's expandthread ?
 
 # thread -> id...
 sub thread_messageids {
