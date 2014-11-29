@@ -771,7 +771,7 @@ sub make_html_arrows_for {
 		    my $id= $maybe_id;
 		    # XX should provide a method
 		    my $t_mg= $$index{ids}{$id}
-		    or die "unknown message id '$id'";
+		      or die "unknown message id '$id'";
 		    my ($t,$mg)=@$t_mg;
 		    # /method
 		    m2xhtml_basename($mg->resurrect)
