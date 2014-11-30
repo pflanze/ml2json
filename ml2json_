@@ -405,12 +405,6 @@ sub m2xhtml_basename {
     idf2flat_path ($m->identification, undef)
 }
 
-sub id2xhtml_basename ($$) {
-    my ($index, $id)=@_;
-    m2xhtml_basename($index->id2m->($id))
-	# ^ XX wrong for cross-mailbox links?
-}
-
 sub m2xhtml_path {
     my ($m)=@_;
     idf2flat_path ($m->identification, $opt{html_to})
@@ -844,6 +838,8 @@ sub indexlink {
 sub make_html_arrows_for {
     my ($index)=@_;
 
+    my $id2m= $index->id2m;
+
     # Flattened view (but grouped by thread) of all messages for
     # 'previous message' and 'next message' links
     my $ordered= Chj::FP::OrderedCollection->new_from_values
@@ -858,10 +854,12 @@ sub make_html_arrows_for {
 	my ($id)=@_;
 	sub {
 	    my ($content)=@_;
+	    # XX is the use of m2xhtml_basename wrong for
+	    # cross-mailbox links?
 	    my $arrowlink= sub {
 		my ($title, $body, $body_inactive, $maybe_id)=@_;
 		my $maybe_url= defined $maybe_id ?
-		    id2xhtml_basename($index, $maybe_id)
+		    m2xhtml_basename(&$id2m($maybe_id))
 		    : undef;
 		indexlink ($title,$body,$body_inactive, $maybe_url)
 	    };
@@ -882,8 +880,9 @@ sub make_html_arrows_for {
 			      $iconshtml{down_inactive},
 			      $ordered->maybe_next($id)),
 		 BR, BR,
-		 nav_svg (map { defined $_ ? id2xhtml_basename($index, $_) : undef }
-			  @$navids)
+		 nav_svg (map {
+		     defined $_ ? m2xhtml_basename(&$id2m($_)) : undef
+		 } @$navids)
 	     ),
 	     $content
 	    ]
