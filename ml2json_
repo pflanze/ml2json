@@ -354,6 +354,7 @@ use Chj::FP::url_;
 use Chj::FP::OrderedCollection;
 use Chj::Ml2json::l10n;
 use Chj::Ml2json::Svginfo;
+use Chj::FP2::List qw(array2list car cdr);
 
 
 use DateTime;
@@ -402,6 +403,17 @@ sub idf2flat_path ($$) {
 sub m2xhtml_basename {
     my ($m)=@_;
     idf2flat_path ($m->identification, undef)
+}
+
+sub id2xhtml_basename ($$) {
+    my ($index, $id)=@_;
+    # XX should provide a method
+    my $t_mg= $$index{ids}{$id}
+      or die "unknown message id '$id'";
+    my ($t,$mg)=@$t_mg;
+    # /method
+    m2xhtml_basename($mg->resurrect)
+	# ^ XX wrong for cross-mailbox links?
 }
 
 sub m2xhtml_path {
@@ -526,7 +538,7 @@ div.arrows {
     position: fixed;
     top: 75px;
     left: 10px;
-    font-size: 50px;
+    font-size: 25px;
     font-family: sans-serif;
 }
 div.arrows > a:hover {
@@ -598,6 +610,43 @@ our %iconshtml= map {
     ($$_[0], mkimg @$_)
 } @$icons;
 
+
+# embedded SVG so that we can use links without having to use img
+# rectangles as boundaries:
+
+use Chj::PSVG 'svg';
+
+sub svg_path ($$;$) {
+    my ($maybe_url, $d, $maybe_title)=@_;
+    my $content=
+	Chj::PSVG::PATH({d=> $d,
+			 (defined $maybe_title ? (title=> $maybe_title) : ()),
+			 stroke=> "white",
+			 "stroke-width"=> "1.5",
+			 fill=> defined $maybe_url ? "black" : "#aaa"});
+    defined $maybe_url ?
+	Chj::PSVG::A({'xlink:href'=> $maybe_url}, $content)
+	: $content
+}
+
+sub nav_svg {
+    @_==4 or die;
+    my ($upurl, $downurl, $righturl, $lefturl)=@_;
+    (svg
+     {height=> "84", width=> "52"},
+     svg_path ($upurl,
+	       "M 26.3113,27.2246 35.7976,31.154 26,1 16.2024,31.154 z",
+	       __"earlier reply to the same message"),
+     svg_path ($downurl,
+	       "M 25.6887,56.2206 16.2024,52.2912 26,82.4452 35.7976,52.2912 z",
+	       __"later reply to the same message"),
+     svg_path ($righturl,
+	       "M 30.2527,43.8454 22.4683,51.6297 51,52.0779 30.5081,32.2199 z",
+	       __"first reply to this message"),
+     svg_path ($lefturl,
+	       "M 21.7473,39.5998 29.5317,31.8155 1,31.3673 21.4919,51.2253 z",
+	       __"original message"))
+}
 
 
 our ($json, $index);
@@ -734,11 +783,54 @@ sub id_showthread {
     $showthread
 }
 
+
+# Get flat list of all ids in a thread.
+
 # thread -> id...
 sub thread_messageids {
     my ($th)=@_;
     ($$th{id},
      map { thread_messageids ($_) } @{$$th{replies}})
+}
+
+
+# Search a message id in a thread, return [prev, next, firstreply, parent] ids
+# for the navigation.
+
+# thread, id, maybe id, maybe id, list-of thread ->
+#     maybe [maybe id, maybe id, maybe id, maybe id]
+sub thread_id_navids {
+    my ($th, $id, $maybe_up_id, $maybe_prev_id, $maybe_rest)= @_;
+    if ($$th{id} eq $id) {
+	# found
+	my $maybe_first_reply= $$th{replies}[0];
+	[ $maybe_prev_id,
+	  $maybe_rest ? car ($maybe_rest)->{id} : undef,
+	  $maybe_first_reply ? $$maybe_first_reply{id} : undef,
+	  $maybe_up_id,
+	]
+    } else {
+	(($maybe_rest and
+	  # search in rest of current level
+	  thread_id_navids (car $maybe_rest,
+			    $id,
+			    $maybe_up_id, # up
+			    $$th{id}, # prev
+			    cdr $maybe_rest))
+	 or do {
+	     # search in deeper level (replies of $th)
+	     if (my $l= array2list $$th{replies}) {
+		 thread_id_navids (car $l,
+				   $id,
+				   $$th{id}, # up
+				   undef, # prev
+				   cdr $l);
+	     } else {
+		 # not found
+		 undef
+	     }
+	 })
+    }
 }
 
 
@@ -754,6 +846,9 @@ sub indexlink {
 # index -> id -> HTML -> HTML
 sub make_html_arrows_for {
     my ($index)=@_;
+
+    # Flattened view (but grouped by thread) of all messages for
+    # 'previous message' and 'next message' links
     my $ordered= Chj::FP::OrderedCollection->new_from_values
 	(map {
 	   my ($id)=$_;
@@ -761,24 +856,20 @@ sub make_html_arrows_for {
 	   $$th{id} eq $id or die;
 	   thread_messageids($th)
 	 } @{$index->all_threadleaders_sorted});
+
     sub {
 	my ($id)=@_;
 	sub {
 	    my ($content)=@_;
 	    my $arrowlink= sub {
 		my ($title, $body, $body_inactive, $maybe_id)=@_;
-		my $maybe_url= (defined $maybe_id) ? do {
-		    my $id= $maybe_id;
-		    # XX should provide a method
-		    my $t_mg= $$index{ids}{$id}
-		      or die "unknown message id '$id'";
-		    my ($t,$mg)=@$t_mg;
-		    # /method
-		    m2xhtml_basename($mg->resurrect)
-		    # ^ XX wrong for cross-mailbox links?
-		} : undef;
+		my $maybe_url= defined $maybe_id ?
+		    id2xhtml_basename($index, $maybe_id)
+		    : undef;
 		indexlink ($title,$body,$body_inactive, $maybe_url)
 	    };
+	    my $navids= thread_id_navids ($index->wholethread($id), $id)
+		or die "bug: id '$id' not found in its wholethread";
 	    [
 	     DIV({class=> "arrows"},
 		 &$arrowlink (__"previous message",
@@ -792,7 +883,11 @@ sub make_html_arrows_for {
 		 &$arrowlink (__"next message",
 			      $iconshtml{down},
 			      $iconshtml{down_inactive},
-			      $ordered->maybe_next($id))),
+			      $ordered->maybe_next($id)),
+		 BR, BR,
+		 nav_svg (map { defined $_ ? id2xhtml_basename($index, $_) : undef }
+			  @$navids)
+	     ),
 	     $content
 	    ]
 	}

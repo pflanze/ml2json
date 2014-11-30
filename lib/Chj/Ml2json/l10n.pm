@@ -44,10 +44,18 @@ our $translations=
     "Date"=> {de=> "Datum"},
     # Meldung Nachricht Botschaft Mitteilung Signal Information
     # Telegramm "die Message"
+
     "previous message"=> {de=> "vorherige Nachricht"},
     "next message"=> {de=> "nächste Nachricht"},
     "message list"=> {de=> "zur Liste"}, # 'zur' is assumed here
     "original message"=> {de=> "ursprüngliche Nachricht"},
+    "first reply to this message"=>
+    {de=> "erste Antwort auf diese Nachricht"},
+    "earlier reply to the same message"=>
+    {de=> "frühere Antwort auf die gleiche Nachricht"},
+    "later reply to the same message"=>
+    {de=> "spätere Antwort auf die gleiche Nachricht"},
+
     "Times are in "=> {de=> "Zeiten sind in "},
     "(attachments)"=> {de=> "(Anhänge)"},
     "has attachments"=> {de=> "hat Anhänge"},
