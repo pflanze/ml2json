@@ -397,7 +397,7 @@ if (defined $opt{cache_dir}) {
 
 sub idf2flat_path ($$) {
     my ($idf,$maybe_dir)=@_;
-    $idf->flat_path($maybe_dir, ".xhtml")
+    $idf->flat_path($maybe_dir, $opt{suffix})
 }
 
 sub m2xhtml_basename {
@@ -874,7 +874,9 @@ sub make_html_arrows_for {
 		 indexlink (__"message list",
 			    $iconshtml{left},
 			    undef, # never used
-			    url_(path=> "index.xhtml", fragment=> $id)), BR,
+			    url_(path=> basename($opt{html_index}),
+				 # ^ XX always correct?
+				 fragment=> $id)), BR,
 		 &$arrowlink (__"next message",
 			      $iconshtml{down},
 			      $iconshtml{down_inactive},
@@ -929,8 +931,6 @@ sub do_output_message {
 	if ($opt{html_to}) {
 	    my $id= $m->id;
 	    my $path= m2xhtml_path ($m);
-	    # iceweasel ignores encoding in .html files, thus
-	    # needs to be .xhtml suffix
 	    my $fragment= $outputjson->html($m);
 	    my $header_hashref_lc= $m->header_hashref_lc;
 	    my $ctime_UTC= $outputjson->json_ctime_UTC($m,$index);

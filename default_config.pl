@@ -296,8 +296,15 @@ our ($mydir,%opt); # 'import' from main
 
   # Generate HTML archives for public viewing instead of for
   # debugging:
-  lang=> "en", # language to use for field names etc.
   archive=> 0, # 1
+  lang=> "en", # language to use for field names etc.
+  # `html_to` and `html_index` are set by getopt in ml2json_ already
+  suffix=> ".xhtml",
+  # Iceweasel ignores encoding in .html files (when serving locally,
+  # i.e. file://), thus needs to be given .xhtml suffix; but Windows
+  # XP / IE 8 do not recognize .xhtml as HTML files (but then IE 8
+  # doesn't handle SVG and also has other issues). (NOTE: `html_index`
+  # includes its own suffix!)
   html_add_arrows=> 1, # whether to add navigation arrows to HTML pages
   listname=> "undefined list name",
   hide_mail_addressP=> sub {
