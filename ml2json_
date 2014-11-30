@@ -407,12 +407,7 @@ sub m2xhtml_basename {
 
 sub id2xhtml_basename ($$) {
     my ($index, $id)=@_;
-    # XX should provide a method
-    my $t_mg= $$index{ids}{$id}
-      or die "unknown message id '$id'";
-    my ($t,$mg)=@$t_mg;
-    # /method
-    m2xhtml_basename($mg->resurrect)
+    m2xhtml_basename($index->id2m->($id))
 	# ^ XX wrong for cross-mailbox links?
 }
 
@@ -1129,14 +1124,12 @@ sub parse_and_convert {
 	exit;
     }
     if (@open_message_id or @open_identify) {
+	my $id2m= $index->id2m;
 	my $idf=
 	  [
 	   (map {
 	       my $id= $$index{messageids}{$_} || $_;
-	       my $t_mg= $$index{ids}{$id}
-		 or die "unknown message id '$id'";
-	       my ($t,$mg)=@$t_mg;
-	       $mg->resurrect->identify # XXX use identification instead (object), need a different _uniq then
+	       &$id2m($id)->identify # XXX use identification instead (object), need a different _uniq then
 	   } @open_message_id),
 	   (map {
 	       m{\b([a-f0-9]{32}[/-]\d+)\b}

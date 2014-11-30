@@ -360,7 +360,9 @@ sub id2m {
     my $s=shift;
     sub {
 	my ($id)=@_;
-	my ($t,$mg)= @{$$s{ids}{$id}};
+	my $t_mg= $$s{ids}{$id}
+	  or die "unknown message id '$id'";
+	my ($t,$mg)= @$t_mg;
 	$mg->resurrect
     }
 }
