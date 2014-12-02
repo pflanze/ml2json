@@ -1258,7 +1258,7 @@ if ($opt{cleanup}) {
     exit 0;
 }
 
-local $l10n_lang= $opt{lang};
+local $l10n_lang= $opt{lang}->($opt{locale});
 
 parse_and_convert if (have $opt{sourcepaths} or @open_identify);
 

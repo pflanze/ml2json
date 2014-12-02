@@ -13,6 +13,7 @@
 use strict; use warnings FATAL => 'uninitialized';
 use Chj::numcores;
 use Chj::Ml2json::l10n; # for '__'
+use Chj::Format::Date 'localized_strftime_localtime';
 our ($mydir,%opt); # 'import' from main
 
 +{
@@ -297,7 +298,21 @@ our ($mydir,%opt); # 'import' from main
   # Generate HTML archives for public viewing instead of for
   # debugging:
   archive=> 0, # 1
-  lang=> "en", # language to use for field names etc.
+  # The locale is used for date formatting, and passed to the 'lang'
+  # config function for the usage as mentioned there. You'll want to
+  # set this to "en_GB" or "de_CH" or whatever. ".UTF8" is appended
+  # automatically if not already given here. Note that the chosen
+  # locale (with .UTF8 appended) must be enabled on the system
+  # (e.g. with `dpkg-reconfigure locales` on Debian)!
+  locale=> "C",
+  # language to use for message translation (Chj::Ml2json::l10n), and
+  # in XHTML lang attribute:
+  lang=> sub {
+      my ($locale)=@_;
+      ($locale eq "C" ? "en" :
+       $locale=~ /^([a-z]{2})_/ ? $1
+       : die "can't get lang out of locale '$locale'")
+  },
   # `html_to` and `html_index` are set by getopt in ml2json_ already
   suffix=> ".xhtml",
   # Iceweasel ignores encoding in .html files (when serving locally,
@@ -395,21 +410,19 @@ our ($mydir,%opt); # 'import' from main
        #$dateheaderstr
        # but perhaps you want to format $unixtime according to your
        # time zone instead:
-       do {
-       	   my $dt= DateTime->from_epoch(epoch=> $unixtime);
-       	   $dt->set_time_zone($opt{time_zone});
-       	   $dt->strftime ('%a %b %d %H:%M:%S %Y %Z')
-       }
+       localized_strftime_localtime($opt{time_zone},
+				    $opt{locale},
+				    '%a %b %d %H:%M:%S %Y %Z',
+				    $unixtime)
        : [$dateheaderstr, $nbsp, " (", $ctime_UTC, " UTC)"])
   },
   archive_date_thread=> sub {
       my ($dateheaderstr, $unixtime)= @_;
       ($opt{archive} ?
-       do {
-       	   my $dt= DateTime->from_epoch(epoch=> $unixtime);
-       	   $dt->set_time_zone($opt{time_zone});
-       	   $dt->strftime ('%a %b %d %H:%M:%S %Y')
-       }
+       localized_strftime_localtime($opt{time_zone},
+				    $opt{locale},
+				    '%a %b %d %H:%M:%S %Y',
+				    $unixtime)
        : undef)
   },
  }
