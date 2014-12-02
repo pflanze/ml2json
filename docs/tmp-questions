@@ -3,3 +3,6 @@
   - how is concept for cross-mailbox positioning for HTML, what for other output files?
     Need to write down fail path concept something !
 
+- $m->identification->deep_path( ) vs other ways to generate paths? 
+  Document/streamline it.
+
