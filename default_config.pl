@@ -14,6 +14,7 @@ use strict; use warnings FATAL => 'uninitialized';
 use Chj::numcores;
 use Chj::Ml2json::l10n; # for '__'
 use Chj::Format::Date 'localized_strftime_localtime';
+use Chj::FP2::Lazy; # you can use Delay in some option values
 our ($mydir,%opt); # 'import' from main
 
 +{
@@ -379,7 +380,11 @@ our ($mydir,%opt); # 'import' from main
   # string to be appended to the CSS defitions
   css_addition=> "",
 
-  show_messageid_and_source=> sub { not $opt{archive} },
+  # whether to show the field line that is possibly holding the
+  # message-id and the view selector:
+  show_messageid_and_or_viewselector=> 1,
+  # whether to actually show the message-id in that field line:
+  show_messageid=> Delay { not $opt{archive} },
   archive_message_title=> sub {
       my ($identity,$subject,$from_string_hidemail)=@_;
       ($opt{archive} ?

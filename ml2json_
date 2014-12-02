@@ -355,6 +355,7 @@ use Chj::FP::OrderedCollection;
 use Chj::Ml2json::l10n;
 use Chj::Ml2json::Svginfo;
 use Chj::FP2::List qw(array2list car cdr);
+use Chj::FP2::Lazy;
 
 
 use DateTime;
@@ -550,6 +551,9 @@ table.after_arrows {
 }
 .fieldkey {
     float: right;
+    font-family: sans-serif;
+}
+.viewselector {
     font-family: sans-serif;
 }
 .threaditem_active {
@@ -892,6 +896,16 @@ sub make_html_arrows_for {
     }
 }
 
+
+sub TD_fieldkey ($;$) {
+    my ($key, $maybe_wrap)=@_;
+    my $str = "$key:";
+    TD({class=> "fieldkey"},
+       $maybe_wrap ? &$maybe_wrap($str) : $str,
+       $nbsp)
+}
+
+
 # (ugly? Want to generate it only once, that's why not defined in do_output_message)
 our $html_arrows_for;
 
@@ -960,7 +974,7 @@ sub do_output_message {
 
 	    my $maybe_source_to_link= $source_to_path && do {
 		my $rel= File::Spec->abs2rel($source_to_path, dirname($path));
-		["; ", A({href=> $rel}, "source")]
+		["; ", A({href=> $rel}, __"source")]
 	    };
 
 	    my %addrs=
@@ -1013,8 +1027,7 @@ sub do_output_message {
 				  @$_==2 or die;
 				  my ($key,$val)=@$_;
 				  TR ({valign=>"top"},
-				      TD ({class=> "fieldkey"},
-					  "$key:$nbsp"),
+				      TD_fieldkey($key),
 				      TD ($val))
 			      }
 			      [__"Subject",
@@ -1048,22 +1061,40 @@ sub do_output_message {
 				$ctime_UTC,
 				$m->unixtime)]
 			     ),
-			     ($opt{show_messageid_and_source}->()
-			      ? TR({valign=>"top"},
-				   TD(SMALL("Message-ID:")),
-				   TD(SMALL($id,
-					    " $nbsp ",
-					    nobr
-					    ("Choice:",
-					     (map {
-						 my ($used,$msg)=@$_;
-						 ($used
-						  ? [" ",
-						     ($choosen eq $msg ? B($msg) : $msg)]
-						  : undef)
-					     } @$choice),
-					     $maybe_source_to_link))))
-			     : undef)))),
+			     (Force ($opt{show_messageid_and_or_viewselector}) ?
+			      do {
+				  my $show_messageid= Force $opt{show_messageid};
+				  my $viewmsg= __"View";
+				  TR({valign=>"top"},
+				     TD_fieldkey(($show_messageid ? __"Message-ID" :
+						  $viewmsg),
+						 \&SMALL),
+				     TD
+				     (SMALL
+				      (do {
+					  my $view=
+					      SPAN
+					      ({class=> "viewselector"},
+					       $show_messageid ? $viewmsg.":" : "",
+					       (map {
+						   my ($used,$msg)=@$_;
+						   my $lmsg= __$msg;
+						   ($used
+						    ? [" ",
+						       ($choosen eq $msg ? B($lmsg)
+							: $lmsg)]
+						    : undef)
+						} @$choice),
+					       $maybe_source_to_link);
+					  $show_messageid ?
+					      ($id,
+					       " $nbsp ",
+					       nobr,
+					       $view)
+					      : $view
+				       })))
+			      }
+			      : undef)))),
 			  TR (TD ({colspan=>2,
 				   bgcolor=> $textbackgroundcol->htmlstring},
 				  $fragment)),

@@ -59,6 +59,12 @@ our $translations=
     "Times are in "=> {de=> "Zeiten sind in "},
     "(attachments)"=> {de=> "(Anhänge)"},
     "has attachments"=> {de=> "hat Anhänge"},
+    "Message-ID"=> {de=> "Nachr.ID"},
+    "View"=> {de=> "Ansicht"},
+    "source"=> {de=> "Quelltext"},
+    "html"=> {de=> "HTML"},
+    "plain"=> {de=> "Unformattiert"},
+    "rich"=> {de=> "Rich Text"},
    };
 
 sub __ ($) {
