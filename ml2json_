@@ -905,7 +905,7 @@ sub do_output_message {
 	}
 
 	my $identify= $m->identify;
-	my $source_path;
+	my $source_to_path;
 	if ($opt{source_to}) {
 	    # HACKY, using slash in $identify, but relying on
 	    # guarantee that it can only contain one slash and is safe
@@ -926,7 +926,7 @@ sub do_output_message {
 		$m->mailboxcursor->xsendfile_to($out);
 	    }
 	    $out->xclose;
-	    $source_path= $path;
+	    $source_to_path= $path;
 	}
 	if ($opt{html_to}) {
 	    my $id= $m->id;
@@ -958,8 +958,8 @@ sub do_output_message {
 	    my $choosen= $outputjson->html_choice($m);
 
 
-	    my $perhaps_source_link= $source_path && do {
-		my $rel= File::Spec->abs2rel($source_path, dirname($path));
+	    my $maybe_source_to_link= $source_to_path && do {
+		my $rel= File::Spec->abs2rel($source_to_path, dirname($path));
 		["; ", A({href=> $rel}, "source")]
 	    };
 
@@ -1062,7 +1062,7 @@ sub do_output_message {
 						     ($choosen eq $msg ? B($msg) : $msg)]
 						  : undef)
 					     } @$choice),
-					     $perhaps_source_link))))
+					     $maybe_source_to_link))))
 			     : undef)))),
 			  TR (TD ({colspan=>2,
 				   bgcolor=> $textbackgroundcol->htmlstring},
