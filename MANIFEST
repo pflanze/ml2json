@@ -38,6 +38,7 @@ lib/Chj/FP/HashSet.pm
 lib/Chj/FP/OrderedCollection.pm
 lib/Chj/FP/Predicates.pm
 lib/Chj/FP/url_.pm
+lib/Chj/Format/Date.pm
 lib/Chj/Format/JSON.pm
 lib/Chj/Ghostable.pm
 lib/Chj/MIME/EncWords.pm
