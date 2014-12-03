@@ -556,6 +556,9 @@ table.after_arrows {
 .viewselector {
     font-family: sans-serif;
 }
+.system {
+    font-family: sans-serif;
+}
 .threaditem_active {
     background-color: #ddf;
 }
@@ -570,6 +573,16 @@ $opt{css_addition}
 our $css_url= "ml2json.css";
 our $svg_url_base= "";
 # (^ used simply as a string prefix; see "XX bad usage" below)
+
+
+sub SPAN_viewselector {
+    SPAN({class=> "viewselector"}, @_)
+}
+
+sub SPAN_system {
+    SPAN({class=> "system"}, @_)
+}
+
 
 
 our $icons=
@@ -1073,9 +1086,8 @@ sub do_output_message {
 				     (SMALL
 				      (do {
 					  my $view=
-					      SPAN
-					      ({class=> "viewselector"},
-					       $show_messageid ? $viewmsg.":" : "",
+					      SPAN_viewselector
+					      ($show_messageid ? $viewmsg.":" : "",
 					       (map {
 						   my ($used,$msg)=@$_;
 						   my $lmsg= __$msg;
@@ -1117,14 +1129,19 @@ sub do_output_message {
 				   and
 				   $$att{content_type} =~ /^image/) {
 				   TR(TD($formatleft,
-					 "Image ($$att{content_type}): ", BR,
+					 SPAN_system
+					 (__"Image",
+					  " ($$att{content_type}): "),
+					 BR,
 					 $name),
 				      TD($formatright,
 					 IMG ({src=> $loc,
 					       title=> $name})))
 			       } else {
 				   TR(TD($formatleft,
-					 "Attachment ($$att{content_type}): "),
+					 SPAN_system
+					 (__"Attachment",
+					  " ($$att{content_type}): ")),
 				      TD($formatright,
 					 A ({href=> $loc}, $name)))
 			       }
