@@ -25,6 +25,7 @@ our $config= require $default_config_path;
 
 sub usage {
     print STDERR map{"$_\n"} @_ if @_;
+    my $maxdur= $$config{max_thread_duration};
     print "$myname sourcedir-or-file(s) [--json-to targetfile]
 
   sourcedir should be a directory with *.mbox files directly in it
@@ -135,7 +136,7 @@ sub usage {
                 the same thread according to their subject line as
                 long as the time span between the first mail of that
                 subject and the last one doesn't exceed the given
-                duration. Pass '0' to disable. Default: '$$config{max_thread_duration}'.
+                duration. Pass '0' to disable. Default: '$maxdur'.
 
     --max-date-deviation duration[1]
                 When mbox separators (lines starting with 'From ')
@@ -196,7 +197,8 @@ GetOptions("verbose"=> \$opt{verbose},
 	       my ($_,$path)=@_;
 	       my $c= require $path;
 	       ref ($c) eq "HASH"
-		 or die "config file '$path' returned something other than a hash ref: $c";
+		   or die "config file '$path' returned something ".
+		          "other than a hash ref: $c";
 	       $config= hashset_union ($c, $config);
 	   },
 	   "max-thread-duration=s"=> \$opt{max_thread_duration},
@@ -242,9 +244,12 @@ sub have ($) {
 }
 
 usage unless
-  (have $opt{sourcepaths} and ($opt{json_to} or $opt{html_to} or $opt{source_to}))
-  or @deidentify or $opt{show_mbox_path} or $opt{repl}
-  or ($opt{html_to} and @open_identify);
+    (have $opt{sourcepaths}
+     and ($opt{json_to} or $opt{html_to} or $opt{source_to}))
+    or @deidentify
+    or $opt{show_mbox_path}
+    or $opt{repl}
+    or ($opt{html_to} and @open_identify);
 # XX should probably instead call usage if nothing was done at the end
 # and/or where the data is missing.
 
@@ -270,7 +275,8 @@ our $tmp= do {
 		if ($s->uid == $>) {
 		    $p
 		} else {
-		    warn "directory pointed to by '$tmplink' ('$p') is owned by somebody else, creating a new one instead";
+		    warn "directory pointed to by '$tmplink' ('$p') ".
+			"is owned by somebody else, creating a new one instead";
 		    xunlink $tmplink;
 		    &$create;
 		}
@@ -307,24 +313,30 @@ if ($opt{show_mbox_path}) {
     if (my $path= $mbox->path) {
 	print $path,"\n" or die $!;
     } else {
-	die "The object stored at '$p' does not have path field, seems to have been generated before adding this feature; run --cleanup and run the conversion again";
+	die "The object stored at '$p' does not have path field, ".
+	    "seems to have been generated before adding this feature; ".
+	    "run --cleanup and run the conversion again";
     }
 }
 
 sub cleanup_tmp {
     if ($opt{attachment_basedir}) {
 	my $p= $opt{attachment_basedir};
-	system ("rm", "-rf", "--", $p)==0 or die "rm -rf '$p' failed";
+	system ("rm", "-rf", "--", $p)==0
+	    or die "rm -rf '$p' failed";
     } else {
 	# partially COPYPASTE..
 	if (my $p= readlink( $tmplink)) {
 	    if (my $s= Xstat $p) {
 		if ($s->uid == $>) {
-		    $p=~ m|^/| or die "not an absolute target location: '$p'";
+		    $p=~ m|^/|
+			or die "not an absolute target location: '$p'";
 		    unlink $tmplink;
-		    system ("rm", "-rf", "--", $p)==0 or die "rm -rf '$p' failed";
+		    system ("rm", "-rf", "--", $p)==0
+			or die "rm -rf '$p' failed";
 		} else {
-		    warn "directory pointed to by '$tmplink' ('$p') is owned by somebody else";
+		    warn "directory pointed to by '$tmplink' ('$p') ".
+			 "is owned by somebody else";
 		}
 	    } else {
 		xunlink $tmplink;
@@ -919,7 +931,8 @@ sub TD_fieldkey ($;$) {
 }
 
 
-# (ugly? Want to generate it only once, that's why not defined in do_output_message)
+# (ugly? Want to generate it only once, that's why not defined in
+# do_output_message)
 our $html_arrows_for;
 
 sub do_output_message {
@@ -974,13 +987,15 @@ sub do_output_message {
 	    my $msg_id2maybe_url= sub {
 		my ($id)=@_;
 		if (my $mg= id2maybe_mg ($id)) {
-		    my $m= $mg->resurrect; # necessary as $mg->identify is different
+		    my $m= $mg->resurrect;
+		    # ^ necessary as $mg->identify is different
 		    m2xhtml_basename($m);
 		} else {
 		    undef
 		}
 	    };
-	    my @choice= $m->origplain_origrich_orightml_string ($opt{do_confirm_html});
+	    my @choice=
+	      $m->origplain_origrich_orightml_string ($opt{do_confirm_html});
 	    my $choice= array_zip2 \@choice, [qw(plain rich html)];
 	    my $choosen= $outputjson->html_choice($m);
 
@@ -1018,142 +1033,144 @@ sub do_output_message {
 		  BODY
 		  (($opt{archive} ? {} : {bgcolor=>"#964a2a"}),
 		   &$perhaps_arrows
-		   (TABLE ({border=>0,
-			    cellspacing=>3,
-			    cellpadding=>16,
-			    ($opt{html_add_arrows} ?
-			     (class=> "after_arrows")
-			     : (width=>"88%",
-				align=>"center")),
-			   },
-			  TR
-			  (TD
-			   ({colspan=>2,
-			     bgcolor=> "#f0f8ff"},
+		   (TABLE
+		    +{border=>0,
+		      cellspacing=>3,
+		      cellpadding=>16,
+		      ($opt{html_add_arrows} ?
+		       (class=> "after_arrows")
+		       : (width=>"88%",
+			  align=>"center")),
+		     },
+		    TR
+		    (TD
+		     ({colspan=>2,
+		       bgcolor=> "#f0f8ff"},
 
-			    $opt{map_mail_address_maybe_avatar}->($$from{address}),
-			    
-			    TABLE
-			    ({border=>0},
-			     (
-			      map {
-				  @$_==2 or die;
-				  my ($key,$val)=@$_;
-				  TR ({valign=>"top"},
-				      TD_fieldkey($key),
-				      TD ($val))
-			      }
-			      [__"Subject",
-			       #with_wrap_if {
-			       #	  A({href=> &$msg_id2url ($maybe_threadleader)}, $_)
-			       #} B($$orig_headers{Subject}), $maybe_threadleader
-			       #sigh, more complicated (maybe monad?):
-			       do {
-				   my $V0= B($subject);
-				   if ($maybe_threadparent) {
-				       if (my $V2= &$msg_id2maybe_url ($maybe_threadparent)) {
-					   A({href=> $V2,
-					      title=> __"original message"},
-					     $V0)
-				       } else {
-					   $V0
-				       }
-				   } else {
-				       $V0
-				   }
-			       }
-			      ],
-			      [__"From", #$$header_hashref_lc{from}
-			       $addrs{from}],
-			      [__"To/Cc",# $$header_hashref_lc{to},
-			       [$addrs{to},
-				($addrs{cc} and [", ",$addrs{cc}])]],
-			      [__"Date",
-			       $opt{archive_date_message}->
-			       ($$header_hashref_lc{date},
-				$ctime_UTC,
-				$m->unixtime)]
-			     ),
-			     (Force ($opt{show_messageid_and_or_viewselector}) ?
-			      do {
-				  my $show_messageid= Force $opt{show_messageid};
-				  my $viewmsg= __"View";
-				  TR({valign=>"top"},
-				     TD_fieldkey(($show_messageid ? __"Message-ID" :
-						  $viewmsg),
-						 \&SMALL),
-				     TD
-				     (SMALL
-				      (do {
-					  my $view=
-					      SPAN_viewselector
-					      ($show_messageid ? $viewmsg.":" : "",
-					       (map {
-						   my ($used,$msg)=@$_;
-						   my $lmsg= __$msg;
-						   ($used
-						    ? [" ",
-						       ($choosen eq $msg ? B($lmsg)
-							: $lmsg)]
-						    : undef)
-						} @$choice),
-					       $maybe_source_to_link);
-					  $show_messageid ?
-					      ($id,
-					       " $nbsp ",
-					       nobr,
-					       $view)
-					      : $view
-				       })))
-			      }
-			      : undef)))),
-			  TR (TD ({colspan=>2,
-				   bgcolor=> $textbackgroundcol->htmlstring},
-				  $fragment)),
-			  (@$attachments
-			   ? (map {
-			       my $att=$_;
-			       my $attpath= $$att{path};
-			       my $loc=
-				 File::Spec->abs2rel($attpath, dirname($path));
-			       my $name= basename($attpath);
-			       my $formatleft=
-				 +{ bgcolor=> $textbackgroundcol->htmlstring,
-				    valign=>"top",
-				    align=> "right"};
-			       my $formatright=
-				 +{ bgcolor=> $textbackgroundcol->htmlstring,
-				    valign=>"top",
-				    align=> "left"};
-			       if ($$att{disposition} eq "inline"
-				   and
-				   $$att{content_type} =~ /^image/) {
-				   TR(TD($formatleft,
-					 SPAN_system
-					 (__"Image",
-					  " ($$att{content_type}): "),
-					 BR,
-					 $name),
-				      TD($formatright,
-					 A({href=> $loc},
-					   IMG ({border=> 0,
-						 src=> $loc,
-						 title=> __"click to open"}))))
-			       } else {
-				   TR(TD($formatleft,
-					 SPAN_system
-					 (__"Attachment",
-					  " ($$att{content_type}): ")),
-				      TD($formatright,
-					 A ({href=> $loc}, $name)))
-			       }
-			   } @$attachments)
-			   :()),
-			  TR (TD ({colspan=>2,
-				   bgcolor=> "#f0f8ff"},
-				  ($maybe_threadleader and
-				   id_showthread($id)
-				   ->($index->thread($maybe_threadleader)))))))),
+		      $opt{map_mail_address_maybe_avatar}->($$from{address}),
+
+		      TABLE
+		      ({border=>0},
+		       (
+			map {
+			    @$_==2 or die;
+			    my ($key,$val)=@$_;
+			    TR ({valign=>"top"},
+				TD_fieldkey($key),
+				TD ($val))
+			}
+			[__"Subject",
+			 #with_wrap_if {
+			 #   A({href=> &$msg_id2url ($maybe_threadleader)}, $_)
+			 #} B($$orig_headers{Subject}), $maybe_threadleader
+			 #sigh, more complicated (maybe monad?):
+			 do {
+			     my $V0= B($subject);
+			     if ($maybe_threadparent) {
+				 if (my $V2=
+				     &$msg_id2maybe_url ($maybe_threadparent)) {
+				     A({href=> $V2,
+					title=> __"original message"},
+				       $V0)
+				 } else {
+				     $V0
+				 }
+			     } else {
+				 $V0
+			     }
+			 }
+			],
+			[__"From", #$$header_hashref_lc{from}
+			 $addrs{from}],
+			[__"To/Cc",# $$header_hashref_lc{to},
+			 [$addrs{to},
+			  ($addrs{cc} and [", ",$addrs{cc}])]],
+			[__"Date",
+			 $opt{archive_date_message}->
+			 ($$header_hashref_lc{date},
+			  $ctime_UTC,
+			  $m->unixtime)]
+		       ),
+		       (Force ($opt{show_messageid_and_or_viewselector}) ?
+			do {
+			    my $show_messageid= Force $opt{show_messageid};
+			    my $viewmsg= __"View";
+			    TR({valign=>"top"},
+			       TD_fieldkey(($show_messageid ? __"Message-ID" :
+					    $viewmsg),
+					   \&SMALL),
+			       TD
+			       (SMALL
+				(do {
+				    my $view=
+				      SPAN_viewselector
+					($show_messageid ? $viewmsg.":" : "",
+					 (map {
+					     my ($used,$msg)=@$_;
+					     my $lmsg= __$msg;
+					     ($used
+					      ? [" ",
+						 ($choosen eq $msg ? B($lmsg)
+						  : $lmsg)]
+					      : undef)
+					 } @$choice),
+					 $maybe_source_to_link);
+				    $show_messageid ?
+				      ($id,
+				       " $nbsp ",
+				       nobr,
+				       $view)
+					: $view
+				    })))
+			}
+			: undef)))),
+		    TR (TD ({colspan=>2,
+			     bgcolor=> $textbackgroundcol->htmlstring},
+			    $fragment)),
+		    (@$attachments
+		     ? (map {
+			 my $att=$_;
+			 my $attpath= $$att{path};
+			 my $loc=
+			   File::Spec->abs2rel($attpath, dirname($path));
+			 my $name= basename($attpath);
+			 my $formatleft=
+			   +{ bgcolor=> $textbackgroundcol->htmlstring,
+			      valign=>"top",
+			      align=> "right"};
+			 my $formatright=
+			   +{ bgcolor=> $textbackgroundcol->htmlstring,
+			      valign=>"top",
+			      align=> "left"};
+			 if ($$att{disposition} eq "inline"
+			     and
+			     $$att{content_type} =~ /^image/) {
+			     TR(TD($formatleft,
+				   SPAN_system
+				   (__"Image",
+				    " ($$att{content_type}): "),
+				   BR,
+				   $name),
+				TD($formatright,
+				   A({href=> $loc},
+				     IMG ({border=> 0,
+					   src=> $loc,
+					   title=> __"click to open"}))))
+			 } else {
+			     TR(TD($formatleft,
+				   SPAN_system
+				   (__"Attachment",
+				    " ($$att{content_type}): ")),
+				TD($formatright,
+				   A ({href=> $loc}, $name)))
+			 }
+		     } @$attachments)
+		     :()),
+		    TR (TD ({colspan=>2,
+			     bgcolor=> "#f0f8ff"},
+			    ($maybe_threadleader and
+			     id_showthread($id)
+			     ->($index->thread($maybe_threadleader))))))),
 		  $m));
 	    puthtmlfile($path, $page, $l10n_lang);
 	}
@@ -1178,7 +1195,9 @@ sub parse_and_convert {
 	  [
 	   (map {
 	       my $id= $$index{messageids}{$_} || $_;
-	       &$id2m($id)->identify # XXX use identification instead (object), need a different _uniq then
+	       &$id2m($id)->identify
+		   # XXX use identification instead (object), need a
+		   # different _uniq then
 	   } @open_message_id),
 	   (map {
 	       m{\b([a-f0-9]{32}[/-]\d+)\b}
@@ -1242,16 +1261,19 @@ sub parse_and_convert {
 	    for my $name (@$iconnames) {
 		my $filename= "$name.svg";
 		# XX bad usage of $svg_url_base, should really use path ops.
-		xcopyfile_utf8 "icons/$filename", "$opt{html_to}/$svg_url_base$filename";
+		xcopyfile_utf8 ("icons/$filename",
+				"$opt{html_to}/$svg_url_base$filename");
 	    }
 	}
 
 	if ($opt{html_index}) {
-	    # (XX parallelize how? par stream_map wanted, then do it in do_output_message ?)
+	    # (XX parallelize how? par stream_map wanted, then do it
+	    # in do_output_message ?)
 	    my $showthread= id_showthread(undef);
 	    my $threadleader_ids= array2stream $index->all_threadleaders_sorted;
 	    my $threadleaders= stream_map $index->id2m, $threadleader_ids;
-	    $threadleaders= &$filter_max_age ($threadleaders); # XXX is this precise enough (cutoff point vs files)?
+	    $threadleaders= &$filter_max_age ($threadleaders);
+	      # ^ XXX is this precise enough (cutoff point vs files)?
 	    my $indexpage=
 	      HTML
 		($opt{archive_threadindex_change}->
@@ -1263,7 +1285,8 @@ sub parse_and_convert {
 		   (stream_map sub {
 			my ($threadleader)=@_;
 			&$showthread($index->thread($threadleader->id))
-			  # XX stupid. id to m to id; would even have t intermediately for the filter_max_age.
+			  # XX stupid. id to m to id; would even have
+			  # t intermediately for the filter_max_age.
 		    }, $threadleaders),
 		   $opt{time_zone_notice}->(1))));
 	    puthtmlfile ($opt{html_index}, $indexpage);
