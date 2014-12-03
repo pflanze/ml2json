@@ -1135,8 +1135,10 @@ sub do_output_message {
 					 BR,
 					 $name),
 				      TD($formatright,
-					 IMG ({src=> $loc,
-					       title=> $name})))
+					 A({href=> $loc},
+					   IMG ({border=> 0,
+						 src=> $loc,
+						 title=> __"click to open"}))))
 			       } else {
 				   TR(TD($formatleft,
 					 SPAN_system

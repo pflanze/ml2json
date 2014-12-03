@@ -67,6 +67,7 @@ our $translations=
     "plain"=> {de=> "Unformattiert"},
     "rich"=> {de=> "Rich Text"},
     "Image"=> {de=> "Bild"},
+    "click to open"=> {de=> "klicken zum Öffnen"},
    };
 
 sub __ ($) {
