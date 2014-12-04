@@ -1008,7 +1008,7 @@ sub message2html {
 		     title=> $title},
 		    $lmsg)))
 	   },
-	   $choices),
+	   array_reverse $choices),
 	  ($source_to_path ? do {
 	      my $rel= File::Spec->abs2rel($source_to_path,
 					   dirname($path));
