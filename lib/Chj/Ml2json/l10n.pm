@@ -61,7 +61,7 @@ our $translations=
     "has attachments"=> {de=> "hat Anhänge"},
     "Attachment"=> {de=> "Anhang"},
     "Message-ID"=> {de=> "Nachr.ID"},
-    "View"=> {de=> "Ansicht"},
+    "Version"=> {de=> "Version"},
     "source"=> {de=> "Quelltext"},
     "html"=> {de=> "HTML"},
     "plain"=> {de=> "Unformattiert"},

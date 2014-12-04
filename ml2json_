@@ -1093,7 +1093,7 @@ sub message2html {
 	     (Force ($opt{show_messageid_and_or_viewselector}) ?
 	      do {
 		  my $show_messageid= Force $opt{show_messageid};
-		  my $viewmsg= __"View";
+		  my $viewmsg= __"Version";
 		  TR({valign=>"top"},
 		     TD_fieldkey(($show_messageid ? __"Message-ID" :
 				  $viewmsg),
