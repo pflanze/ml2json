@@ -570,6 +570,10 @@ table.after_arrows {
 }
 .viewselector {
     font-family: sans-serif;
+    font-size: smaller;
+    text-align: center;
+    margin-top: 0.2em;
+    margin-bottom: -0.5em;
 }
 .selected {
     border: 1px #999 solid;
@@ -609,7 +613,6 @@ BEGIN { # CT so that the Perl parser knows those exist, meh
 
     *SPAN_system= makeSPAN "system";
 
-    *SPAN_viewselector= makeSPAN "viewselector";
     *SPAN_selector= makeSPAN "selector";
     *SPAN_selected= makeSPAN "selected";
 }
@@ -984,6 +987,7 @@ sub message2html {
     };
 
     my $viewselector=
+	Force ($opt{show_viewselector}) &&
 	array_join
 	(array_append
 	 (array_map (sub {
@@ -1090,30 +1094,15 @@ sub message2html {
 		$ctime_UTC,
 		$m->unixtime)]
 	     ),
-	     (Force ($opt{show_messageid_and_or_viewselector}) ?
-	      do {
-		  my $show_messageid= Force $opt{show_messageid};
-		  my $viewmsg= __"Version";
-		  TR({valign=>"top"},
-		     TD_fieldkey(($show_messageid ? __"Message-ID" :
-				  $viewmsg),
-				 \&SMALL),
-		     TD
-		     (SMALL
-		      (do {
-			  my $view=
-			    SPAN_viewselector
-			      ($show_messageid ? $viewmsg.":" : "",
-			       $viewselector);
-			  $show_messageid ?
-			    ($id,
-			     " $nbsp ",
-			     nobr,
-			     $view)
-			      : $view
-			  })))
-	      }
-	      : undef)))),
+	     (Force ($opt{show_messageid}) ?
+	      TR({valign=>"top"},
+		 TD_fieldkey(__"Message-ID", \&SMALL),
+		 TD(SMALL $id))
+	      : undef)),
+
+	    ($viewselector ?
+	     DIV ({class=> "viewselector"}, __"Version",":", $viewselector)
+	     : undef))),
 	  TR (TD ({colspan=>2,
 		   bgcolor=> $textbackgroundcol->htmlstring},
 		  $fragment)),

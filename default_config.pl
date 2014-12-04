@@ -380,11 +380,8 @@ our ($mydir,%opt); # 'import' from main
   # string to be appended to the CSS defitions
   css_addition=> "",
 
-  # whether to show the field line that is possibly holding the
-  # message-id and the view selector:
-  show_messageid_and_or_viewselector=> 1,
-  # whether to actually show the message-id in that field line:
   show_messageid=> Delay { not $opt{archive} },
+  show_viewselector=> 1,
   archive_message_title=> sub {
       my ($identity,$subject,$from_string_hidemail)=@_;
       ($opt{archive} ?
