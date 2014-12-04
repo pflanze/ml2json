@@ -408,19 +408,22 @@ if (defined $opt{cache_dir}) {
     # XX hacky dito
 }
 
-sub idf2flat_path ($$) {
-    my ($idf,$maybe_dir)=@_;
-    $idf->flat_path($maybe_dir, $opt{suffix})
+sub idf2flat_path ($$$) {
+    my ($idf,$maybe_dir,$presuffix)=@_;
+    $idf->flat_path($maybe_dir, $presuffix.$opt{suffix})
 }
 
 sub m2xhtml_basename {
     my ($m)=@_;
-    idf2flat_path ($m->identification, undef)
+    idf2flat_path ($m->identification, undef, "")
 }
 
-sub m2xhtml_path {
-    my ($m)=@_;
-    idf2flat_path ($m->identification, $opt{html_to})
+sub m2xhtml_path ($$$) {
+    my ($m, $default_choice, $chosen_view)=@_;
+    idf2flat_path ($m->identification,
+		   $opt{html_to},
+		   ($chosen_view eq $default_choice ?
+		    "" : "-$chosen_view"))
 }
 
 # for parsing from (user-given) string
@@ -428,7 +431,7 @@ sub identify2xhtml_path {
     my ($identify)=@_;
     my $idf= Chj::Ml2json::Mailcollection::Message::Identify->
 	new_from_string ($identify);
-    idf2flat_path ($idf, $opt{html_to})
+    idf2flat_path ($idf, $opt{html_to}, "")
 }
 
 
@@ -568,6 +571,9 @@ table.after_arrows {
 .viewselector {
     font-family: sans-serif;
 }
+.selected {
+    border: 1px #999 solid;
+}
 .system {
     font-family: sans-serif;
 }
@@ -593,14 +599,20 @@ our $svg_url_base= "";
 # (^ used simply as a string prefix; see "XX bad usage" below)
 
 
-sub SPAN_viewselector {
-    SPAN({class=> "viewselector"}, @_)
-}
+BEGIN { # CT so that the Perl parser knows those exist, meh
+    sub makeSPAN {
+	my ($class)=@_;
+	sub {
+	    SPAN({class=> $class}, @_)
+	}
+    }
 
-sub SPAN_system {
-    SPAN({class=> "system"}, @_)
-}
+    *SPAN_system= makeSPAN "system";
 
+    *SPAN_viewselector= makeSPAN "viewselector";
+    *SPAN_selector= makeSPAN "selector";
+    *SPAN_selected= makeSPAN "selected";
+}
 
 
 our $icons=
@@ -941,6 +953,217 @@ sub TD_fieldkey ($;$) {
 # do_output_message)
 our $html_arrows_for;
 
+sub message2html {
+    my ($m, $source_to_path, $path,
+	$choices, $default_choice, $chosen_view)=@_;
+
+    my $identify= $m->identify;
+    my $id= $m->id;
+    my $fragment= $outputjson->html_of_kind($m, $chosen_view);
+    my $header_hashref_lc= $m->header_hashref_lc;
+    my $ctime_UTC= $outputjson->json_ctime_UTC($m,$index);
+    my $attachments= $outputjson->json_attachments($m,$index);
+    my $subject= $outputjson->json_decoded_subject($m,$index);
+    my $inreplyto= $outputjson->json_in_reply_to ($m,$index);
+    my $replies= $outputjson->json_replies($m,$index);
+    my $threadleaders= $outputjson->json_threadleaders($m,$index);
+    my $maybe_threadleader=
+      (@$threadleaders == 1) ? $$threadleaders[0] : undef;
+    my $threadparents= $outputjson->json_threadparents($m,$index);
+    my $maybe_threadparent=
+      (@$threadparents == 1) ? $$threadparents[0] : undef;
+    my $msg_id2maybe_url= sub {
+	my ($id)=@_;
+	if (my $mg= id2maybe_mg ($id)) {
+	    my $m= $mg->resurrect;
+	    # ^ necessary as $mg->identify is different
+	    m2xhtml_basename($m);
+	} else {
+	    undef
+	}
+    };
+
+    my $viewselector=
+	array_join
+	(array_append
+	 (array_map (sub {
+			 my ($choice)=@_;
+			 my $lmsg= __$choice;
+			 ($chosen_view eq $choice
+			  ? SPAN_selected($lmsg)
+			  : (SPAN_selector
+			     A({href=>
+				    basename
+				    m2xhtml_path($m, $default_choice, $choice)},
+			       $lmsg)))
+		     },
+		     $choices),
+	  ($source_to_path ? do {
+	      my $rel= File::Spec->abs2rel($source_to_path,
+					   dirname($path));
+	      [SPAN_selector A({href=> $rel}, __"source")]
+	   } : [])),
+	 " - ");
+
+    my %addrs=
+      map {
+	  my $vs= $outputjson->_json_mailparsed_header($m,$_);
+	  ($_=> do {
+	      if (@$vs) {
+		  array_join (array_map (\&addr2html,$vs), ", ")
+	      } else {
+		  undef
+	      }
+	  })
+      } qw(from to cc);
+    my $from= $outputjson->_json_mailparsed_header($m,"from")->[0];
+    my $fromstr= fromstr ($from);
+
+    my $perhaps_arrows=
+	$opt{html_add_arrows} ?
+	&$html_arrows_for ($id)
+	: \&identity;
+
+    HTML
+      ($opt{archive_message_change}->
+       (HEAD (TITLE ($opt{archive_message_title}->
+		     ($identify, $subject, $fromstr)),
+	      css_link $css_url),
+	BODY
+	(($opt{archive} ? {} : {bgcolor=>"#964a2a"}),
+	 &$perhaps_arrows
+	 (TABLE
+	  +{border=>0,
+	    cellspacing=>3,
+	    cellpadding=>16,
+	    ($opt{html_add_arrows} ?
+	     (class=> "after_arrows")
+	     : (width=>"88%",
+		align=>"center")),
+	   },
+	  TR
+	  (TD
+	   ({colspan=>2,
+	     bgcolor=> "#f0f8ff"},
+
+	    $opt{map_mail_address_maybe_avatar}->($$from{address}),
+
+	    TABLE
+	    ({border=>0},
+	     (
+	      map {
+		  @$_==2 or die;
+		  my ($key,$val)=@$_;
+		  TR ({valign=>"top"},
+		      TD_fieldkey($key),
+		      TD ($val))
+	      }
+	      [__"Subject",
+	       #with_wrap_if {
+	       #   A({href=> &$msg_id2url ($maybe_threadleader)}, $_)
+	       #} B($$orig_headers{Subject}), $maybe_threadleader
+	       #sigh, more complicated (maybe monad?):
+	       do {
+		   my $V0= B($subject);
+		   if ($maybe_threadparent) {
+		       if (my $V2=
+			   &$msg_id2maybe_url ($maybe_threadparent)) {
+			   A({href=> $V2,
+			      title=> __"original message"},
+			     $V0)
+		       } else {
+			   $V0
+		       }
+		   } else {
+		       $V0
+		   }
+	       }
+	      ],
+	      [__"From", #$$header_hashref_lc{from}
+	       $addrs{from}],
+	      [__"To/Cc",# $$header_hashref_lc{to},
+	       [$addrs{to},
+		($addrs{cc} and [", ",$addrs{cc}])]],
+	      [__"Date",
+	       $opt{archive_date_message}->
+	       ($$header_hashref_lc{date},
+		$ctime_UTC,
+		$m->unixtime)]
+	     ),
+	     (Force ($opt{show_messageid_and_or_viewselector}) ?
+	      do {
+		  my $show_messageid= Force $opt{show_messageid};
+		  my $viewmsg= __"View";
+		  TR({valign=>"top"},
+		     TD_fieldkey(($show_messageid ? __"Message-ID" :
+				  $viewmsg),
+				 \&SMALL),
+		     TD
+		     (SMALL
+		      (do {
+			  my $view=
+			    SPAN_viewselector
+			      ($show_messageid ? $viewmsg.":" : "",
+			       $viewselector);
+			  $show_messageid ?
+			    ($id,
+			     " $nbsp ",
+			     nobr,
+			     $view)
+			      : $view
+			  })))
+	      }
+	      : undef)))),
+	  TR (TD ({colspan=>2,
+		   bgcolor=> $textbackgroundcol->htmlstring},
+		  $fragment)),
+	  (@$attachments
+	   ? (map {
+	       my $att=$_;
+	       my $attpath= $$att{path};
+	       my $loc=
+		 File::Spec->abs2rel($attpath, dirname($path));
+	       my $name= basename($attpath);
+	       my $formatleft=
+		 +{ bgcolor=> $textbackgroundcol->htmlstring,
+		    valign=>"top",
+		    align=> "right"};
+	       my $formatright=
+		 +{ bgcolor=> $textbackgroundcol->htmlstring,
+		    valign=>"top",
+		    align=> "left"};
+	       if ($$att{disposition} eq "inline"
+		   and
+		   $$att{content_type} =~ /^image/) {
+		   TR(TD($formatleft,
+			 SPAN_system
+			 (__"Image",
+			  " ($$att{content_type}): "),
+			 BR,
+			 $name),
+		      TD($formatright,
+			 A({href=> $loc},
+			   IMG ({border=> 0,
+				 src=> $loc,
+				 title=> __"click to open"}))))
+	       } else {
+		   TR(TD($formatleft,
+			 SPAN_system
+			 (__"Attachment",
+			  " ($$att{content_type}): ")),
+		      TD($formatright,
+			 A ({href=> $loc}, $name)))
+	       }
+	   } @$attachments)
+	   :()),
+	  TR (TD ({colspan=>2,
+		   bgcolor=> "#f0f8ff"},
+		  ($maybe_threadleader and
+		   id_showthread($id)
+		   ->($index->thread($maybe_threadleader))))))),
+	$m))
+}
+
 sub do_output_message {
     my ($m,$pos)=@_;
     Try {
@@ -952,7 +1175,6 @@ sub do_output_message {
 	    $json->message_print($m,$index);
 	}
 
-	my $identify= $m->identify;
 	my $source_to_path;
 	if ($opt{source_to}) {
 	    # HACKY, using slash in $identify, but relying on
@@ -977,210 +1199,28 @@ sub do_output_message {
 	    $source_to_path= $path;
 	}
 	if ($opt{html_to}) {
-	    my $id= $m->id;
-	    my $path= m2xhtml_path ($m);
-	    my $fragment= $outputjson->html($m);
-	    my $header_hashref_lc= $m->header_hashref_lc;
-	    my $ctime_UTC= $outputjson->json_ctime_UTC($m,$index);
-	    my $attachments= $outputjson->json_attachments($m,$index);
-	    my $subject= $outputjson->json_decoded_subject($m,$index);
-	    my $inreplyto= $outputjson->json_in_reply_to ($m,$index);
-	    my $replies= $outputjson->json_replies($m,$index);
-	    my $threadleaders= $outputjson->json_threadleaders($m,$index);
-	    my $maybe_threadleader=
-	      (@$threadleaders == 1) ? $$threadleaders[0] : undef;
-	    my $threadparents= $outputjson->json_threadparents($m,$index);
-	    my $maybe_threadparent=
-	      (@$threadparents == 1) ? $$threadparents[0] : undef;
-	    my $msg_id2maybe_url= sub {
-		my ($id)=@_;
-		if (my $mg= id2maybe_mg ($id)) {
-		    my $m= $mg->resurrect;
-		    # ^ necessary as $mg->identify is different
-		    m2xhtml_basename($m);
-		} else {
-		    undef
-		}
-	    };
-	    my @choice=
-	      $m->origplain_origrich_orightml_string ($opt{do_confirm_html});
-	    my $choice= array_zip2 \@choice, [qw(plain rich html)];
-	    my $choosen= $outputjson->html_choice($m);
 
+	    my $choices=
+		array_map
+		(\&array_snd,
+		 array_filter
+		 (\&array_fst,
+		  array_zip ([$m->origplain_origrich_orightml_string
+			      # _string is used so that empty MIME
+			      # entities don't trigger, right?
+			      ($opt{do_confirm_html})],
+			     [qw(plain rich html)])));
+	    my $default_choice= $outputjson->html_choice($m);
 
-	    my $maybe_source_to_link= $source_to_path && do {
-		my $rel= File::Spec->abs2rel($source_to_path, dirname($path));
-		["; ", A({href=> $rel}, __"source")]
-	    };
-
-	    my %addrs=
-	      map {
-		  my $vs= $outputjson->_json_mailparsed_header($m,$_);
-		  ($_=> do {
-		      if (@$vs) {
-			  array_join (array_map (\&addr2html,$vs), ", ")
-		      } else {
-			  undef
-		      }
-		  })
-	      } qw(from to cc);
-	    my $from= $outputjson->_json_mailparsed_header($m,"from")->[0];
-	    my $fromstr= fromstr ($from);
-
-	    my $perhaps_arrows=
-		$opt{html_add_arrows} ?
-		&$html_arrows_for ($id)
-		: \&identity;
-
-	    my $page=
-	      HTML
-		($opt{archive_message_change}->
-		 (HEAD (TITLE ($opt{archive_message_title}->
-			       ($identify, $subject, $fromstr)),
-			css_link $css_url),
-		  BODY
-		  (($opt{archive} ? {} : {bgcolor=>"#964a2a"}),
-		   &$perhaps_arrows
-		   (TABLE
-		    +{border=>0,
-		      cellspacing=>3,
-		      cellpadding=>16,
-		      ($opt{html_add_arrows} ?
-		       (class=> "after_arrows")
-		       : (width=>"88%",
-			  align=>"center")),
-		     },
-		    TR
-		    (TD
-		     ({colspan=>2,
-		       bgcolor=> "#f0f8ff"},
-
-		      $opt{map_mail_address_maybe_avatar}->($$from{address}),
-
-		      TABLE
-		      ({border=>0},
-		       (
-			map {
-			    @$_==2 or die;
-			    my ($key,$val)=@$_;
-			    TR ({valign=>"top"},
-				TD_fieldkey($key),
-				TD ($val))
-			}
-			[__"Subject",
-			 #with_wrap_if {
-			 #   A({href=> &$msg_id2url ($maybe_threadleader)}, $_)
-			 #} B($$orig_headers{Subject}), $maybe_threadleader
-			 #sigh, more complicated (maybe monad?):
-			 do {
-			     my $V0= B($subject);
-			     if ($maybe_threadparent) {
-				 if (my $V2=
-				     &$msg_id2maybe_url ($maybe_threadparent)) {
-				     A({href=> $V2,
-					title=> __"original message"},
-				       $V0)
-				 } else {
-				     $V0
-				 }
-			     } else {
-				 $V0
-			     }
-			 }
-			],
-			[__"From", #$$header_hashref_lc{from}
-			 $addrs{from}],
-			[__"To/Cc",# $$header_hashref_lc{to},
-			 [$addrs{to},
-			  ($addrs{cc} and [", ",$addrs{cc}])]],
-			[__"Date",
-			 $opt{archive_date_message}->
-			 ($$header_hashref_lc{date},
-			  $ctime_UTC,
-			  $m->unixtime)]
-		       ),
-		       (Force ($opt{show_messageid_and_or_viewselector}) ?
-			do {
-			    my $show_messageid= Force $opt{show_messageid};
-			    my $viewmsg= __"View";
-			    TR({valign=>"top"},
-			       TD_fieldkey(($show_messageid ? __"Message-ID" :
-					    $viewmsg),
-					   \&SMALL),
-			       TD
-			       (SMALL
-				(do {
-				    my $view=
-				      SPAN_viewselector
-					($show_messageid ? $viewmsg.":" : "",
-					 (map {
-					     my ($used,$msg)=@$_;
-					     my $lmsg= __$msg;
-					     ($used
-					      ? [" ",
-						 ($choosen eq $msg ? B($lmsg)
-						  : $lmsg)]
-					      : undef)
-					 } @$choice),
-					 $maybe_source_to_link);
-				    $show_messageid ?
-				      ($id,
-				       " $nbsp ",
-				       nobr,
-				       $view)
-					: $view
-				    })))
-			}
-			: undef)))),
-		    TR (TD ({colspan=>2,
-			     bgcolor=> $textbackgroundcol->htmlstring},
-			    $fragment)),
-		    (@$attachments
-		     ? (map {
-			 my $att=$_;
-			 my $attpath= $$att{path};
-			 my $loc=
-			   File::Spec->abs2rel($attpath, dirname($path));
-			 my $name= basename($attpath);
-			 my $formatleft=
-			   +{ bgcolor=> $textbackgroundcol->htmlstring,
-			      valign=>"top",
-			      align=> "right"};
-			 my $formatright=
-			   +{ bgcolor=> $textbackgroundcol->htmlstring,
-			      valign=>"top",
-			      align=> "left"};
-			 if ($$att{disposition} eq "inline"
-			     and
-			     $$att{content_type} =~ /^image/) {
-			     TR(TD($formatleft,
-				   SPAN_system
-				   (__"Image",
-				    " ($$att{content_type}): "),
-				   BR,
-				   $name),
-				TD($formatright,
-				   A({href=> $loc},
-				     IMG ({border=> 0,
-					   src=> $loc,
-					   title=> __"click to open"}))))
-			 } else {
-			     TR(TD($formatleft,
-				   SPAN_system
-				   (__"Attachment",
-				    " ($$att{content_type}): ")),
-				TD($formatright,
-				   A ({href=> $loc}, $name)))
-			 }
-		     } @$attachments)
-		     :()),
-		    TR (TD ({colspan=>2,
-			     bgcolor=> "#f0f8ff"},
-			    ($maybe_threadleader and
-			     id_showthread($id)
-			     ->($index->thread($maybe_threadleader))))))),
-		  $m));
-	    puthtmlfile($path, $page, $l10n_lang);
+	    for my $chosen_view (@$choices) {
+		my $path= m2xhtml_path ($m, $default_choice, $chosen_view);
+		puthtmlfile($path,
+			    message2html ($m, $source_to_path, $path,
+					  $choices,
+					  $default_choice,
+					  $chosen_view),
+			    $l10n_lang);
+	    }
 	}
     } $m;
 }
