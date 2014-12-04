@@ -945,6 +945,8 @@ sub do_output_message {
     my ($m,$pos)=@_;
     Try {
 	if ($opt{json_to}) {
+	    # HACK to make it possible to generate JSON stream in
+	    # parallel and still have start and end parens.
 	    $json->set_not_first(1)
 	      if ($opt{jobs} > 1 and $pos > 0);
 	    $json->message_print($m,$index);
