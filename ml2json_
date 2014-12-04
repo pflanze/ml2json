@@ -990,22 +990,31 @@ sub message2html {
 	Force ($opt{show_viewselector}) &&
 	array_join
 	(array_append
-	 (array_map (sub {
-			 my ($choice)=@_;
-			 my $lmsg= __$choice;
-			 ($chosen_view eq $choice
-			  ? SPAN_selected($lmsg)
-			  : (SPAN_selector
-			     A({href=>
-				    basename
-				    m2xhtml_path($m, $default_choice, $choice)},
-			       $lmsg)))
-		     },
-		     $choices),
+	 (array_map
+	  (sub {
+	      my ($choice)=@_;
+	      my $lmsg= __$choice;
+	      my $title=
+		  __("show X segment that has been sent with this mail")
+		  ->($choice);
+	      ($chosen_view eq $choice
+	       ? (SPAN_selected
+		  SPAN
+		  {title=> $title},
+		  $lmsg)
+	       : (SPAN_selector
+		  A({href=>
+		       basename (m2xhtml_path($m, $default_choice, $choice)),
+		     title=> $title},
+		    $lmsg)))
+	   },
+	   $choices),
 	  ($source_to_path ? do {
 	      my $rel= File::Spec->abs2rel($source_to_path,
 					   dirname($path));
-	      [SPAN_selector A({href=> $rel}, __"source")]
+	      [SPAN_selector A({href=> $rel,
+				title=> __"show raw source code of this mail"},
+			       __"source")]
 	   } : [])),
 	 " - ");
 
@@ -1101,7 +1110,7 @@ sub message2html {
 	      : undef)),
 
 	    ($viewselector ?
-	     DIV ({class=> "viewselector"}, __"Version",":", $viewselector)
+	     DIV ({class=> "viewselector"}, $viewselector)
 	     : undef))),
 	  TR (TD ({colspan=>2,
 		   bgcolor=> $textbackgroundcol->htmlstring},
