@@ -50,7 +50,8 @@ sub MIME_Entity_all_parts {
 sub MIME_Head_maybe_content_type_lc_split {
     my $head=shift;
     if (my $contenttype= $head->get("Content-Type")) {
-	my ($kind,$subkind,$rest)= $contenttype=~ m|([^/;\s]+)(?:/([^/;\s]+))?(.*)|s
+	my ($kind,$subkind,$rest)=
+	    $contenttype=~ m|([^/;\s]+)(?:/([^/;\s]+))?(.*)|s
 	  or die "failed to match content-type '$contenttype'";
 	# ^ XX better fallback?
 	# Some mailers don't use lowercase
@@ -67,7 +68,8 @@ sub MIME_Entity_maybe_content_type_lc_split {
 
 sub MIME_Entity_maybe_content_type_lc {
     my $s=shift;
-    if (my ($kind,$subkind,$rest)= MIME_Head_maybe_content_type_lc_split($s->head)) {
+    if (my ($kind,$subkind,$rest)=
+	MIME_Head_maybe_content_type_lc_split($s->head)) {
 	$kind.(defined $subkind ? "/$subkind" : "")
     } else {
 	()
@@ -242,7 +244,8 @@ sub MIME_Entity_attachment_list {
 	    my $rec; $rec= sub {
 		my ($l)=@_;
 		if ($l) {
-		    @_=(car($l), &$rec(cdr $l)); goto \&MIME_Entity_attachment_list;
+		    @_=(car($l), &$rec(cdr $l));
+		    goto \&MIME_Entity_attachment_list;
 		} else {
 		    $tail
 		}
@@ -283,7 +286,8 @@ sub MIME_Entity_maybe_alternative_or_singletext_valuedentity {
     if (my $l= MIME_Entity_alternative_or_singletext_valuedentity_list($s)) {
 	my $a= list2array ($l);
 	local our $a2= array_sort $a,
-	  on(\&Chj::Ml2json::MIMEExtract::ValuedEntity::x, complement(\&number_cmp));
+	  on(\&Chj::Ml2json::MIMEExtract::ValuedEntity::x,
+	     complement(\&number_cmp));
 	#use Chj::repl;repl if @$a2 > 1;##  hm don't have a message to test
 	$$a2[0] #->ent no, need to see outside what it was
     } else {
@@ -398,7 +402,8 @@ sub bodyhandle_decoding_read_all_ref ($$) {
 	}
     } else {
 	if ($$ref0=~ /[\x80..\xFF]/) {
-	    NOTE "no encoding specified, but contains 8 bit chars, trying alternatives";
+	    NOTE "no encoding specified, but contains 8 bit chars, ".
+		"trying alternatives";
 	    &$decode_sort_select([]);
 	} else {
 	    $ref0
@@ -485,7 +490,8 @@ sub MIME_Entity_origplain_origrich_orightml {
 		    if (! ($lcstr=~ /<(?:html|body|p|br|div|span|a|ul|ol)\b/
 			   or
 			   $lcstr=~ /\&(?:lt|amp|auml|ouml|uuml);/)) {
-			WARN("claimed text/html content doesn't look like html, treating as plain text instead");
+			WARN("claimed text/html content doesn't look like html, "
+			     ."treating as plain text instead");
 			$pos=0;
 		    }
 		}
