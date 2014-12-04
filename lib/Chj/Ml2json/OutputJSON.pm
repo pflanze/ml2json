@@ -345,6 +345,29 @@ sub html_choice {
      $pl_ ? "plain" : undef)
 }
 
+sub html_of_kind {
+    my $s=shift;
+    @_==2 or die;
+    my ($m, $kind)=@_;
+    my $by_kind= $$m{"_OutputJSON__html_by_kind"} ||= do {
+	my %by_kind;
+	(array_map sub {
+	    my $args= [@_];
+	    my $kind= shift @$args;
+	    $by_kind{$kind}=$args;
+	 },
+	 [qw(plain rich html)],
+	 [qw(_plain2html _enriched2html _cleanuphtml)],
+	 [$m->origplain_origrich_orightml ($$s{do_confirm_html})],
+	 [$m->origplain_origrich_orightml_string ($$s{do_confirm_html})]);
+	\%by_kind
+    };
+    my $args= $$by_kind{$kind}
+      or die "invalid kind '$kind'";
+    my ($method,$ent,$str)= @$args;
+    $s->$method($str,$ent)
+}
+
 sub json_html {
     my $s=shift;
     @_==2 or die;
