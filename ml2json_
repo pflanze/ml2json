@@ -636,7 +636,7 @@ our $iconnames= array_map sub{$_[0][0]}, $icons;
 sub mkimg {
     my ($name, $alt, $maybe_title, $maybe_scale)=@_;
     my $filename= "$name.svg";
-    my $info= Chj::Ml2json::Svginfo->new_from_path ("icons/$filename");
+    my $info= Chj::Ml2json::Svginfo->new_from_path ("$mydir/icons/$filename");
     # XX eliminate alt since indexlink adds a title to the A element, too?
     IMG {src=> "$svg_url_base$filename", alt=> $alt,
 	 (map {
@@ -1307,7 +1307,7 @@ sub parse_and_convert {
 	    for my $name (@$iconnames) {
 		my $filename= "$name.svg";
 		# XX bad usage of $svg_url_base, should really use path ops.
-		xcopyfile_utf8 ("icons/$filename",
+		xcopyfile_utf8 ("$mydir/icons/$filename",
 				"$opt{html_to}/$svg_url_base$filename");
 	    }
 	}
