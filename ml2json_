@@ -541,7 +541,7 @@ dir.reply {
 }
 div.arrows {
     position: fixed;
-    top: 75px;
+    top: $opt{arrows_position_top};
     left: 10px;
     font-size: 25px;
     font-family: sans-serif;

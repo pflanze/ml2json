@@ -322,6 +322,7 @@ our ($mydir,%opt); # 'import' from main
   # doesn't handle SVG and also has other issues). (NOTE: `html_index`
   # includes its own suffix!)
   html_add_arrows=> 1, # whether to add navigation arrows to HTML pages
+  arrows_position_top=> "75px", # used in CSS div.arrows, fixed from top of page
   listname=> "undefined list name",
   hide_mail_addressP=> sub {
       my ($address)=@_;
