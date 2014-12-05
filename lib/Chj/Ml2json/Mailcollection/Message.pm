@@ -220,7 +220,7 @@ use Chj::chompspace ();
 
 sub identify {
     my $s=shift;
-    $$s{_cache_identify} //= $s->identification->string
+    $s->identification->string
 }
 
 sub headers {
