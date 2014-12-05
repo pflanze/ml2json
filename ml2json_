@@ -361,13 +361,14 @@ use Chj::chompspace;
 use Chj::Ml2json::Parse::TextStripper;
 use Chj::Ml2json::Ghosts; # Chj::Ml2json::Ghostable, Chj::Ml2json::Ghost
 use Chj::xIO qw(xputfile_utf8 xcopyfile_utf8);
-use Chj::FP::Div "identity";
+use Chj::FP::Div qw(identity compose);
 use Chj::FP::url_;
 use Chj::FP::OrderedCollection;
 use Chj::Ml2json::l10n;
 use Chj::Ml2json::Svginfo;
 use Chj::FP2::List qw(array2list car cdr);
 use Chj::FP2::Lazy;
+use Chj::FP::HashSet;
 
 
 use DateTime;
@@ -632,7 +633,14 @@ our $icons=
      # ^ delay __ until $l10n_lang is set (will be called in PXML
      # serializer)
     ];
-our $iconnames= array_map sub{$_[0][0]}, $icons;
+our $iconfilenames= array_map compose (sub {
+    my ($name)=@_;
+    "$name.svg"
+}, \&array_fst), $icons;
+# Make available here, too (ugly?):
+$Chj::Ml2json::MailcollectionParser::target_ignore_filename=
+ array2hashset $iconfilenames;
+
 sub mkimg {
     my ($name, $alt, $maybe_title, $maybe_scale)=@_;
     my $filename= "$name.svg";
@@ -1304,8 +1312,7 @@ sub parse_and_convert {
 	    # generate the CSS page used by the HTML pages
 	    xputfile_utf8 "$opt{html_to}/$css_url", $css_code;
 	    # and the SVG files
-	    for my $name (@$iconnames) {
-		my $filename= "$name.svg";
+	    for my $filename (@$iconfilenames) {
 		# XX bad usage of $svg_url_base, should really use path ops.
 		xcopyfile_utf8 ("$mydir/icons/$filename",
 				"$opt{html_to}/$svg_url_base$filename");

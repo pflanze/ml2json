@@ -78,6 +78,9 @@ use Email::Date 'find_date';
 use Mail::Message::Field::Date;
 
 
+our $target_ignore_filename= {};  # filename -> boolean
+
+
 # fix up pseudo-mbox message heads: turn spaces in header names into '-'
 sub fixup_msg {
     my ($message)=@_;
@@ -351,7 +354,8 @@ sub make_parse___ghost {
 			   # output files are written to the same
 			   # place as the attachments. Assumes that
 			   # mailbox i's don't have that suffix.
-			   unless ($$is{$item}) {
+			   unless ($$is{$item}
+				   or $$target_ignore_filename{$item}) {
 			       my $path= "$mailboxtargetbase/$item";
 			       WARN "Removing stale path '$path'";
 			       Rmrf $path;
