@@ -968,7 +968,6 @@ sub message2html {
     my ($m, $source_to_path, $path,
 	$choices, $default_choice, $chosen_view)=@_;
 
-    my $identify= $m->identify;
     my $id= $m->id;
     my $fragment= $outputjson->html_of_kind($m, $chosen_view);
     my $header_hashref_lc= $m->header_hashref_lc;
@@ -1048,7 +1047,7 @@ sub message2html {
     HTML
       ($opt{archive_message_change}->
        (HEAD (TITLE ($opt{archive_message_title}->
-		     ($identify, $subject, $fromstr)),
+		     ($m, $subject, $fromstr)),
 	      css_link $css_url),
 	BODY
 	(($opt{archive} ? {} : {bgcolor=>"#964a2a"}),

@@ -384,10 +384,10 @@ our ($mydir,%opt); # 'import' from main
   show_messageid=> Delay { not $opt{archive} },
   show_viewselector=> 1,
   archive_message_title=> sub {
-      my ($identity,$subject,$from_string_hidemail)=@_;
+      my ($m,$subject,$from_string_hidemail)=@_;
       ($opt{archive} ?
        "$opt{listname}: @$subject ($from_string_hidemail)"
-       : $identity)
+       : $m->identify)
   },
   archive_message_change=> sub {
       my ($head, $body, $m)=@_;
