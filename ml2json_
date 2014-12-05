@@ -622,11 +622,11 @@ our $icons=
     [
      # $name, $alt, $maybe_title, $maybe_scale
      # (most are wrapped with a SPAN with title, so don't have it here)
-     ["up_inactive", ""],
+     ["up_inactive", $nbsp],
      ["up", "^"],
      ["doubleup", "^^"],
      ["down", "v"],
-     ["down_inactive", ""],
+     ["down_inactive", $nbsp],
      ["left", "<"],
      ["paper-clip", sub {__"(attachments)"}, sub{__"has attachments"}, 0.8],
      # ^ delay __ until $l10n_lang is set (will be called in PXML
