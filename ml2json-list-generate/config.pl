@@ -1,5 +1,5 @@
 use strict; use warnings FATAL => 'uninitialized';
-our $mydir; # 'import' from main
+our ($mydir,%opt); # 'import' from main
 
 my $HOME= $ENV{HOME} || die;
 my $listname= "ml2json-list";
@@ -36,7 +36,7 @@ my $add_header=sub {
       }),
      $body->body_update
      (sub {
-	  [&$header (!$maybe_m), @_]
+	  [&$header (!$maybe_m), @_, $opt{archive_footer}->()]
       }))
 };
 
