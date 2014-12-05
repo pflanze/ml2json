@@ -810,7 +810,7 @@ sub id_showthread {
 	       $content
 	       : A({href=> $url,
 		    (!defined $maybe_selected_id and $opt{html_add_arrows}) ?
-			(name=> $_id)
+			(name=> $m->identify)
 			: ()},
 		   $content));
 
@@ -910,6 +910,7 @@ sub make_html_arrows_for {
 
     sub {
 	my ($id)=@_;
+	my $identify= &$id2m ($id)->identify;
 	sub {
 	    my ($content)=@_;
 	    # XX is the use of m2xhtml_basename wrong for
@@ -934,7 +935,7 @@ sub make_html_arrows_for {
 			    undef, # never used
 			    url_(path=> basename($opt{html_index}),
 				 # ^ XX always correct?
-				 fragment=> $id)), BR,
+				 fragment=> $identify)), BR,
 		 &$arrowlink (__"next message",
 			      $iconshtml{down},
 			      $iconshtml{down_inactive},
