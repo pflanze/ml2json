@@ -71,4 +71,5 @@ my $add_header=sub {
   time_zone=> "Europe/London", # use UTC or GMT instead?
   archive_message_change=> $add_header,
   archive_threadindex_change=> $add_header,
+  arrows_position_top=> "130px", # our head is pretty big (XX: is it fixed in px?)
 }
