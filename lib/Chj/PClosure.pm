@@ -12,14 +12,32 @@ Chj::PClosure
 
  use Chj::PClosure;
 
+ # instead of this...:
+
+ # sub make_handler {
+ #    my ($v1,$v2)=@_;
+ #    sub {
+ #        my ($v3)=@_;
+ #        $v1 * $v2 + $v3
+ #    }
+ # }
+ # my $cl= make_handler(10, 11);
+ # # cannot send $cl over a wire.
+ # $cl->(12); # -> 122
+
+ # ... we need to do manual lambda lifting: pass along the values that
+ # would make up the environment of the closure explicitely to the
+ # function:
+
  sub handler {
     my ($v1,$v2,$v3)=@_;
-    [$v1,$v2,$v3]
+    $v1 * $v2 + $v3
  }
 
- my $cl= PClosure (*handler, "a", "b");
- # serialize, deserialize,
- $cl->call("c"); # -> ["a","b","c"]
+ my $cl= PClosure (*handler, 10, 11);
+ # possibly send $cl over a wire,
+ $cl->call(12); # -> 122
+
  # or pass $cl to Chj::Parallel::Instance's stream_for_each method etc.
 
 =head1 DESCRIPTION
