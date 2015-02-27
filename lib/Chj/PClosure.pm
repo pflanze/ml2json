@@ -15,7 +15,7 @@ Chj::PClosure
  # instead of this...:
 
  # sub make_handler {
- #    my ($v1,$v2)=@_;
+ #    my ($v1, $v2)=@_;
  #    sub {
  #        my ($v3)=@_;
  #        $v1 * $v2 + $v3
@@ -29,13 +29,17 @@ Chj::PClosure
  # would make up the environment of the closure explicitely to the
  # function:
 
- sub handler {
-    my ($v1,$v2,$v3)=@_;
+ sub make_handler {
+    my ($v1,$v2)=@_;
+    PClosure (*_handler, $v1, $v2)
+ }
+ sub _handler {
+    my ($v1, $v2, $v3)=@_;
     $v1 * $v2 + $v3
  }
 
- my $cl= PClosure (*handler, 10, 11);
- # possibly send $cl over a wire,
+ my $cl= make_handler(10, 11);
+ # can send $cl over a wire,
  $cl->call(12); # -> 122
 
  # or pass $cl to Chj::Parallel::Instance's stream_for_each method etc.
