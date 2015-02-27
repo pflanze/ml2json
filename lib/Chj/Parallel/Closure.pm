@@ -34,4 +34,14 @@ sub call {
     goto *{$$s{procname}}{CODE}
 }
 
+use overload '&{}'=> sub {
+    my $s=shift;
+    my $fn= $s->can("call") or die;
+    sub {
+	unshift @_, $s;
+	goto $fn
+    }
+};
+
+
 _END_
