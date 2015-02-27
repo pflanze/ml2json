@@ -1,0 +1,39 @@
+#!/usr/bin/perl -w
+
+# Thu Jul  4 21:30:42 BST 2013
+(my $email='ch%christianjaeger,ch')=~ tr/%,/@./;
+
+use strict; use warnings FATAL => 'uninitialized'; use utf8;
+
+use Cwd 'abs_path';
+
+our ($mydir, $myname);
+BEGIN {
+    my $location= (-l $0) ? abs_path ($0) : $0;
+    $location=~ /(.*?)([^\/]+?)_?\z/s or die "?";
+    ($mydir, $myname)=($1,$2);
+    $mydir= $ENV{ML2JSON_MYDIR} if $ENV{ML2JSON_MYDIR};
+}
+use lib "$mydir/perllib";
+use lib "$mydir/ftemplate/lib";
+use lib "$mydir/lib";
+
+use Chj::PClosure;
+
+sub make_handler {
+   my ($v1,$v2)=@_;
+   PClosure (*_handler, $v1, $v2)
+}
+sub _handler {
+   my ($v1, $v2, $v3)=@_;
+   $v1 * $v2 + $v3
+}
+
+our $cl= make_handler(10, 11);
+# can send $cl over a wire,
+#$cl->call(12); # -> 122
+# or (a little slower):
+#&$cl(12); # -> 122
+
+use Chj::repl; repl;
+
